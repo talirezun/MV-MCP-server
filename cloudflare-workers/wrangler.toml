@@ -1,0 +1,49 @@
+name = "mountvacation-mcp"
+main = "src/index.ts"
+compatibility_date = "2023-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker configuration
+[env.production]
+name = "mountvacation-mcp"
+routes = [
+  { pattern = "mountvacation-mcp.your-domain.workers.dev", zone_name = "your-domain.workers.dev" }
+]
+
+[env.staging]
+name = "mountvacation-mcp-staging"
+
+# Environment variables (secrets should be set via wrangler secret put)
+[vars]
+NODE_ENV = "production"
+LOG_LEVEL = "info"
+CACHE_TTL_SECONDS = "300"
+MAX_CACHE_SIZE = "1000"
+API_TIMEOUT_SECONDS = "30"
+MAX_RESULTS_DEFAULT = "5"
+MAX_RESULTS_LIMIT = "20"
+RATE_LIMIT_REQUESTS_PER_MINUTE = "60"
+
+# KV namespace for caching (optional)
+[[kv_namespaces]]
+binding = "CACHE"
+id = "your-kv-namespace-id"
+preview_id = "your-preview-kv-namespace-id"
+
+# Durable Objects (if needed for advanced features)
+# [[durable_objects.bindings]]
+# name = "RATE_LIMITER"
+# class_name = "RateLimiter"
+
+# Analytics Engine (for monitoring)
+[[analytics_engine_datasets]]
+binding = "ANALYTICS"
+
+# Compatibility settings
+[build]
+command = "npm run build"
+
+# Development settings
+[env.development]
+name = "mountvacation-mcp-dev"
+vars = { NODE_ENV = "development", LOG_LEVEL = "debug" }
