@@ -21,13 +21,12 @@ cd MV-MCP-server
 cp .env.example .env
 ```
 
-### 2. Add Your Credentials
+### 2. Add MV API Credentials
 
 Edit `.env` file with your MountVacation API credentials:
 
 ```bash
-MOUNTVACATION_USERNAME=your_username
-MOUNTVACATION_PASSWORD=your_password
+MOUNTVACATION_API_KEY=api_key
 ```
 
 ### 3. Choose Your Implementation
