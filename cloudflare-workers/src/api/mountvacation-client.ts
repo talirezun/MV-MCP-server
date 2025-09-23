@@ -116,7 +116,6 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'murren': { resort: 9500 },
 
   // Generic regions for broader searches
-  'italian dolomites': { region: 4252 },
   'dolomites': { region: 4252 },
   'dolomiti': { region: 4252 },
   'trentino': { region: 4252 },
@@ -128,9 +127,25 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'swiss alps': { region: 4256 },
   'alps': { region: 4252 }, // Default to Italian Dolomites
 
+  // Italian ski destinations (prioritize Italian regions)
+  'italy ski resort': { region: 911 }, // Trentino-Alto Adige
+  'italy ski resorts': { region: 911 },
+  'italian ski resort': { region: 911 },
+  'italian ski resorts': { region: 911 },
+  'italy skiing': { region: 911 },
+  'italian skiing': { region: 911 },
+  'italy ski': { region: 911 },
+  'italian ski': { region: 911 },
+  'italian dolomites': { region: 911 }, // Trentino-Alto Adige for Dolomites
+  'italy dolomites': { region: 911 },
+  'ski italy': { region: 911 },
+  'skiing italy': { region: 911 },
+  'ski in italy': { region: 911 },
+  'skiing in italy': { region: 911 },
+
   // Fallback coordinates for major areas (if IDs don't work)
-  'italy skiing': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 100000 } },
-  'italy ski': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 100000 } },
+  'italy skiing fallback': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 50000 } },
+  'italy ski fallback': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 50000 } },
 };
 
 export class MountVacationClient {
@@ -368,15 +383,34 @@ export class MountVacationClient {
       });
     }
 
-    // Generic Italy geolocation search
-    if (normalizedLocation.includes('italy') || normalizedLocation.includes('ski')) {
+    // Italian ski destinations - prioritize Italian regions
+    if (normalizedLocation.includes('italy') && (normalizedLocation.includes('ski') || normalizedLocation.includes('dolomit'))) {
+      // Try Italian ski regions first
+      strategies.push({
+        name: 'trentino_alto_adige_fallback',
+        params: { ...baseParams, region: '911' } // Trentino-Alto Adige
+      });
+      strategies.push({
+        name: 'veneto_fallback',
+        params: { ...baseParams, region: '914' } // Veneto (Cortina)
+      });
+      strategies.push({
+        name: 'valle_aosta_fallback',
+        params: { ...baseParams, region: '913' } // Valle d'Aosta
+      });
+      strategies.push({
+        name: 'lombardy_fallback',
+        params: { ...baseParams, region: '904' } // Lombardy (Livigno)
+      });
+
+      // Only use geolocation as last resort with smaller radius
       strategies.push({
         name: 'italy_geolocation_fallback',
         params: {
           ...baseParams,
           latitude: '46.4982',
           longitude: '11.3548',
-          radius: '100000'
+          radius: '50000' // Smaller radius to focus on Italian Alps
         }
       });
     }

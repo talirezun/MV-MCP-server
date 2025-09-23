@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": [
+        "/Users/talirezun/MV-MCP-server/scripts/mcp-cloud-bridge.js"
+      ]
+    }
+  }
+}
