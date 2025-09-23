@@ -68,7 +68,7 @@ export default {
           mcp: '/mcp',
           health: '/health',
         },
-        documentation: 'https://github.com/your-repo/mountvacation-mcp',
+        documentation: 'https://github.com/talirezun/MV-MCP-server',
       }), {
         headers: { 
           'Content-Type': 'application/json',

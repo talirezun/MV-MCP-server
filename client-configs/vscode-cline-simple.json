@@ -1,9 +1,0 @@
-{
-  "mountvacation": {
-    "command": "node",
-    "args": [
-      "-e",
-      "const readline = require('readline'); const rl = readline.createInterface({input: process.stdin, output: process.stdout}); rl.on('line', async (line) => { try { const req = JSON.parse(line); const res = await fetch('https://mountvacation-mcp-server.4thtech.workers.dev/mcp', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(req)}); console.log(JSON.stringify(await res.json())); } catch (e) { console.log(JSON.stringify({jsonrpc: '2.0', id: null, error: {code: -32603, message: e.message}})); } });"
-    ]
-  }
-}

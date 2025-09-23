@@ -106,7 +106,7 @@ Connect to: `stdio://python python-fastmcp/mountvacation_mcp.py`
 
 ### Cloudflare Workers
 
-**Already Deployed**: `https://mountvacation-mcp-server.4thtech.workers.dev`
+**Already Deployed**: `https://mcp.blocklabs.technology`
 
 To deploy your own instance:
 
@@ -142,7 +142,7 @@ npm test
 
 ## 🌐 Live Server (Experimental)
 
-**Production URL**: `https://mountvacation-mcp-server.4thtech.workers.dev`
+**Production URL**: `https://mcp.blocklabs.technology`
 
 - ✅ **Health Check**: `/health` (Working)
 - ⚠️ **MCP Endpoint**: `/mcp` (In Development)

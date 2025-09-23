@@ -491,6 +491,31 @@ def search_accommodations(
         }
 
 if __name__ == "__main__":
+    # Check for test flag
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        logger.info("Running server test")
+        try:
+            # Test API connection
+            test_result = api_client.search_accommodations(
+                location="Madonna di Campiglio",
+                arrival_date="2026-01-15",
+                departure_date="2026-01-22",
+                persons_ages="30,28",
+                currency="EUR",
+                max_results=1
+            )
+            if test_result.get('error'):
+                logger.error("Test failed", error=test_result['error'])
+                sys.exit(1)
+            else:
+                logger.info("Test passed", results_count=len(test_result.get('accommodations', [])))
+                print("✅ Server test passed!")
+                sys.exit(0)
+        except Exception as e:
+            logger.error("Test failed with exception", error=str(e))
+            print(f"❌ Server test failed: {e}")
+            sys.exit(1)
+
     logger.info("Starting MountVacation MCP Server", version="1.0.0")
     try:
         mcp.run()

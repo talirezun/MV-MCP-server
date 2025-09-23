@@ -1,4 +1,4 @@
-name = "mountvacation-mcp-server"
+name = "mountvacation-mcp"
 main = "src/index.ts"
 compatibility_date = "2023-12-01"
 compatibility_flags = ["nodejs_compat"]
@@ -6,7 +6,10 @@ account_id = "e43aa15d537153ef8eadd3512168c4aa"
 
 # Worker configuration
 [env.production]
-name = "mountvacation-mcp-server"
+name = "mountvacation-mcp-production"
+routes = [
+  { pattern = "mcp.blocklabs.technology/*", zone_name = "blocklabs.technology" }
+]
 
 [env.staging]
 name = "mountvacation-mcp-staging"
