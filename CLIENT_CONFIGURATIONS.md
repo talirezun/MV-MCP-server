@@ -5,8 +5,18 @@
 ## 🚀 One-File Setup
 
 ### **Step 1: Download the Bridge Script**
+
+**Method A: Direct Download (Recommended)**
 ```bash
-curl -o mountvacation-mcp.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/scripts/standalone-mcp-bridge.js
+curl -L -o mountvacation-mcp.js "https://github.com/talirezun/MV-MCP-server/raw/main/scripts/standalone-mcp-bridge.js"
+chmod +x mountvacation-mcp.js
+```
+
+**Method B: If Method A doesn't work**
+```bash
+git clone --depth 1 https://github.com/talirezun/MV-MCP-server.git temp-download
+cp temp-download/scripts/standalone-mcp-bridge.js ./mountvacation-mcp.js
+rm -rf temp-download
 chmod +x mountvacation-mcp.js
 ```
 
