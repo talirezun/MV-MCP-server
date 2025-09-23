@@ -1,22 +1,32 @@
 /**
  * MountVacation MCP Server - Cloudflare Workers Implementation
- * A robust MCP server for searching mountain vacation accommodations
+ * A robust HTTP-based MCP server for searching mountain vacation accommodations
  */
-
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-  Tool,
-  ListToolsResultSchema,
-  CallToolResultSchema
-} from '@modelcontextprotocol/sdk/types.js';
 
 import { Env, SearchParams } from './types';
 import { createLogger } from './utils/logger';
 import { CacheManager } from './utils/cache';
 import { RateLimiter } from './utils/rate-limiter';
 import { MountVacationClient } from './api/mountvacation-client';
+
+// MCP JSON-RPC types
+interface MCPRequest {
+  jsonrpc: '2.0';
+  id: string | number | null;
+  method: string;
+  params?: any;
+}
+
+interface MCPResponse {
+  jsonrpc: '2.0';
+  id: string | number | null;
+  result?: any;
+  error?: {
+    code: number;
+    message: string;
+    data?: any;
+  };
+}
 
 export default {
   async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
@@ -104,7 +114,7 @@ async function handleMCPRequest(request: Request, env: Env, logger: any): Promis
     parseInt(env.CACHE_TTL_SECONDS),
     logger
   );
-  
+
   const rateLimiter = new RateLimiter(
     parseInt(env.RATE_LIMIT_REQUESTS_PER_MINUTE),
     1,
@@ -118,9 +128,16 @@ async function handleMCPRequest(request: Request, env: Env, logger: any): Promis
   if (rateLimiter.isRateLimited(clientId)) {
     const rateLimitInfo = rateLimiter.getRateLimitInfo(clientId);
     return new Response(JSON.stringify({
-      error: 'Rate limit exceeded',
-      resetTime: rateLimitInfo?.resetTime.toISOString(),
-      maxRequests: rateLimitInfo?.maxRequests,
+      jsonrpc: '2.0',
+      id: null,
+      error: {
+        code: -32603,
+        message: 'Rate limit exceeded',
+        data: {
+          resetTime: rateLimitInfo?.resetTime.toISOString(),
+          maxRequests: rateLimitInfo?.maxRequests,
+        }
+      }
     }), {
       status: 429,
       headers: {
@@ -130,147 +147,155 @@ async function handleMCPRequest(request: Request, env: Env, logger: any): Promis
     });
   }
 
-  // Create MCP server
-  const server = new Server(
-    {
-      name: 'mountvacation-mcp',
-      version: '1.0.0',
-    }
-  );
-
-  // Register tools
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
-    const tools: Tool[] = [
-      {
-        name: 'search_accommodations',
-        description: 'Search for mountain vacation accommodations using the MountVacation API. This tool searches for available accommodations in mountain destinations and returns detailed information including pricing, amenities, and booking links.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            location: {
-              type: 'string',
-              description: 'City, resort, or region name (e.g., "Chamonix", "Zermatt", "Alps")',
-            },
-            arrival_date: {
-              type: 'string',
-              description: 'Check-in date in YYYY-MM-DD format (e.g., "2024-03-10")',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$',
-            },
-            departure_date: {
-              type: 'string',
-              description: 'Check-out date in YYYY-MM-DD format (e.g., "2024-03-17")',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$',
-            },
-            persons_ages: {
-              type: 'string',
-              description: 'Comma-separated ages of all guests (e.g., "18,18,12,8" for 2 adults and 2 children)',
-              pattern: '^\\d+(,\\d+)*$',
-            },
-            currency: {
-              type: 'string',
-              description: 'Currency code for pricing (default: "EUR")',
-              enum: ['EUR', 'USD', 'GBP', 'CHF', 'CAD', 'AUD'],
-              default: 'EUR',
-            },
-            max_results: {
-              type: 'number',
-              description: 'Maximum number of accommodations to return (default: 5, max: 20)',
-              minimum: 1,
-              maximum: 20,
-              default: 5,
-            },
-          },
-          required: ['location', 'arrival_date', 'departure_date', 'persons_ages'],
-        },
-      },
-    ];
-
-    return { tools };
-  });
-
-  // Handle tool calls
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    if (request.params.name === 'search_accommodations') {
-      return await handleSearchAccommodations(
-        request.params.arguments as unknown as SearchParams,
-        env,
-        cacheManager,
-        apiClient,
-        logger
-      );
-    }
-
-    throw new Error(`Unknown tool: ${request.params.name}`);
-  });
-
   try {
-    // Parse MCP request
-    const body = await request.text();
-    const mcpRequest = JSON.parse(body);
+    // Parse JSON-RPC request
+    const mcpRequest: MCPRequest = await request.json();
 
     logger.info('MCP request received', {
       method: mcpRequest.method,
       id: mcpRequest.id,
     });
 
-    // Process request through MCP server
-    // Note: This is a simplified implementation
-    // In a full implementation, you'd need to properly handle the JSON-RPC protocol
-    
-    if (mcpRequest.method === 'tools/list') {
-      const response = await server.request(
-        { method: 'tools/list', params: {} } as any,
-        ListToolsResultSchema
-      );
-      return new Response(JSON.stringify({
-        jsonrpc: '2.0',
-        id: mcpRequest.id,
-        result: response,
-      }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    // Handle different MCP methods
+    switch (mcpRequest.method) {
+      case 'tools/list':
+        return handleToolsList(mcpRequest, logger);
 
-    if (mcpRequest.method === 'tools/call') {
-      const response = await server.request(mcpRequest as any, CallToolResultSchema);
-      return new Response(JSON.stringify({
-        jsonrpc: '2.0',
-        id: mcpRequest.id,
-        result: response,
-      }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+      case 'tools/call':
+        return await handleToolCall(mcpRequest, env, cacheManager, apiClient, logger);
 
-    return new Response(JSON.stringify({
-      jsonrpc: '2.0',
-      id: mcpRequest.id,
-      error: {
-        code: -32601,
-        message: 'Method not found',
-      },
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+      default:
+        return createErrorResponse(mcpRequest.id, -32601, `Method not found: ${mcpRequest.method}`);
+    }
 
   } catch (error) {
-    logger.error('MCP request processing failed', {
+    logger.error('MCP request parsing failed', {
       error: error instanceof Error ? error.message : String(error),
     });
 
-    return new Response(JSON.stringify({
-      jsonrpc: '2.0',
-      id: null,
-      error: {
-        code: -32700,
-        message: 'Parse error',
-      },
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return createErrorResponse(null, -32700, 'Parse error');
   }
+    }
+
+// Helper function to create error responses
+function createErrorResponse(id: string | number | null, code: number, message: string, data?: any): Response {
+  const response: MCPResponse = {
+    jsonrpc: '2.0',
+    id,
+    error: {
+      code,
+      message,
+      ...(data && { data })
+    }
+  };
+
+  return new Response(JSON.stringify(response), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+// Helper function to create success responses
+function createSuccessResponse(id: string | number | null, result: any): Response {
+  const response: MCPResponse = {
+    jsonrpc: '2.0',
+    id,
+    result
+  };
+
+  return new Response(JSON.stringify(response), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+// Handle tools/list requests
+function handleToolsList(request: MCPRequest, logger: any): Response {
+  const tools = [
+    {
+      name: 'search_accommodations',
+      description: 'Search for mountain vacation accommodations using the MountVacation API. This tool searches for available accommodations in mountain destinations and returns detailed information including pricing, amenities, and booking links.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          location: {
+            type: 'string',
+            description: 'City, resort, or region name (e.g., "Chamonix", "Zermatt", "Alps")',
+          },
+          arrival_date: {
+            type: 'string',
+            description: 'Check-in date in YYYY-MM-DD format (e.g., "2024-03-10")',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          departure_date: {
+            type: 'string',
+            description: 'Check-out date in YYYY-MM-DD format (e.g., "2024-03-17")',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          persons_ages: {
+            type: 'string',
+            description: 'Comma-separated ages of all guests (e.g., "18,18,12,8" for 2 adults and 2 children)',
+            pattern: '^\\d+(,\\d+)*$',
+          },
+          currency: {
+            type: 'string',
+            description: 'Currency code for pricing (default: "EUR")',
+            enum: ['EUR', 'USD', 'GBP', 'CHF', 'CAD', 'AUD'],
+            default: 'EUR',
+          },
+          max_results: {
+            type: 'number',
+            description: 'Maximum number of accommodations to return (default: 5, max: 20)',
+            minimum: 1,
+            maximum: 20,
+            default: 5,
+          },
+        },
+        required: ['location', 'arrival_date', 'departure_date', 'persons_ages'],
+      },
+    },
+  ];
+
+  logger.info('Tools list requested', { toolCount: tools.length });
+
+  return createSuccessResponse(request.id, { tools });
+}
+
+// Handle tools/call requests
+async function handleToolCall(
+  request: MCPRequest,
+  env: Env,
+  cacheManager: CacheManager,
+  apiClient: MountVacationClient,
+  logger: any
+): Promise<Response> {
+  const { name, arguments: args } = request.params;
+
+  if (name === 'search_accommodations') {
+    try {
+      const result = await handleSearchAccommodations(
+        args as SearchParams,
+        env,
+        cacheManager,
+        apiClient,
+        logger
+      );
+
+      return createSuccessResponse(request.id, result);
+    } catch (error) {
+      logger.error('Tool call failed', {
+        tool: name,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      return createErrorResponse(
+        request.id,
+        -32603,
+        'Internal error',
+        { tool: name, error: String(error) }
+      );
+    }
+  }
+
+  return createErrorResponse(request.id, -32601, `Unknown tool: ${name}`);
 }
 
 async function handleSearchAccommodations(

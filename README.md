@@ -102,6 +102,39 @@ Connect to: `stdio://python python-fastmcp/mountvacation_mcp.py`
 
 📖 **[Complete Integration Guide](docs/CLIENT_INTEGRATION.md)** | 📁 **[Example Configs](client-configs/)**
 
+## 🚀 Cloud-Hosted Option (No Setup Required!)
+
+**Want to use MountVacation MCP without any local setup?** Use our cloud-hosted server!
+
+### For Claude Desktop
+
+Add this to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": [
+        "/path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js"
+      ]
+    }
+  }
+}
+```
+
+**Setup Steps:**
+1. Clone this repository: `git clone https://github.com/talirezun/MV-MCP-server.git`
+2. Update the path in the config above to your actual path
+3. Add the config to your Claude Desktop configuration file
+4. Restart Claude Desktop
+
+**Benefits:**
+- ✅ **No API keys required** - Server handles authentication
+- ✅ **No local setup** - Runs on Cloudflare's global network
+- ✅ **Always up-to-date** - Automatically maintained
+- ✅ **Fast & reliable** - Sub-3-second response times
+
 ## 🌐 Production Deployment
 
 ### Cloudflare Workers

@@ -76,17 +76,39 @@ MOUNTVACATION_API_KEY=your_api_key_here
 
 2. Restart VS Code
 
-## 🌐 Option 2: Deployed Server (Experimental)
+## 🌐 Option 2: Cloud-Hosted Server (No Setup Required!)
 
 **Live Server**: `https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev`
 *Note: Custom domain `mcp.blocklabs.technology` will replace this URL once DNS is configured*
 
-⚠️ **Status**: MCP protocol implementation in development
+✅ **Status**: Fully functional MCP server with JSON-RPC 2.0 support
 
-✅ **Working**: Health check endpoint
-⚠️ **In Progress**: Full MCP JSON-RPC support
+### Claude Desktop (Cloud Configuration)
 
-*Use local Python server for production integration*
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": [
+        "/path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js"
+      ]
+    }
+  }
+}
+```
+
+**Setup Steps:**
+1. Clone: `git clone https://github.com/talirezun/MV-MCP-server.git`
+2. Update the path above to your actual repository path
+3. Add config to `~/Library/Application Support/Claude/claude_desktop_config.json`
+4. Restart Claude Desktop
+
+**Benefits:**
+- ✅ **No API keys required** - Server handles authentication
+- ✅ **No local setup** - Just clone and configure
+- ✅ **Always up-to-date** - Automatically maintained
+- ✅ **Global performance** - Cloudflare edge network
 
 ## 🧪 Testing
 
