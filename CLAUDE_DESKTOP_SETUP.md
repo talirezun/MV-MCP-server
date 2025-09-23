@@ -111,22 +111,32 @@ The server is specially optimized for Italian ski resorts:
 
 ## 🛠️ **Troubleshooting**
 
-### **Problem: "Taking longer than usual" or No Results**
+### **Problem: "Server disconnected" Error**
 
-**Solution 1: Check File Path**
-- Verify the path to `mcp-cloud-bridge.js` is correct
-- Use absolute path (full path from root)
-- Check file exists: `ls /path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js`
+**✅ FIXED!** The latest version now includes proper MCP protocol support:
+- Added `initialize` method handler for Claude Desktop compatibility
+- Added `notifications/initialized` method support
+- Full MCP protocol version 2024-11-05 compliance
 
-**Solution 2: Test Cloud Bridge Manually**
+**Solution 1: Update to Latest Version**
 ```bash
-cd /path/to/MV-MCP-server
-node scripts/mcp-cloud-bridge.js
+cd /Users/talirezun/MV-MCP-server
+git pull origin main
 ```
-Then type: `{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}`
-You should see a list of 3 tools.
 
-**Solution 3: Check Node.js**
+**Solution 2: Test the Setup**
+```bash
+cd /Users/talirezun/MV-MCP-server
+node test-claude-desktop-setup.js
+```
+You should see "All tests passed!" message.
+
+**Solution 3: Check File Path**
+- Verify the path to `mcp-cloud-bridge.js` is correct
+- Use absolute path: `/Users/talirezun/MV-MCP-server/scripts/mcp-cloud-bridge.js`
+- Check file exists: `ls /Users/talirezun/MV-MCP-server/scripts/mcp-cloud-bridge.js`
+
+**Solution 4: Check Node.js**
 - Ensure Node.js is installed: `node --version`
 - Should be v18 or higher
 
