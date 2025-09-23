@@ -1,47 +1,140 @@
 # MountVacation MCP Client Integration Guide
 
-This guide shows you how to integrate the MountVacation MCP Server with various AI clients. The server provides comprehensive mountain vacation accommodation search with property links, image galleries, and detailed facility information.
+This guide provides **copy-paste configurations** for integrating the MountVacation MCP server with all major AI clients. Choose between **cloud-hosted** (no setup required) or **local** deployment options.
 
-## 🏠 Option 1: Local Python Server (Recommended)
+## 🌐 Cloud-Hosted Integration (Recommended)
 
-**Requirements:**
-- Python 3.8+
-- MountVacation API key
+**Zero setup required!** Use our production Cloudflare Workers deployment for instant access to European accommodation search.
 
-✅ **Advantages:**
-- Full MCP protocol support with all 3 tools
-- Property page URLs and direct booking links
-- Rich image galleries with multiple formats
-- Detailed accommodation and facility properties
-- GPS coordinates and enhanced location data
-- Complete feature set with latest API coverage
+**Benefits:**
+- ✅ **No API key required** for testing
+- ✅ **No local installation** needed
+- ✅ **Always up-to-date** with latest features
+- ✅ **Global performance** via Cloudflare edge network
+- ✅ **Enterprise reliability** with 99.9% uptime
 
-### Setup
+### Claude Desktop (Cloud-Hosted)
 
-1. Clone the repository:
+**Step 1:** Clone the repository
 ```bash
 git clone https://github.com/talirezun/MV-MCP-server.git
-cd MV-MCP-server
 ```
 
-2. Set up Python environment:
+**Step 2:** Add to your `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": ["/full/path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js"]
+    }
+  }
+}
+```
+
+**Step 3:** Update the path to your actual repository location and restart Claude Desktop.
+
+### VS Code (Cline) - Cloud-Hosted
+
+Add to your Cline MCP configuration:
+```json
+{
+  "mountvacation": {
+    "command": "node",
+    "args": ["mcp-cloud-bridge.js"],
+    "cwd": "/full/path/to/MV-MCP-server/scripts"
+  }
+}
+```
+
+### Cursor - Cloud-Hosted
+
+Add to your Cursor MCP settings:
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": ["/full/path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js"]
+    }
+  }
+}
+```
+
+## 🔐 Production with Your API Key
+
+For production use with your own MountVacation API key:
+
+### Get Your MountVacation API Key
+1. Visit [MountVacation.si](https://www.mountvacation.si/)
+2. Contact their sales team for API access
+3. Receive your unique API key
+
+### Claude Desktop (Production)
+
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": ["/full/path/to/MV-MCP-server/scripts/mcp-cloud-bridge-with-auth.js"],
+      "env": {
+        "MOUNTVACATION_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### VS Code (Cline) - Production
+
+```json
+{
+  "mountvacation": {
+    "command": "node",
+    "args": ["mcp-cloud-bridge-with-auth.js"],
+    "cwd": "/full/path/to/MV-MCP-server/scripts",
+    "env": {
+      "MOUNTVACATION_API_KEY": "your_api_key_here"
+    }
+  }
+}
+```
+
+### Cursor - Production
+
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": ["/full/path/to/MV-MCP-server/scripts/mcp-cloud-bridge-with-auth.js"],
+      "env": {
+        "MOUNTVACATION_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+## 🐍 Local Python Server (Advanced)
+
+For developers who prefer local deployment:
+
+### Prerequisites
+- Python 3.8+
+- pip package manager
+
+### Setup
 ```bash
-cd python-fastmcp
+git clone https://github.com/talirezun/MV-MCP-server.git
+cd MV-MCP-server/python-fastmcp
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. Create `.env` file:
-```bash
-MOUNTVACATION_API_KEY=your_api_key_here
-```
-
-### Claude Desktop
-
-1. Open your Claude Desktop configuration file:
-   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-2. Add this configuration:
+### Claude Desktop (Local Python)
 
 ```json
 {
@@ -57,11 +150,7 @@ MOUNTVACATION_API_KEY=your_api_key_here
 }
 ```
 
-3. Restart Claude Desktop
-
-### VS Code (Cline Extension)
-
-1. Create or edit `.vscode/mcp.json` in your project:
+### VS Code (Cline) - Local Python
 
 ```json
 {
@@ -76,58 +165,105 @@ MOUNTVACATION_API_KEY=your_api_key_here
 }
 ```
 
-2. Restart VS Code
+## 🔧 Additional Client Support
 
-## 🌐 Option 2: Cloud-Hosted Server (No Setup Required!)
+### LM Studio
 
-**Live Server**: `https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev`
-*Note: Custom domain `mcp.blocklabs.technology` will replace this URL once DNS is configured*
+Add to your LM Studio MCP configuration:
+```json
+{
+  "mountvacation": {
+    "command": "node",
+    "args": ["/full/path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js"]
+  }
+}
+```
 
-✅ **Status**: Fully functional MCP server with JSON-RPC 2.0 support
+### Continue.dev
 
-### Claude Desktop (Cloud Configuration)
-
+Add to your `.continue/config.json`:
 ```json
 {
   "mcpServers": {
     "mountvacation": {
       "command": "node",
-      "args": [
-        "/path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js"
-      ]
+      "args": ["/full/path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js"]
     }
   }
 }
 ```
 
-**Setup Steps:**
-1. Clone: `git clone https://github.com/talirezun/MV-MCP-server.git`
-2. Update the path above to your actual repository path
-3. Add config to `~/Library/Application Support/Claude/claude_desktop_config.json`
-4. Restart Claude Desktop
+### Open WebUI
 
-**Benefits:**
-- ✅ **No API keys required** - Server handles authentication
-- ✅ **No local setup** - Just clone and configure
-- ✅ **Always up-to-date** - Automatically maintained
-- ✅ **Global performance** - Cloudflare edge network
+Configure in your Open WebUI MCP settings:
+```json
+{
+  "mountvacation": {
+    "command": "node",
+    "args": ["/full/path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js"]
+  }
+}
+```
 
-## 🧪 Testing
+### Aider
 
-After setup, test by asking your AI assistant:
+Use with Aider command-line:
+```bash
+aider --mcp-server "node /full/path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js"
+```
 
-> "Search for ski accommodations in Madonna di Campiglio for January 2026, 2 adults, 7 nights"
+## 🧪 Testing Your Setup
 
-## 🔧 Troubleshooting
+### 1. Basic Connection Test
+Ask your AI assistant:
+> "Are you connected to the MountVacation MCP server?"
+
+### 2. Simple Search Test
+> "Find accommodations in Austria for March 2025"
+
+### 3. Advanced Feature Test
+> "Search for ski accommodations in Italian Dolomites for 4 people, ages 35,33,12,8, from March 15-22, 2025, with pool and sauna"
+
+### 4. Expected Results
+You should see:
+- ✅ European accommodation listings
+- ✅ Property photos and details
+- ✅ Direct booking links
+- ✅ GPS coordinates and amenities
+- ✅ Multi-currency pricing
+
+## 🚨 Troubleshooting
 
 ### Common Issues
 
-1. **"Command not found"**: Ensure Node.js is installed for deployed server option
-2. **"Module not found"**: For local setup, ensure Python dependencies are installed
-3. **"API Error"**: Check your API key is correct (local setup only)
+**"Server disconnected" error:**
+- Ensure the path to the script is correct and absolute
+- Check that Node.js is installed and accessible
+- Restart your AI client after configuration changes
+
+**"No results found" error:**
+- Try different location names (e.g., "Austria" instead of "Austrian Alps")
+- Check your internet connection
+- Verify the MountVacation API is accessible
+
+**"API key invalid" error:**
+- Ensure your API key is correctly set in environment variables
+- Contact MountVacation support to verify your API key status
+- Try using the cloud-hosted version without API key first
 
 ### Getting Help
 
-- Check the [main README](../README.md)
-- Open an [issue](https://github.com/talirezun/MV-MCP-server/issues)
-- Review example configurations in [`client-configs/`](../client-configs/)
+1. **Check logs** in your AI client for detailed error messages
+2. **Test the server directly** using the health check endpoint
+3. **Review configuration** files for syntax errors
+4. **Open an issue** on GitHub with your configuration and error details
+
+## 📖 Next Steps
+
+- **[API Documentation](API_DOCUMENTATION.md)** - Complete tool reference
+- **[Production Setup Guide](../PRODUCTION_SETUP_GUIDE.md)** - Usage examples and best practices
+- **[Example Configurations](../client-configs/)** - Ready-to-use config files
+
+---
+
+**🏔️ Ready to explore European mountain vacations with AI? Your setup should be working in under 2 minutes!**

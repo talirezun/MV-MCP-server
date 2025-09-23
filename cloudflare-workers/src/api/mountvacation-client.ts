@@ -168,32 +168,32 @@ export class MountVacationClient {
     const { location, arrival_date, departure_date, persons_ages, currency = 'EUR', max_results = 5 } = params;
 
     // Validate dates
-    const dateValidation = this.validateDates(arrival_date, departure_date);
+    const dateValidation = this.validateDates(arrival_date, departure_date || '');
     if (dateValidation.error) {
       return dateValidation;
     }
 
     // Base search parameters
-    const baseParams = {
+    const baseParams: Record<string, string> = {
       arrival: arrival_date,
-      departure: departure_date,
-      personsAges: persons_ages,
+      departure: departure_date || '',
+      personsAges: persons_ages || '',
       currency: currency.toUpperCase(),
       lang: 'en',
     };
 
     // Try to find location mapping
-    const locationMapping = this.findLocationMapping(location);
+    const locationMapping = location ? this.findLocationMapping(location) : null;
 
     if (locationMapping) {
       // Use mapped location data
-      const searchStrategies = this.buildSearchStrategies(baseParams, locationMapping, location);
+      const searchStrategies = this.buildSearchStrategies(baseParams, locationMapping, location || '');
 
       for (const strategy of searchStrategies) {
         try {
           this.logger.debug('Trying mapped search strategy', {
             strategy: strategy.name,
-            location,
+            location: location || 'unknown',
             params: strategy.params
           });
 
@@ -203,7 +203,7 @@ export class MountVacationClient {
             const formatted = this.formatResults(result, max_results);
             this.logger.info('Search successful with mapping', {
               strategy: strategy.name,
-              location,
+              location: location || 'unknown',
               mapping: locationMapping,
               results_count: formatted.accommodations?.length || 0,
             });
@@ -212,7 +212,7 @@ export class MountVacationClient {
         } catch (error) {
           this.logger.warn('Mapped search strategy failed', {
             strategy: strategy.name,
-            location,
+            location: location || 'unknown',
             error: error instanceof Error ? error.message : String(error),
           });
           continue;
@@ -221,16 +221,16 @@ export class MountVacationClient {
     }
 
     // If mapping failed or no mapping found, try fallback strategies
-    this.logger.info('No results with location mapping, trying fallback strategies', { location });
+    this.logger.info('No results with location mapping, trying fallback strategies', { location: location || 'unknown' });
 
     // Fallback: try generic region searches for common terms
-    const fallbackStrategies = this.buildFallbackStrategies(baseParams, location);
+    const fallbackStrategies = this.buildFallbackStrategies(baseParams, location || '');
 
     for (const strategy of fallbackStrategies) {
       try {
         this.logger.debug('Trying fallback search strategy', {
           strategy: strategy.name,
-          location,
+          location: location || 'unknown',
           params: strategy.params
         });
 
@@ -240,7 +240,7 @@ export class MountVacationClient {
           const formatted = this.formatResults(result, max_results);
           this.logger.info('Search successful with fallback', {
             strategy: strategy.name,
-            location,
+            location: location || 'unknown',
             results_count: formatted.accommodations?.length || 0,
           });
           return formatted;
@@ -248,7 +248,7 @@ export class MountVacationClient {
       } catch (error) {
         this.logger.warn('Fallback search strategy failed', {
           strategy: strategy.name,
-          location,
+          location: location || 'unknown',
           error: error instanceof Error ? error.message : String(error),
         });
         continue;
@@ -264,7 +264,7 @@ export class MountVacationClient {
         'Check the spelling of the location name',
         'Try nearby resort or city names',
       ],
-      available_locations: this.getSuggestedLocations(location),
+      available_locations: this.getSuggestedLocations(location || ''),
       timestamp: new Date().toISOString(),
     };
   }

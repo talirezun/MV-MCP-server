@@ -708,10 +708,10 @@ async function handleSearchAccommodations(
   try {
     // Check cache first
     const cacheKey = cacheManager.generateKey(
-      location,
+      location || '',
       arrival_date,
-      departure_date,
-      persons_ages,
+      departure_date || '',
+      persons_ages || '',
       currency,
       validatedMaxResults
     );
