@@ -1,4 +1,4 @@
-name = "mountvacation-mcp"
+name = "blocklabs-mountvacation-mcp"
 main = "src/index.ts"
 compatibility_date = "2023-12-01"
 compatibility_flags = ["nodejs_compat"]
@@ -7,14 +7,15 @@ workers_dev = true
 
 # Worker configuration
 [env.production]
-name = "mountvacation-mcp-production"
+name = "blocklabs-mountvacation-mcp-production"
 workers_dev = false
 routes = [
   { pattern = "mcp.blocklabs.technology/*", zone_name = "blocklabs.technology" }
 ]
+vars = { NODE_ENV = "production", LOG_LEVEL = "info", CACHE_TTL_SECONDS = "300", MAX_CACHE_SIZE = "1000", API_TIMEOUT_SECONDS = "30", MAX_RESULTS_DEFAULT = "5", MAX_RESULTS_LIMIT = "20", RATE_LIMIT_REQUESTS_PER_MINUTE = "60" }
 
 [env.staging]
-name = "mountvacation-mcp-staging"
+name = "blocklabs-mountvacation-mcp-staging"
 
 # Environment variables (secrets should be set via wrangler secret put)
 [vars]
@@ -48,5 +49,5 @@ command = "npm run build"
 
 # Development settings
 [env.development]
-name = "mountvacation-mcp-dev"
+name = "blocklabs-mountvacation-mcp-dev"
 vars = { NODE_ENV = "development", LOG_LEVEL = "debug" }
