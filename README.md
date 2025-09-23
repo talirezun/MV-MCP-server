@@ -29,31 +29,42 @@ Edit `.env` file with your MountVacation API key:
 MOUNTVACATION_API_KEY=your_api_key_here
 ```
 
-### 3. Choose Your Implementation
+### 3. Setup Local Server
 
-#### Option A: Python FastMCP (Local Development)
+#### Quick Setup (Recommended)
+
+```bash
+./scripts/setup-local-server.sh
+```
+
+#### Manual Setup
 
 ```bash
 cd python-fastmcp
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-python mountvacation_mcp.py
 ```
 
-#### Option B: TypeScript Cloudflare Workers (Production)
+### 4. Test Your Setup
 
+#### Test Local Server
 ```bash
-cd cloudflare-workers
-npm install
-npm run dev
+cd python-fastmcp
+source venv/bin/activate
+python mountvacation_mcp.py --test
 ```
 
-### 4. Test with MCP Inspector
+#### Test Deployed Server
+```bash
+node scripts/test-deployed-server.js
+```
 
+#### Test with MCP Inspector
 ```bash
 npm install -g @modelcontextprotocol/inspector
 mcp-inspector
 ```
-
 Connect to: `stdio://python python-fastmcp/mountvacation_mcp.py`
 
 ## 🔧 Client Integration
