@@ -165,10 +165,23 @@ export class MountVacationClient {
    * Search for accommodations using location mapping and multiple strategies
    */
   async searchAccommodations(params: SearchParams, env: Env): Promise<SearchResult> {
-    const { location, arrival_date, departure_date, persons_ages, currency = 'EUR', max_results = 5 } = params;
+    const { location, arrival_date, departure_date, nights, persons_ages, currency = 'EUR', max_results = 5 } = params;
+
+    // Calculate departure_date if not provided but nights is provided
+    let finalDepartureDate = departure_date;
+    if (!departure_date && nights) {
+      const arrivalDate = new Date(arrival_date);
+      arrivalDate.setDate(arrivalDate.getDate() + nights);
+      finalDepartureDate = arrivalDate.toISOString().split('T')[0];
+    } else if (!departure_date && !nights) {
+      // Default to 1 night if neither departure_date nor nights provided
+      const arrivalDate = new Date(arrival_date);
+      arrivalDate.setDate(arrivalDate.getDate() + 1);
+      finalDepartureDate = arrivalDate.toISOString().split('T')[0];
+    }
 
     // Validate dates
-    const dateValidation = this.validateDates(arrival_date, departure_date || '');
+    const dateValidation = this.validateDates(arrival_date, finalDepartureDate!);
     if (dateValidation.error) {
       return dateValidation;
     }
@@ -176,7 +189,7 @@ export class MountVacationClient {
     // Base search parameters
     const baseParams: Record<string, string> = {
       arrival: arrival_date,
-      departure: departure_date || '',
+      departure: finalDepartureDate!,
       personsAges: persons_ages || '',
       currency: currency.toUpperCase(),
       lang: 'en',
