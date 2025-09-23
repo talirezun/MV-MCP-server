@@ -25,7 +25,7 @@ process.stdin.on('data', async (chunk) => {
     if (line.trim()) {
       try {
         const request = JSON.parse(line);
-        const response = await forwardToCloudServer(request);
+        const response = await handleMCPRequest(request);
         process.stdout.write(JSON.stringify(response) + '\n');
       } catch (error) {
         const errorResponse = {
@@ -46,11 +46,45 @@ process.stdin.on('end', () => {
   process.exit(0);
 });
 
+async function handleMCPRequest(request) {
+  // Handle MCP protocol methods locally
+  if (request.method === 'initialize') {
+    return {
+      jsonrpc: '2.0',
+      id: request.id,
+      result: {
+        protocolVersion: '2024-11-05',
+        capabilities: {
+          tools: {},
+          resources: {},
+          prompts: {},
+          logging: {}
+        },
+        serverInfo: {
+          name: 'MountVacation MCP Cloud Bridge',
+          version: '2.0.0'
+        }
+      }
+    };
+  }
+
+  if (request.method === 'notifications/initialized') {
+    return {
+      jsonrpc: '2.0',
+      id: request.id,
+      result: {}
+    };
+  }
+
+  // Forward all other requests to cloud server
+  return forwardToCloudServer(request);
+}
+
 async function forwardToCloudServer(request) {
   return new Promise((resolve) => {
     const url = new URL(SERVER_URL);
     const postData = JSON.stringify(request);
-    
+
     const options = {
       hostname: url.hostname,
       port: 443,
@@ -59,17 +93,17 @@ async function forwardToCloudServer(request) {
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData),
-        'User-Agent': 'MountVacation-MCP-Bridge/1.0'
+        'User-Agent': 'MountVacation-MCP-Bridge/2.0'
       }
     };
-    
+
     const req = https.request(options, (res) => {
       let data = '';
-      
+
       res.on('data', (chunk) => {
         data += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const response = JSON.parse(data);
@@ -86,7 +120,7 @@ async function forwardToCloudServer(request) {
         }
       });
     });
-    
+
     req.on('error', (error) => {
       resolve({
         jsonrpc: '2.0',
@@ -97,7 +131,7 @@ async function forwardToCloudServer(request) {
         }
       });
     });
-    
+
     req.setTimeout(30000, () => {
       req.destroy();
       resolve({
@@ -109,7 +143,7 @@ async function forwardToCloudServer(request) {
         }
       });
     });
-    
+
     req.write(postData);
     req.end();
   });
