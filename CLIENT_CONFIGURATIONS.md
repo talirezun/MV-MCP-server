@@ -1,222 +1,247 @@
 # MountVacation MCP Client Configurations
 
-## 🌐 **Cloud-Based Setup for All MCP Clients**
+**Ultra-simple setup** - just download one file and copy-paste the configuration. No repository cloning required!
 
-This guide provides copy-paste configuration templates for connecting any MCP client to the cloud-hosted MountVacation MCP server. **No local installation required!**
+## 🚀 One-File Setup
 
-### **📋 Prerequisites**
+### **Step 1: Download the Bridge Script**
+```bash
+curl -o mountvacation-mcp.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/scripts/standalone-mcp-bridge.js
+chmod +x mountvacation-mcp.js
+```
 
-1. **Get your MountVacation API Key**:
-   - Visit: [https://mountvacation.com/api](https://mountvacation.com/api)
-   - Sign up and obtain your API key
-   - Keep it secure - you'll need it for the configuration
+### **Step 2: Get Your API Key (Optional)**
+- **For testing**: Skip this step, use the configuration as-is
+- **For production**:
+  1. Visit [MountVacation.si](https://www.mountvacation.si/)
+  2. Contact their team for API access
+  3. Set your API key: `export MOUNTVACATION_API_KEY="your_api_key_here"`
 
-2. **Download the bridge script**:
-   ```bash
-   curl -o mcp-mountvacation-bridge.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/scripts/mcp-cloud-bridge-with-auth.js
-   ```
+## 📋 Client Configurations
 
-3. **Set your API key** (choose one method):
-   - **Method A**: Edit the downloaded file and replace `YOUR_API_KEY_HERE` with your actual API key
-   - **Method B**: Set environment variable: `export MOUNTVACATION_API_KEY="your_api_key_here"`
+### **Claude Desktop**
 
----
+**Copy this into your `claude_desktop_config.json`:**
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": ["/full/path/to/your/mountvacation-mcp.js"]
+    }
+  }
+}
+```
 
-## 🖥️ **Claude Desktop**
+**With your own API key (production):**
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": ["/full/path/to/your/mountvacation-mcp.js"],
+      "env": {
+        "MOUNTVACATION_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
 
-**Configuration File Location:**
+**Configuration file location:**
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-**Configuration:**
+### **VS Code (Cline)**
+
+**Basic configuration:**
 ```json
 {
   "mcpServers": {
     "mountvacation": {
       "command": "node",
-      "args": [
-        "/path/to/your/mcp-mountvacation-bridge.js"
-      ],
-      "env": {
-        "MOUNTVACATION_API_KEY": "your_api_key_here"
-      }
+      "args": ["/full/path/to/your/mountvacation-mcp.js"]
     }
   }
 }
 ```
 
-**Alternative (if you edited the file directly):**
+**With your API key:**
 ```json
 {
   "mcpServers": {
     "mountvacation": {
       "command": "node",
-      "args": [
-        "/path/to/your/mcp-mountvacation-bridge.js"
-      ]
+      "args": ["/full/path/to/your/mountvacation-mcp.js"],
+      "env": {
+        "MOUNTVACATION_API_KEY": "your_api_key_here"
+      }
     }
   }
 }
 ```
 
----
+### **Cursor**
 
-## 🧠 **LM Studio**
-
-**Configuration File Location:**
-- **macOS**: `~/.config/lmstudio/mcp_config.json`
-- **Windows**: `%USERPROFILE%\.config\lmstudio\mcp_config.json`
-- **Linux**: `~/.config/lmstudio/mcp_config.json`
-
-**Configuration:**
+**With your API key:**
 ```json
 {
   "mcpServers": {
     "mountvacation": {
-      "command": "node",
-      "args": [
-        "/path/to/your/mcp-mountvacation-bridge.js"
-      ],
-      "env": {
-        "MOUNTVACATION_API_KEY": "your_api_key_here"
+      "transport": "http",
+      "url": "https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev/mcp",
+      "headers": {
+        "X-MountVacation-API-Key": "your_api_key_here"
       }
     }
   }
 }
 ```
 
----
-
-## 🔧 **Continue.dev**
-
-**Configuration File Location:**
-- **macOS**: `~/.continue/config.json`
-- **Windows**: `%USERPROFILE%\.continue\config.json`
-- **Linux**: `~/.continue/config.json`
-
-**Configuration:**
+**Testing mode:**
 ```json
 {
-  "mcpServers": [
-    {
-      "name": "mountvacation",
-      "command": "node",
-      "args": [
-        "/path/to/your/mcp-mountvacation-bridge.js"
-      ],
-      "env": {
-        "MOUNTVACATION_API_KEY": "your_api_key_here"
-      }
-    }
-  ]
-}
-```
-
----
-
-## 🤖 **Cline (formerly Claude Dev)**
-
-**Configuration File Location:**
-- **VS Code Settings**: Open VS Code → Settings → Extensions → Cline → MCP Servers
-
-**Configuration:**
-```json
-{
-  "cline.mcpServers": {
+  "mcpServers": {
     "mountvacation": {
-      "command": "node",
-      "args": [
-        "/path/to/your/mcp-mountvacation-bridge.js"
-      ],
-      "env": {
-        "MOUNTVACATION_API_KEY": "your_api_key_here"
+      "transport": "http",
+      "url": "https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev/mcp"
+    }
+  }
+}
+```
+
+### **LM Studio**
+
+**With your API key:**
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "transport": "http",
+      "url": "https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev/mcp",
+      "headers": {
+        "X-MountVacation-API-Key": "your_api_key_here"
       }
     }
   }
 }
 ```
 
----
+### **Continue.dev**
 
-## 🐍 **Python MCP Client**
-
-**Configuration:**
-```python
-import os
-from mcp import ClientSession, StdioServerParameters
-
-# Set your API key
-os.environ['MOUNTVACATION_API_KEY'] = 'your_api_key_here'
-
-# Configure the server
-server_params = StdioServerParameters(
-    command="node",
-    args=["/path/to/your/mcp-mountvacation-bridge.js"]
-)
-
-# Use the client
-async with ClientSession(server_params) as session:
-    # Your MCP client code here
-    pass
+Add to your `.continue/config.json`:
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "transport": "http",
+      "url": "https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev/mcp",
+      "headers": {
+        "X-MountVacation-API-Key": "your_api_key_here"
+      }
+    }
+  }
+}
 ```
 
+### **Open WebUI**
+
+Configure in your Open WebUI MCP settings:
+```json
+{
+  "mountvacation": {
+    "transport": "http",
+    "url": "https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev/mcp",
+    "headers": {
+      "X-MountVacation-API-Key": "your_api_key_here"
+    }
+  }
+}
+```
+
+### **Aider**
+
+Use with Aider command-line:
+```bash
+aider --mcp-server "http://blocklabs-mountvacation-mcp-production.4thtech.workers.dev/mcp" \
+      --mcp-header "X-MountVacation-API-Key: your_api_key_here"
+```
+
+## 🧪 Testing Your Setup
+
+### 1. **Basic Connection Test**
+Ask your AI assistant:
+> "Are you connected to the MountVacation MCP server?"
+
+### 2. **Simple Search Test**
+> "Find accommodations in Austria for March 2025"
+
+### 3. **Advanced Feature Test**
+> "Search for ski accommodations in Italian Dolomites for 4 people, ages 35,33,12,8, from March 15-22, 2025, with pool and sauna"
+
+### 4. **Expected Results**
+You should see:
+- ✅ European accommodation listings
+- ✅ Property photos and details  
+- ✅ Direct booking links
+- ✅ GPS coordinates and amenities
+- ✅ Multi-currency pricing
+
+## 🚨 Troubleshooting
+
+### **Common Issues**
+
+**"Connection failed" error:**
+- Check your internet connection
+- Verify the URL is correct
+- Try the testing mode without API key first
+
+**"Invalid API key" error:**
+- Ensure your API key is correctly formatted
+- Contact MountVacation support to verify your key
+- Try using testing mode to isolate the issue
+
+**"No results found" error:**
+- Try different location names (e.g., "Austria" instead of "Austrian Alps")
+- Check that the MountVacation API is accessible
+- Verify your search parameters are valid
+
+### **Getting Help**
+
+1. **Check client logs** for detailed error messages
+2. **Test the server directly**: Visit `https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev/health`
+3. **Try testing mode** without API key to isolate authentication issues
+4. **Open an issue** on GitHub with your configuration and error details
+
+## ✨ What You Get
+
+### **6 Comprehensive Tools**
+1. **search_accommodations** - Main search with location/geolocation
+2. **get_accommodation_details** - Complete property information
+3. **get_facility_details** - Room-specific details
+4. **search_by_resort_id** - Resort-based search
+5. **search_by_city_id** - City-based search
+6. **search_by_geolocation** - GPS coordinate search
+
+### **Complete European Coverage**
+- **🇸🇮 Slovenia** - Lake Bled, Kranjska Gora, Julian Alps
+- **🇭🇷 Croatia** - Plitvice Lakes, Istria, Dalmatian Coast
+- **🇮🇹 Italy** - Dolomites, Trentino-Alto Adige, Valle d'Aosta
+- **🇦🇹 Austria** - Tyrol, Salzburg, Austrian Alps
+- **🇨🇭 Switzerland** - Valais, Graubünden, Swiss Alps
+- **🇫🇷 France** - French Alps, Pyrenees, Provence
+- **🇪🇸 Spain** - Pyrenees, Picos de Europa, Sierra Nevada
+- **🇩🇪 Germany** - Bavarian Alps, Black Forest, Harz Mountains
+- **And more** - All MountVacation destinations
+
+### **Rich Property Data**
+- **Photos & Galleries** - Property images and virtual tours
+- **Booking Links** - Direct booking with pre-filled dates
+- **GPS Coordinates** - Exact location data
+- **Amenities** - Pool, spa, ski-in/ski-out, WiFi, parking
+- **Pricing** - Multi-currency with real-time rates
+- **Availability** - Live booking status
+
 ---
 
-## 🌐 **Generic MCP Client**
-
-For any other MCP client that supports the standard MCP protocol:
-
-**Command:** `node`
-**Arguments:** `["/path/to/your/mcp-mountvacation-bridge.js"]`
-**Environment Variables:** `MOUNTVACATION_API_KEY=your_api_key_here`
-
----
-
-## 🧪 **Testing Your Setup**
-
-After configuring your client, test the connection:
-
-1. **Restart your MCP client** completely
-2. **Try this query**:
-   ```
-   Search for accommodations in Chamonix, France for 2 adults from January 15-20, 2026
-   ```
-3. **Expected results**:
-   - ✅ List of accommodations in Chamonix
-   - ✅ Pricing in EUR/USD/other currencies
-   - ✅ Property links and booking URLs
-   - ✅ Detailed amenities and descriptions
-
----
-
-## 🛠️ **Troubleshooting**
-
-### **"API key not configured" Error**
-- Verify your API key is set correctly
-- Check environment variable: `echo $MOUNTVACATION_API_KEY`
-- Ensure no extra spaces or quotes in the API key
-
-### **"Failed to connect" Error**
-- Check internet connection
-- Verify Node.js is installed: `node --version`
-- Test the bridge manually: `node /path/to/your/mcp-mountvacation-bridge.js`
-
-### **"No results found" Error**
-- Try broader search terms (e.g., "French Alps" instead of specific resort)
-- Check dates are in YYYY-MM-DD format
-- Verify location spelling
-
-### **"Server disconnected" Error**
-- Restart your MCP client
-- Check file path is correct and absolute
-- Ensure bridge script has execute permissions
-
----
-
-## 📞 **Support**
-
-- **GitHub Issues**: [MV-MCP-server Issues](https://github.com/talirezun/MV-MCP-server/issues)
-- **Documentation**: [Full Setup Guide](https://github.com/talirezun/MV-MCP-server)
-- **API Documentation**: [MountVacation API](https://mountvacation.com/api)
-
-**The setup works with any MCP client that supports the standard MCP protocol!** 🎉
+**🏔️ Ready to explore European mountain vacations with AI? Just copy, paste, and start searching!**

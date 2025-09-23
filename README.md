@@ -44,48 +44,51 @@ A comprehensive Model Context Protocol (MCP) server that provides **complete acc
 
 ## 🚀 Quick Start
 
-### **Option 1: Cloud-Hosted (Recommended - No Setup Required!)**
+### **Ultra-Simple Setup (One File Download)**
 
-Use our production Cloudflare Workers deployment - **no local setup, no API key required for testing**:
+No repository cloning required! Just download one file and copy-paste the configuration:
 
-#### For Claude Desktop
-Add this to your `claude_desktop_config.json`:
+#### Step 1: Download the Bridge Script
+```bash
+curl -o mountvacation-mcp.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/scripts/standalone-mcp-bridge.js
+chmod +x mountvacation-mcp.js
+```
+
+#### Step 2: Configure Claude Desktop
+**Copy this into your `claude_desktop_config.json`:**
 
 ```json
 {
   "mcpServers": {
     "mountvacation": {
       "command": "node",
-      "args": ["/path/to/MV-MCP-server/scripts/mcp-cloud-bridge.js"]
+      "args": ["/full/path/to/your/mountvacation-mcp.js"]
     }
   }
 }
 ```
 
-**Setup Steps:**
-1. `git clone https://github.com/talirezun/MV-MCP-server.git`
-2. Update the path in the config above to your actual path
-3. Restart Claude Desktop
-4. Start searching: *"Find ski accommodations in Austrian Alps for March 2025"*
+**That's it!** Restart Claude Desktop and start searching:
+> *"Find ski accommodations in Austrian Alps for March 2025"*
 
-### **Option 2: Production with Your API Key**
+### **Production with Your API Key**
 
 For production use with your own MountVacation API key:
 
 #### Get Your API Key
 1. Visit [MountVacation.si](https://www.mountvacation.si/)
 2. Contact them to get your API key
-3. Use the authentication setup below
+3. Use the configuration below
 
-#### Authentication Setup
-Add your API key to the cloud bridge configuration:
+#### Production Configuration
+**Add your API key to the configuration:**
 
 ```json
 {
   "mcpServers": {
     "mountvacation": {
       "command": "node",
-      "args": ["/path/to/MV-MCP-server/scripts/mcp-cloud-bridge-with-auth.js"],
+      "args": ["/full/path/to/your/mountvacation-mcp.js"],
       "env": {
         "MOUNTVACATION_API_KEY": "your_api_key_here"
       }
@@ -94,9 +97,9 @@ Add your API key to the cloud bridge configuration:
 }
 ```
 
-### **Option 3: Local Python Server**
+### **Alternative: Local Python Server (Advanced)**
 
-For advanced users who want to run locally:
+For developers who prefer local deployment:
 
 ```bash
 git clone https://github.com/talirezun/MV-MCP-server.git
@@ -106,20 +109,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Claude Desktop config:
-```json
-{
-  "mcpServers": {
-    "mountvacation": {
-      "command": "python",
-      "args": ["/full/path/to/python-fastmcp/mountvacation_mcp.py"],
-      "env": {
-        "MOUNTVACATION_API_KEY": "your_api_key_here"
-      }
-    }
-  }
-}
-```
+*Note: The HTTP configuration above is recommended for most users.*
 
 ## 🔧 Multi-Client Support
 
