@@ -686,9 +686,17 @@ async function handleSearchAccommodations(
     arrival_date,
     departure_date,
     persons_ages,
+    persons,
     currency = 'EUR',
     max_results = parseInt(env.MAX_RESULTS_DEFAULT),
   } = args;
+
+  // Handle persons parameter - convert to persons_ages format
+  let finalPersonsAges = persons_ages;
+  if (!persons_ages && persons) {
+    // Convert persons count to ages (assume all adults age 30)
+    finalPersonsAges = Array(persons).fill(30).join(',');
+  }
 
   // Validate max_results
   const validatedMaxResults = Math.min(max_results, parseInt(env.MAX_RESULTS_LIMIT));
@@ -697,7 +705,8 @@ async function handleSearchAccommodations(
     location,
     arrival_date,
     departure_date,
-    persons_ages,
+    persons_ages: finalPersonsAges,
+    original_persons: persons,
     currency,
     max_results: validatedMaxResults,
   });
@@ -708,7 +717,7 @@ async function handleSearchAccommodations(
       location || '',
       arrival_date,
       departure_date || '',
-      persons_ages || '',
+      finalPersonsAges || '',
       currency,
       validatedMaxResults
     );
@@ -731,7 +740,7 @@ async function handleSearchAccommodations(
       arrival_date,
       ...(location && { location }),
       ...(departure_date && { departure_date }),
-      ...(persons_ages && { persons_ages }),
+      ...(finalPersonsAges && { persons_ages: finalPersonsAges }),
       ...(currency && { currency }),
       max_results: validatedMaxResults,
     };

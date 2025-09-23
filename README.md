@@ -44,50 +44,23 @@ A comprehensive Model Context Protocol (MCP) server that provides **complete acc
 
 ## 🚀 Quick Start
 
-### **Ultra-Simple Setup (One File Download)**
+### **🎯 ULTRA-SIMPLE SETUP (2 Minutes!)**
 
-No repository cloning required! Just download one file and copy-paste the configuration:
+**No git clone, no dependencies, no SDK installation required!**
 
-#### Step 1: Download the Bridge Script
+**Step 1:** Download the MCP bridge (30 seconds)
 ```bash
-curl -L -o mountvacation-mcp.js "https://github.com/talirezun/MV-MCP-server/raw/main/scripts/standalone-mcp-bridge.js"
+curl -L -o mountvacation-mcp.js "https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/scripts/standalone-mcp-bridge.js"
 chmod +x mountvacation-mcp.js
 ```
 
-#### Step 2: Configure Claude Desktop
-**Copy this into your `claude_desktop_config.json`:**
-
+**Step 2:** Add to Claude Desktop config (1 minute)
 ```json
 {
   "mcpServers": {
     "mountvacation": {
       "command": "node",
-      "args": ["/full/path/to/your/mountvacation-mcp.js"]
-    }
-  }
-}
-```
-
-**⚠️ This configuration will NOT work without an API key!** You must add your MountVacation API key (see below).
-
-### **🔑 API Key Required (Essential Step)**
-
-**⚠️ IMPORTANT**: You MUST have your own MountVacation API key to use this MCP server.
-
-#### Get Your MountVacation API Key
-1. Visit [MountVacation.si](https://www.mountvacation.si/)
-2. Contact them to obtain your API key
-3. **Without an API key, the MCP server will not work**
-
-#### Configuration with Your API Key
-**Replace `your_api_key_here` with your actual API key:**
-
-```json
-{
-  "mcpServers": {
-    "mountvacation": {
-      "command": "node",
-      "args": ["/full/path/to/your/mountvacation-mcp.js"],
+      "args": ["/full/path/to/mountvacation-mcp.js"],
       "env": {
         "MOUNTVACATION_API_KEY": "your_api_key_here"
       }
@@ -96,21 +69,18 @@ chmod +x mountvacation-mcp.js
 }
 ```
 
-**⚠️ Note**: The MCP server now requires a valid API key - there is no testing mode without an API key.
+**Step 3:** Restart Claude Desktop - Done! 🎉
 
-### **Alternative: Local Python Server (Advanced)**
+👉 **[Complete Setup Guide](SIMPLE_SETUP_GUIDE.md)** - Detailed instructions for all AI clients
 
-For developers who prefer local deployment:
+### 🔑 Getting Your API Key
 
-```bash
-git clone https://github.com/talirezun/MV-MCP-server.git
-cd MV-MCP-server/python-fastmcp
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+1. Visit [MountVacation.si](https://www.mountvacation.si/)
+2. Contact their sales team for API access
+3. Receive your unique API key
+4. Add it to the configuration above
 
-*Note: The HTTP configuration above is recommended for most users.*
+**⚠️ IMPORTANT**: You MUST have your own MountVacation API key for the MCP server to work.
 
 ## 🔧 Multi-Client Support
 
@@ -128,9 +98,7 @@ This MCP server works with **all major AI clients**. See our comprehensive confi
 
 ### **Configuration Templates**
 
-📖 **[CLIENT_CONFIGURATIONS.md](CLIENT_CONFIGURATIONS.md)** - Copy-paste configs for all clients
-📖 **[PRODUCTION_SETUP_GUIDE.md](PRODUCTION_SETUP_GUIDE.md)** - Complete setup and usage guide
-📁 **[client-configs/](client-configs/)** - Example configuration files
+📖 **[SIMPLE_SETUP_GUIDE.md](SIMPLE_SETUP_GUIDE.md)** - Complete setup guide for all AI clients
 
 ## 🌐 Production Infrastructure
 
@@ -293,9 +261,7 @@ MV-MCP-server/
 
 ## 🆘 Support & Resources
 
-- 📖 **[Complete Documentation](./docs/)** - Architecture, API reference, troubleshooting
-- 📋 **[Client Setup Guides](CLIENT_CONFIGURATIONS.md)** - Copy-paste configurations
-- 📚 **[Production Guide](PRODUCTION_SETUP_GUIDE.md)** - Usage examples and best practices
+- 📖 **[Simple Setup Guide](SIMPLE_SETUP_GUIDE.md)** - Complete setup instructions for all AI clients
 - 🐛 **[GitHub Issues](https://github.com/talirezun/MV-MCP-server/issues)** - Bug reports and feature requests
 - 💬 **[Discussions](https://github.com/talirezun/MV-MCP-server/discussions)** - Community support and ideas
 

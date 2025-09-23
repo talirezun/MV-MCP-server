@@ -6,6 +6,7 @@
  */
 
 const SERVER_URL = 'https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev';
+const API_KEY = process.env.MOUNTVACATION_API_KEY;
 
 async function testHealthCheck() {
   console.log('🏥 Testing health check...');
@@ -23,9 +24,14 @@ async function testHealthCheck() {
 async function testToolsList() {
   console.log('\n🔧 Testing tools list...');
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (API_KEY) {
+      headers['X-MountVacation-API-Key'] = API_KEY;
+    }
+
     const response = await fetch(`${SERVER_URL}/mcp`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: 1,
@@ -44,9 +50,14 @@ async function testToolsList() {
 async function testSearch() {
   console.log('\n🔍 Testing accommodation search...');
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (API_KEY) {
+      headers['X-MountVacation-API-Key'] = API_KEY;
+    }
+
     const response = await fetch(`${SERVER_URL}/mcp`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: 2,

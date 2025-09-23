@@ -486,9 +486,13 @@ export class MountVacationClient {
     };
 
     try {
-      this.logger.debug('Making API request', { 
+      // DEBUG: Log detailed request info
+      this.logger.debug('Making API request', {
         url: url.toString(),
-        timeout_ms: this.timeout 
+        timeout_ms: this.timeout,
+        params: Object.fromEntries(url.searchParams),
+        api_key_length: this.apiKey.length,
+        api_key_prefix: this.apiKey.substring(0, 8) + '...',
       });
 
       const startTime = Date.now();
@@ -503,6 +507,21 @@ export class MountVacationClient {
 
       if (response.ok) {
         const data = await response.json() as APIResponse;
+
+        // DEBUG: Log the actual API response
+        this.logger.debug('MountVacation API Response', {
+          accommodations_count: data.accommodations?.length || 0,
+          has_accommodations: !!data.accommodations,
+          response_keys: Object.keys(data),
+          first_accommodation: data.accommodations?.[0] ? {
+            id: data.accommodations[0].id,
+            title: data.accommodations[0].title,
+            city: data.accommodations[0].city,
+            country: data.accommodations[0].country,
+            resort: data.accommodations[0].resort
+          } : null
+        });
+
         return data;
       } else {
         return this.handleApiError(response);

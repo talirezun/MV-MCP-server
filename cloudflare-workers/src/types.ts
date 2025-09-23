@@ -227,6 +227,13 @@ export interface LogContext {
   max_requests?: number;
   window_start?: string;
   mapping?: any; // For location mapping information
+  // Debug fields
+  api_key_length?: number;
+  api_key_prefix?: string;
+  accommodations_count?: number;
+  has_accommodations?: boolean;
+  response_keys?: string[];
+  first_accommodation?: any;
 }
 
 export interface RateLimitInfo {
