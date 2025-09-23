@@ -1,14 +1,12 @@
-name = "mountvacation-mcp"
+name = "mountvacation-mcp-server"
 main = "src/index.ts"
 compatibility_date = "2023-12-01"
 compatibility_flags = ["nodejs_compat"]
+account_id = "e43aa15d537153ef8eadd3512168c4aa"
 
 # Worker configuration
 [env.production]
-name = "mountvacation-mcp"
-routes = [
-  { pattern = "mountvacation-mcp.your-domain.workers.dev", zone_name = "your-domain.workers.dev" }
-]
+name = "mountvacation-mcp-server"
 
 [env.staging]
 name = "mountvacation-mcp-staging"
@@ -24,20 +22,20 @@ MAX_RESULTS_DEFAULT = "5"
 MAX_RESULTS_LIMIT = "20"
 RATE_LIMIT_REQUESTS_PER_MINUTE = "60"
 
-# KV namespace for caching (optional)
-[[kv_namespaces]]
-binding = "CACHE"
-id = "your-kv-namespace-id"
-preview_id = "your-preview-kv-namespace-id"
+# KV namespace for caching (optional - commented out for initial deployment)
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "your-kv-namespace-id"
+# preview_id = "your-preview-kv-namespace-id"
 
 # Durable Objects (if needed for advanced features)
 # [[durable_objects.bindings]]
 # name = "RATE_LIMITER"
 # class_name = "RateLimiter"
 
-# Analytics Engine (for monitoring)
-[[analytics_engine_datasets]]
-binding = "ANALYTICS"
+# Analytics Engine (for monitoring - commented out for initial deployment)
+# [[analytics_engine_datasets]]
+# binding = "ANALYTICS"
 
 # Compatibility settings
 [build]
