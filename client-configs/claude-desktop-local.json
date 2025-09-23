@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "python",
+      "args": ["path/to/python-fastmcp/mountvacation_mcp.py"],
+      "env": {
+        "MOUNTVACATION_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}

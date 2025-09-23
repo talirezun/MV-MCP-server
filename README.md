@@ -21,9 +21,9 @@ cd MV-MCP-server
 cp .env.example .env
 ```
 
-### 2. Add MV API Credentials
+### 2. Add MountVacation API Key
 
-Edit `.env` file with your MountVacation API credentials:
+Edit `.env` file with your MountVacation API key:
 
 ```bash
 MOUNTVACATION_API_KEY=your_api_key_here
@@ -58,53 +58,52 @@ Connect to: `stdio://python python-fastmcp/mountvacation_mcp.py`
 
 ## 🔧 Client Integration
 
-### Claude Desktop
+### 🏠 Local Python Server (Recommended)
 
-Add to `claude_desktop_config.json`:
-
+#### Claude Desktop
 ```json
 {
   "mcpServers": {
     "mountvacation": {
       "command": "python",
-      "args": ["path/to/python-fastmcp/mountvacation_mcp.py"],
+      "args": ["/full/path/to/python-fastmcp/mountvacation_mcp.py"],
       "env": {
-        "MOUNTVACATION_USERNAME": "your_username",
-        "MOUNTVACATION_PASSWORD": "your_password"
+        "MOUNTVACATION_API_KEY": "your_api_key_here"
       }
     }
   }
 }
 ```
 
-### VS Code (Cline)
-
-Add to `.vscode/mcp.json`:
-
+#### VS Code (Cline)
 ```json
 {
   "mountvacation": {
     "command": "python",
     "args": ["mountvacation_mcp.py"],
-    "cwd": "path/to/python-fastmcp",
+    "cwd": "/full/path/to/python-fastmcp",
     "env": {
-      "MOUNTVACATION_USERNAME": "your_username",
-      "MOUNTVACATION_PASSWORD": "your_password"
+      "MOUNTVACATION_API_KEY": "your_api_key_here"
     }
   }
 }
 ```
 
+📖 **[Complete Integration Guide](docs/CLIENT_INTEGRATION.md)** | 📁 **[Example Configs](client-configs/)**
+
 ## 🌐 Production Deployment
 
 ### Cloudflare Workers
+
+**Already Deployed**: `https://mountvacation-mcp-server.4thtech.workers.dev`
+
+To deploy your own instance:
 
 ```bash
 cd cloudflare-workers
 npm install -g wrangler
 wrangler login
-wrangler secret put MOUNTVACATION_USERNAME
-wrangler secret put MOUNTVACATION_PASSWORD
+wrangler secret put MOUNTVACATION_API_KEY
 wrangler deploy
 ```
 
@@ -112,9 +111,11 @@ wrangler deploy
 
 Ask your AI assistant:
 
-- "Find me a ski chalet in Chamonix for 4 people from March 10-17"
-- "Search for mountain accommodations in Zermatt for 2 adults, July 15-22"
-- "Look for family-friendly places in the Alps for 2 adults and 2 kids (ages 12, 8)"
+- "Find ski accommodations in Madonna di Campiglio for January 2026, 2 adults, 7 nights"
+- "Search for mountain hotels in the Italian Dolomites for March 2026, 4 people"
+- "Look for family-friendly places in the Alps with breakfast included"
+
+**Available Locations**: Madonna di Campiglio, Italian Dolomites, Kronplatz area, and other European mountain destinations.
 
 ## 🧪 Testing
 
@@ -128,13 +129,25 @@ cd cloudflare-workers
 npm test
 ```
 
+## 🌐 Live Server (Experimental)
+
+**Production URL**: `https://mountvacation-mcp-server.4thtech.workers.dev`
+
+- ✅ **Health Check**: `/health` (Working)
+- ⚠️ **MCP Endpoint**: `/mcp` (In Development)
+- ✅ **Global Edge Network**: Sub-3s response times worldwide
+- ✅ **Rate Limited**: 60 requests/minute per client
+- ✅ **Secure**: API keys stored as Cloudflare secrets
+
+*Note: Use local Python server for production MCP integration*
+
 ## 📁 Project Structure
 
 ```
 ├── python-fastmcp/          # FastMCP Python implementation
-├── cloudflare-workers/      # TypeScript Cloudflare Workers
+├── cloudflare-workers/      # TypeScript Cloudflare Workers (DEPLOYED)
 ├── client-configs/          # AI client integration examples
-├── docs/                    # Documentation
+├── docs/                    # Documentation and guides
 ├── scripts/                 # Deployment utilities
 └── tests/                   # Integration tests
 ```
