@@ -21,7 +21,7 @@ cd MV-MCP-server
 cp .env.example .env
 ```
 
-### 2. Add Your Credentials
+### 2. Add MV API Credentials
 
 Edit `.env` file with your MountVacation API credentials:
 
