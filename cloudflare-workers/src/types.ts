@@ -25,12 +25,31 @@ export interface Env {
 }
 
 export interface SearchParams {
-  location: string;
-  arrival_date: string;
-  departure_date: string;
-  persons_ages: string;
-  currency?: string;
-  max_results?: number;
+  // Search method parameters (at least one required)
+  location?: string;                    // Location name search
+  accommodation_id?: number;            // Single accommodation search
+  accommodation_ids?: number[];         // Multiple accommodations search
+  resort_id?: number;                   // Resort-based search
+  city_id?: number;                     // City-based search
+  latitude?: number;                    // Geolocation search (requires longitude & radius)
+  longitude?: number;                   // Geolocation search (requires latitude & radius)
+  radius?: number;                      // Geolocation search radius in meters
+
+  // Date parameters (required)
+  arrival_date: string;                 // YYYY-MM-DD format
+  departure_date?: string;              // YYYY-MM-DD format (alternative: use nights)
+  nights?: number;                      // Number of nights (alternative to departure_date)
+
+  // Person parameters (at least one required)
+  persons_ages?: string;                // Comma-separated ages (e.g., "30,28,8")
+  persons?: number;                     // Number of persons (all adults)
+
+  // Optional parameters
+  currency?: string;                    // Currency code (default: EUR)
+  language?: string;                    // Language code (default: en)
+  include_additional_fees?: boolean;    // Include additional fees (default: false)
+  max_results?: number;                 // Max results per page (default: 10)
+  page?: number;                        // Page number for pagination (default: 1)
 }
 
 export interface AccommodationOffer {

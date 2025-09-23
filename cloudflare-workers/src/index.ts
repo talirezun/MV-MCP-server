@@ -108,6 +108,54 @@ export default {
 };
 
 async function handleMCPRequest(request: Request, env: Env, logger: any): Promise<Response> {
+  // Extract API key from headers (with MVP fallback)
+  const apiKey = request.headers.get('X-MountVacation-API-Key') ||
+                 request.headers.get('Authorization')?.replace('Bearer ', '') ||
+                 env.MOUNTVACATION_API_KEY; // MVP fallback - remove for production
+
+  // For production, uncomment this block to require user API keys:
+  /*
+  if (!apiKey || apiKey === env.MOUNTVACATION_API_KEY) {
+    return new Response(JSON.stringify({
+      jsonrpc: '2.0',
+      id: null,
+      error: {
+        code: -32602,
+        message: 'API key required. Please provide your MountVacation API key.',
+        data: {
+          required_header: 'X-MountVacation-API-Key',
+          alternative_header: 'Authorization: Bearer <api_key>',
+          get_api_key: 'https://mountvacation.com/api',
+          documentation: 'https://github.com/talirezun/MV-MCP-server#api-key-setup'
+        }
+      }
+    }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  */
+
+  if (!apiKey) {
+    return new Response(JSON.stringify({
+      jsonrpc: '2.0',
+      id: null,
+      error: {
+        code: -32602,
+        message: 'Missing API key. Please provide X-MountVacation-API-Key header.',
+        data: {
+          required_header: 'X-MountVacation-API-Key',
+          alternative_header: 'Authorization: Bearer <api_key>',
+          get_api_key: 'https://mountvacation.com/api',
+          documentation: 'https://github.com/talirezun/MV-MCP-server#api-key-setup'
+        }
+      }
+    }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   // Initialize components
   const cacheManager = new CacheManager(
     parseInt(env.MAX_CACHE_SIZE),
@@ -212,44 +260,105 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
   const tools = [
     {
       name: 'search_accommodations',
-      description: 'Search for mountain vacation accommodations using the MountVacation API. This tool searches for available accommodations in mountain destinations and returns detailed information including pricing, amenities, and booking links.',
+      description: 'Search for accommodations using the MountVacation API. Supports location-based search (city, resort, region names), specific accommodation IDs, resort IDs, city IDs, and geolocation-based search. Returns comprehensive accommodation details including pricing, amenities, pictures, distances, and booking information.',
       inputSchema: {
         type: 'object',
         properties: {
+          // Search by location name (most common)
           location: {
             type: 'string',
-            description: 'City, resort, or region name (e.g., "Chamonix", "Zermatt", "Alps")',
+            description: 'Location name: city, resort, region, or country (e.g., "Madonna di Campiglio", "French Alps", "Slovenia"). Leave empty if using other search methods.',
           },
+          // Search by specific IDs
+          accommodation_id: {
+            type: 'integer',
+            description: 'Specific accommodation ID for direct search. Use instead of location.',
+          },
+          accommodation_ids: {
+            type: 'array',
+            items: { type: 'integer' },
+            description: 'Array of accommodation IDs for searching multiple specific accommodations. Use instead of location.',
+          },
+          resort_id: {
+            type: 'integer',
+            description: 'Resort ID to search all accommodations in a specific resort. Use instead of location.',
+          },
+          city_id: {
+            type: 'integer',
+            description: 'City ID to search all accommodations in a specific city. Use instead of location.',
+          },
+          // Geolocation search
+          latitude: {
+            type: 'number',
+            description: 'Latitude for geolocation-based search. Requires longitude and radius.',
+          },
+          longitude: {
+            type: 'number',
+            description: 'Longitude for geolocation-based search. Requires latitude and radius.',
+          },
+          radius: {
+            type: 'integer',
+            description: 'Search radius in meters for geolocation search (e.g., 10000 for 10km). Requires latitude and longitude.',
+          },
+          // Date parameters (required)
           arrival_date: {
             type: 'string',
-            description: 'Check-in date in YYYY-MM-DD format (e.g., "2024-03-10")',
+            description: 'Check-in date in YYYY-MM-DD format (e.g., "2024-03-10"). Must not be in the past.',
             pattern: '^\\d{4}-\\d{2}-\\d{2}$',
           },
           departure_date: {
             type: 'string',
-            description: 'Check-out date in YYYY-MM-DD format (e.g., "2024-03-17")',
+            description: 'Check-out date in YYYY-MM-DD format (e.g., "2024-03-17"). Alternative: use nights instead.',
             pattern: '^\\d{4}-\\d{2}-\\d{2}$',
           },
+          nights: {
+            type: 'integer',
+            description: 'Number of nights to stay. Alternative to departure_date.',
+            minimum: 1,
+          },
+          // Person parameters (required - choose one)
           persons_ages: {
             type: 'string',
-            description: 'Comma-separated ages of all guests (e.g., "18,18,12,8" for 2 adults and 2 children)',
+            description: 'Ages of all persons separated by commas (e.g., "30,28,8,5" for 2 adults and 2 children). Recommended for accurate pricing with children discounts.',
             pattern: '^\\d+(,\\d+)*$',
           },
+          persons: {
+            type: 'integer',
+            description: 'Number of persons (all treated as adults). Alternative to persons_ages.',
+            minimum: 1,
+          },
+          // Optional parameters
           currency: {
             type: 'string',
-            description: 'Currency code for pricing (default: "EUR")',
-            enum: ['EUR', 'USD', 'GBP', 'CHF', 'CAD', 'AUD'],
+            description: 'Currency code for pricing. Supported: AUD, BGN, BRL, CAD, CHF, CNY, CZK, DKK, EUR, GBP, HKD, HRK, HUF, IDR, ILS, INR, JPY, KRW, LTL, MXN, MYR, NOK, NZD, PHP, PLN, RON, RUB, SEK, SGD, THB, TRY, USD, ZAR',
             default: 'EUR',
           },
+          language: {
+            type: 'string',
+            description: 'Language for translated content. Supported: en, de, it, fr, sl, hr, pl, cz',
+            enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
+            default: 'en',
+          },
+          include_additional_fees: {
+            type: 'boolean',
+            description: 'Include additional fees in search results for more accurate total pricing',
+            default: false,
+          },
           max_results: {
-            type: 'number',
-            description: 'Maximum number of accommodations to return (default: 5, max: 20)',
+            type: 'integer',
+            description: 'Maximum number of accommodations to return per page (1-100)',
             minimum: 1,
-            maximum: 20,
-            default: 5,
+            maximum: 100,
+            default: 10,
+          },
+          page: {
+            type: 'integer',
+            description: 'Page number for pagination (starts from 1)',
+            minimum: 1,
+            default: 1,
           },
         },
-        required: ['location', 'arrival_date', 'departure_date', 'persons_ages'],
+        required: ['arrival_date'],
       },
     },
     {
@@ -301,6 +410,180 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
         required: ['accommodation_id', 'facility_id'],
       },
     },
+    {
+      name: 'search_by_resort_id',
+      description: 'Search all accommodations in a specific resort using resort ID. Returns all available accommodations in that resort with full details.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          resort_id: {
+            type: 'integer',
+            description: 'The resort ID to search accommodations in',
+          },
+          arrival_date: {
+            type: 'string',
+            description: 'Check-in date in YYYY-MM-DD format',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          departure_date: {
+            type: 'string',
+            description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          nights: {
+            type: 'integer',
+            description: 'Number of nights. Alternative to departure_date',
+            minimum: 1,
+          },
+          persons_ages: {
+            type: 'string',
+            description: 'Ages separated by commas (e.g., "30,28,8")',
+            pattern: '^\\d+(,\\d+)*$',
+          },
+          persons: {
+            type: 'integer',
+            description: 'Number of persons (all adults). Alternative to persons_ages',
+            minimum: 1,
+          },
+          currency: {
+            type: 'string',
+            description: 'Currency code (default: EUR)',
+            default: 'EUR',
+          },
+          language: {
+            type: 'string',
+            description: 'Language code (default: en)',
+            enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
+            default: 'en',
+          },
+          include_additional_fees: {
+            type: 'boolean',
+            description: 'Include additional fees for accurate pricing',
+            default: false,
+          },
+        },
+        required: ['resort_id', 'arrival_date'],
+      },
+    },
+    {
+      name: 'search_by_city_id',
+      description: 'Search all accommodations in a specific city using city ID. Returns all available accommodations in that city with full details.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          city_id: {
+            type: 'integer',
+            description: 'The city ID to search accommodations in',
+          },
+          arrival_date: {
+            type: 'string',
+            description: 'Check-in date in YYYY-MM-DD format',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          departure_date: {
+            type: 'string',
+            description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          nights: {
+            type: 'integer',
+            description: 'Number of nights. Alternative to departure_date',
+            minimum: 1,
+          },
+          persons_ages: {
+            type: 'string',
+            description: 'Ages separated by commas (e.g., "30,28,8")',
+            pattern: '^\\d+(,\\d+)*$',
+          },
+          persons: {
+            type: 'integer',
+            description: 'Number of persons (all adults). Alternative to persons_ages',
+            minimum: 1,
+          },
+          currency: {
+            type: 'string',
+            description: 'Currency code (default: EUR)',
+            default: 'EUR',
+          },
+          language: {
+            type: 'string',
+            description: 'Language code (default: en)',
+            enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
+            default: 'en',
+          },
+          include_additional_fees: {
+            type: 'boolean',
+            description: 'Include additional fees for accurate pricing',
+            default: false,
+          },
+        },
+        required: ['city_id', 'arrival_date'],
+      },
+    },
+    {
+      name: 'search_by_geolocation',
+      description: 'Search accommodations within a specific radius from geographic coordinates. Useful for finding accommodations near specific locations.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          latitude: {
+            type: 'number',
+            description: 'Latitude coordinate',
+          },
+          longitude: {
+            type: 'number',
+            description: 'Longitude coordinate',
+          },
+          radius: {
+            type: 'integer',
+            description: 'Search radius in meters (e.g., 10000 for 10km)',
+            minimum: 100,
+          },
+          arrival_date: {
+            type: 'string',
+            description: 'Check-in date in YYYY-MM-DD format',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          departure_date: {
+            type: 'string',
+            description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          nights: {
+            type: 'integer',
+            description: 'Number of nights. Alternative to departure_date',
+            minimum: 1,
+          },
+          persons_ages: {
+            type: 'string',
+            description: 'Ages separated by commas (e.g., "30,28,8")',
+            pattern: '^\\d+(,\\d+)*$',
+          },
+          persons: {
+            type: 'integer',
+            description: 'Number of persons (all adults). Alternative to persons_ages',
+            minimum: 1,
+          },
+          currency: {
+            type: 'string',
+            description: 'Currency code (default: EUR)',
+            default: 'EUR',
+          },
+          language: {
+            type: 'string',
+            description: 'Language code (default: en)',
+            enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
+            default: 'en',
+          },
+          include_additional_fees: {
+            type: 'boolean',
+            description: 'Include additional fees for accurate pricing',
+            default: false,
+          },
+        },
+        required: ['latitude', 'longitude', 'radius', 'arrival_date'],
+      },
+    },
   ];
 
   logger.info('Tools list requested', { toolCount: tools.length });
@@ -345,6 +628,36 @@ async function handleToolCall(
           args.language || 'en'
         );
         return createSuccessResponse(request.id, { facility_details: facilityDetails });
+
+      case 'search_by_resort_id':
+        const resortSearchResult = await handleSearchByResortId(
+          args,
+          env,
+          cacheManager,
+          apiClient,
+          logger
+        );
+        return createSuccessResponse(request.id, resortSearchResult);
+
+      case 'search_by_city_id':
+        const citySearchResult = await handleSearchByCityId(
+          args,
+          env,
+          cacheManager,
+          apiClient,
+          logger
+        );
+        return createSuccessResponse(request.id, citySearchResult);
+
+      case 'search_by_geolocation':
+        const geoSearchResult = await handleSearchByGeolocation(
+          args,
+          env,
+          cacheManager,
+          apiClient,
+          logger
+        );
+        return createSuccessResponse(request.id, geoSearchResult);
 
       default:
         return createErrorResponse(request.id, -32601, `Unknown tool: ${name}`);
@@ -417,14 +730,16 @@ async function handleSearchAccommodations(
     }
 
     // Make API request
-    const result = await apiClient.searchAccommodations({
-      location,
+    const searchParams: SearchParams = {
       arrival_date,
-      departure_date,
-      persons_ages,
-      currency,
+      ...(location && { location }),
+      ...(departure_date && { departure_date }),
+      ...(persons_ages && { persons_ages }),
+      ...(currency && { currency }),
       max_results: validatedMaxResults,
-    }, env);
+    };
+
+    const result = await apiClient.searchAccommodations(searchParams, env);
 
     // Cache successful results
     if (!result.error) {
@@ -456,6 +771,180 @@ async function handleSearchAccommodations(
           type: 'text',
           text: JSON.stringify({
             error: `Search failed: ${error instanceof Error ? error.message : String(error)}`,
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      ],
+    };
+  }
+}
+
+async function handleSearchByResortId(
+  args: any,
+  env: Env,
+  cacheManager: CacheManager,
+  apiClient: MountVacationClient,
+  logger: any
+) {
+  try {
+    logger.info('Starting resort ID search', { resort_id: args.resort_id });
+
+    // Build search parameters for resort ID search
+    const searchParams: SearchParams = {
+      resort_id: args.resort_id,
+      arrival_date: args.arrival_date,
+      departure_date: args.departure_date,
+      nights: args.nights,
+      persons_ages: args.persons_ages,
+      persons: args.persons,
+      currency: args.currency || 'EUR',
+      language: args.language || 'en',
+      include_additional_fees: args.include_additional_fees || false,
+      max_results: args.max_results || 10,
+      page: args.page || 1,
+    };
+
+    const result = await apiClient.searchAccommodations(searchParams, env);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result),
+        },
+      ],
+    };
+  } catch (error) {
+    logger.error('Resort ID search failed', {
+      resort_id: args.resort_id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            error: `Resort search failed: ${error instanceof Error ? error.message : String(error)}`,
+            resort_id: args.resort_id,
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      ],
+    };
+  }
+}
+
+async function handleSearchByCityId(
+  args: any,
+  env: Env,
+  cacheManager: CacheManager,
+  apiClient: MountVacationClient,
+  logger: any
+) {
+  try {
+    logger.info('Starting city ID search', { city_id: args.city_id });
+
+    const searchParams: SearchParams = {
+      city_id: args.city_id,
+      arrival_date: args.arrival_date,
+      departure_date: args.departure_date,
+      nights: args.nights,
+      persons_ages: args.persons_ages,
+      persons: args.persons,
+      currency: args.currency || 'EUR',
+      language: args.language || 'en',
+      include_additional_fees: args.include_additional_fees || false,
+      max_results: args.max_results || 10,
+      page: args.page || 1,
+    };
+
+    const result = await apiClient.searchAccommodations(searchParams, env);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result),
+        },
+      ],
+    };
+  } catch (error) {
+    logger.error('City ID search failed', {
+      city_id: args.city_id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            error: `City search failed: ${error instanceof Error ? error.message : String(error)}`,
+            city_id: args.city_id,
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      ],
+    };
+  }
+}
+
+async function handleSearchByGeolocation(
+  args: any,
+  env: Env,
+  cacheManager: CacheManager,
+  apiClient: MountVacationClient,
+  logger: any
+) {
+  try {
+    logger.info('Starting geolocation search', {
+      latitude: args.latitude,
+      longitude: args.longitude,
+      radius: args.radius
+    });
+
+    const searchParams: SearchParams = {
+      latitude: args.latitude,
+      longitude: args.longitude,
+      radius: args.radius,
+      arrival_date: args.arrival_date,
+      departure_date: args.departure_date,
+      nights: args.nights,
+      persons_ages: args.persons_ages,
+      persons: args.persons,
+      currency: args.currency || 'EUR',
+      language: args.language || 'en',
+      include_additional_fees: args.include_additional_fees || false,
+      max_results: args.max_results || 10,
+      page: args.page || 1,
+    };
+
+    const result = await apiClient.searchAccommodations(searchParams, env);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result),
+        },
+      ],
+    };
+  } catch (error) {
+    logger.error('Geolocation search failed', {
+      latitude: args.latitude,
+      longitude: args.longitude,
+      radius: args.radius,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            error: `Geolocation search failed: ${error instanceof Error ? error.message : String(error)}`,
+            coordinates: { latitude: args.latitude, longitude: args.longitude, radius: args.radius },
             timestamp: new Date().toISOString(),
           }),
         },
