@@ -78,7 +78,7 @@ MOUNTVACATION_API_KEY=your_api_key_here
 
 ## 🌐 Option 2: Deployed Server (Experimental)
 
-**Live Server**: `https://mcp.blocklabs.technology`
+**Live Server**: `https://mountvacation-mcp.4thtech.workers.dev`
 
 ⚠️ **Status**: MCP protocol implementation in development
 

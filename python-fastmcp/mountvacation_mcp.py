@@ -170,7 +170,7 @@ class MountVacationAPI:
                 result = self._make_api_request(params)
                 
                 if result and not result.get('error'):
-                    formatted_result = self._format_results(result, max_results)
+                    formatted_result = self._format_results(result, max_results, location)
                     # Cache successful results
                     search_cache[cache_key] = formatted_result
                     logger.info("Search successful", strategy=strategy, results_count=len(formatted_result.get('accommodations', [])))
@@ -226,7 +226,7 @@ class MountVacationAPI:
             logger.error("Unexpected API error", error=str(e))
             return {"error": f"Unexpected error: {str(e)}"}
     
-    def _format_results(self, data: Dict[str, Any], max_results: int) -> Dict[str, Any]:
+    def _format_results(self, data: Dict[str, Any], max_results: int, location: str) -> Dict[str, Any]:
         """Format API response for LLM consumption"""
         
         accommodations = data.get('accommodations', [])[:max_results]

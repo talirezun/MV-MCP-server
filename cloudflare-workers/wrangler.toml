@@ -3,10 +3,12 @@ main = "src/index.ts"
 compatibility_date = "2023-12-01"
 compatibility_flags = ["nodejs_compat"]
 account_id = "e43aa15d537153ef8eadd3512168c4aa"
+workers_dev = true
 
 # Worker configuration
 [env.production]
 name = "mountvacation-mcp-production"
+workers_dev = false
 routes = [
   { pattern = "mcp.blocklabs.technology/*", zone_name = "blocklabs.technology" }
 ]
