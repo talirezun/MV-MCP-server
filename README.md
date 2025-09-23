@@ -106,7 +106,8 @@ Connect to: `stdio://python python-fastmcp/mountvacation_mcp.py`
 
 ### Cloudflare Workers
 
-**Already Deployed**: `https://blocklabs-mountvacation-mcp.4thtech.workers.dev`
+**Already Deployed**: `https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev`
+*Note: Custom domain `mcp.blocklabs.technology` coming soon*
 
 To deploy your own instance:
 
@@ -142,7 +143,19 @@ npm test
 
 ## 🌐 Live Server (Experimental)
 
-**Production URL**: `https://blocklabs-mountvacation-mcp.4thtech.workers.dev`
+**Production URL**: `https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev`
+*Custom domain `mcp.blocklabs.technology` will be available once DNS is configured*
+
+### 🌐 Custom Domain Setup (Optional)
+
+To use the clean `mcp.blocklabs.technology` domain instead of the workers.dev URL:
+
+1. **Add blocklabs.technology domain to Cloudflare account**
+2. **Configure DNS A record**: `mcp.blocklabs.technology` → Cloudflare proxy
+3. **Update wrangler.toml** to enable custom routes (already configured)
+4. **Deploy to production**: `wrangler deploy --env production`
+
+The current workers.dev URL works perfectly and will be replaced with the custom domain once DNS is configured.
 
 - ✅ **Health Check**: `/health` (Working)
 - ⚠️ **MCP Endpoint**: `/mcp` (In Development)

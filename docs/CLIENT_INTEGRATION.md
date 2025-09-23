@@ -78,7 +78,8 @@ MOUNTVACATION_API_KEY=your_api_key_here
 
 ## 🌐 Option 2: Deployed Server (Experimental)
 
-**Live Server**: `https://blocklabs-mountvacation-mcp.4thtech.workers.dev`
+**Live Server**: `https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev`
+*Note: Custom domain `mcp.blocklabs.technology` will replace this URL once DNS is configured*
 
 ⚠️ **Status**: MCP protocol implementation in development
 

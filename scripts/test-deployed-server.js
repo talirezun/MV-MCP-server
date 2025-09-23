@@ -5,7 +5,7 @@
  * Usage: node test-deployed-server.js
  */
 
-const SERVER_URL = 'https://blocklabs-mountvacation-mcp.4thtech.workers.dev';
+const SERVER_URL = 'https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev';
 
 async function testHealthCheck() {
   console.log('🏥 Testing health check...');
