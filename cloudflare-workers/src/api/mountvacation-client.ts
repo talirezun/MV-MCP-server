@@ -2,15 +2,132 @@
  * MountVacation API Client for Cloudflare Workers
  */
 
-import { 
-  Env, 
-  SearchParams, 
-  SearchResult, 
-  APIResponse, 
-  RawAccommodation, 
-  FormattedAccommodation 
+import {
+  Env,
+  SearchParams,
+  SearchResult,
+  APIResponse,
+  RawAccommodation,
+  FormattedAccommodation
 } from '../types';
 import { Logger } from '../utils/logger';
+
+// Location mapping for popular ski destinations
+// This maps location names to MountVacation API IDs
+interface LocationMapping {
+  resort?: number;
+  city?: number;
+  region?: number;
+  skiarea?: number;
+  coordinates?: { lat: number; lng: number; radius?: number };
+}
+
+const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
+  // Italian Dolomites - Use correct region IDs
+  'madonna di campiglio': { region: 911 }, // Trentino-Alto Adige
+  'campiglio': { region: 911 },
+  'val di sole': { region: 911 },
+  'cortina d\'ampezzo': { region: 914 }, // Veneto
+  'cortina': { region: 914 },
+  'val gardena': { region: 911 }, // Trentino-Alto Adige
+  'selva di val gardena': { region: 911 },
+  'ortisei': { region: 911 },
+  'santa cristina': { region: 911 },
+  'alpe di siusi': { region: 911 },
+  'kronplatz': { region: 911 },
+  'plan de corones': { region: 911 },
+  'alta badia': { region: 911 },
+  'corvara': { region: 911 },
+  'la villa': { region: 911 },
+  'san cassiano': { region: 911 },
+  'arabba': { region: 914 }, // Veneto
+  'marmolada': { region: 914 },
+  'canazei': { region: 911 },
+  'campitello': { region: 911 },
+  'moena': { region: 911 },
+  'predazzo': { region: 911 },
+  'cavalese': { region: 911 },
+
+  // Other Italian ski areas
+  'livigno': { region: 904 }, // Lombardy
+  'bormio': { region: 904 }, // Lombardy
+  'ponte di legno': { region: 904 }, // Lombardy
+  'tonale': { region: 911 }, // Trentino-Alto Adige
+  'passo tonale': { region: 911 },
+  'cervinia': { region: 913 }, // Valle d'Aosta
+  'breuil-cervinia': { region: 913 },
+  'courmayeur': { region: 913 }, // Valle d'Aosta
+  'la thuile': { region: 913 },
+  'san martino di castrozza': { region: 911 }, // Trentino-Alto Adige
+  'folgaria': { region: 911 },
+  'andalo': { region: 911 },
+  'molveno': { region: 911 },
+  'pinzolo': { region: 911 },
+  'folgarida': { region: 911 },
+  'marilleva': { region: 911 },
+  'sestriere': { region: 906 }, // Piedmont
+  'bardonecchia': { region: 906 },
+  'sauze d\'oulx': { region: 906 },
+  'claviere': { region: 906 },
+  'limone piemonte': { region: 906 },
+  'pila': { region: 913 }, // Valle d'Aosta
+  'via lattea': { region: 906 }, // Piedmont
+
+  // French Alps
+  'chamonix': { resort: 9471 },
+  'val d\'isere': { resort: 9472 },
+  'tignes': { resort: 9473 },
+  'les arcs': { resort: 9474 },
+  'la plagne': { resort: 9475 },
+  'courchevel': { resort: 9476 },
+  'meribel': { resort: 9477 },
+  'val thorens': { resort: 9478 },
+  'les menuires': { resort: 9479 },
+  'alpe d\'huez': { resort: 9480 },
+  'les deux alpes': { resort: 9481 },
+  'serre chevalier': { resort: 9482 },
+
+  // Austrian Alps
+  'innsbruck': { city: 1152 },
+  'kitzbuhel': { resort: 9483 },
+  'st anton': { resort: 9484 },
+  'st. anton am arlberg': { resort: 9484 },
+  'zell am see': { resort: 9485 },
+  'kaprun': { resort: 9486 },
+  'saalbach': { resort: 9487 },
+  'hinterglemm': { resort: 9488 },
+  'bad gastein': { resort: 9489 },
+  'schladming': { resort: 9490 },
+
+  // Swiss Alps
+  'zermatt': { resort: 9491 },
+  'st moritz': { resort: 9492 },
+  'davos': { resort: 9493 },
+  'klosters': { resort: 9494 },
+  'verbier': { resort: 9495 },
+  'crans montana': { resort: 9496 },
+  'saas fee': { resort: 9497 },
+  'grindelwald': { resort: 9498 },
+  'wengen': { resort: 9499 },
+  'murren': { resort: 9500 },
+
+  // Generic regions for broader searches
+  'italian dolomites': { region: 4252 },
+  'dolomites': { region: 4252 },
+  'dolomiti': { region: 4252 },
+  'trentino': { region: 4252 },
+  'alto adige': { region: 4251 },
+  'south tyrol': { region: 4251 },
+  'italian alps': { region: 4252 },
+  'french alps': { region: 4254 },
+  'austrian alps': { region: 4255 },
+  'swiss alps': { region: 4256 },
+  'alps': { region: 4252 }, // Default to Italian Dolomites
+
+  // Fallback coordinates for major areas (if IDs don't work)
+  'italy skiing': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 100000 } },
+  'italy ski': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 100000 } },
+};
 
 export class MountVacationClient {
   private baseUrl = 'https://api.mountvacation.com';
@@ -24,7 +141,7 @@ export class MountVacationClient {
   }
 
   /**
-   * Search for accommodations using multiple strategies
+   * Search for accommodations using location mapping and multiple strategies
    */
   async searchAccommodations(params: SearchParams, env: Env): Promise<SearchResult> {
     const { location, arrival_date, departure_date, persons_ages, currency = 'EUR', max_results = 5 } = params;
@@ -44,26 +161,63 @@ export class MountVacationClient {
       lang: 'en',
     };
 
-    // Try multiple search strategies
-    const searchStrategies = [
-      { name: 'resort', params: { ...baseParams, resort: location } },
-      { name: 'city', params: { ...baseParams, city: location } },
-      { name: 'region', params: { ...baseParams, region: location } },
-    ];
+    // Try to find location mapping
+    const locationMapping = this.findLocationMapping(location);
 
-    for (const strategy of searchStrategies) {
+    if (locationMapping) {
+      // Use mapped location data
+      const searchStrategies = this.buildSearchStrategies(baseParams, locationMapping, location);
+
+      for (const strategy of searchStrategies) {
+        try {
+          this.logger.debug('Trying mapped search strategy', {
+            strategy: strategy.name,
+            location,
+            params: strategy.params
+          });
+
+          const result = await this.makeApiRequest(strategy.params, env);
+
+          if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
+            const formatted = this.formatResults(result, max_results);
+            this.logger.info('Search successful with mapping', {
+              strategy: strategy.name,
+              location,
+              mapping: locationMapping,
+              results_count: formatted.accommodations?.length || 0,
+            });
+            return formatted;
+          }
+        } catch (error) {
+          this.logger.warn('Mapped search strategy failed', {
+            strategy: strategy.name,
+            location,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          continue;
+        }
+      }
+    }
+
+    // If mapping failed or no mapping found, try fallback strategies
+    this.logger.info('No results with location mapping, trying fallback strategies', { location });
+
+    // Fallback: try generic region searches for common terms
+    const fallbackStrategies = this.buildFallbackStrategies(baseParams, location);
+
+    for (const strategy of fallbackStrategies) {
       try {
-        this.logger.debug('Trying search strategy', { 
-          strategy: strategy.name, 
+        this.logger.debug('Trying fallback search strategy', {
+          strategy: strategy.name,
           location,
-          params: strategy.params 
+          params: strategy.params
         });
 
         const result = await this.makeApiRequest(strategy.params, env);
-        
+
         if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
           const formatted = this.formatResults(result, max_results);
-          this.logger.info('Search successful', {
+          this.logger.info('Search successful with fallback', {
             strategy: strategy.name,
             location,
             results_count: formatted.accommodations?.length || 0,
@@ -71,7 +225,7 @@ export class MountVacationClient {
           return formatted;
         }
       } catch (error) {
-        this.logger.warn('Search strategy failed', {
+        this.logger.warn('Fallback search strategy failed', {
           strategy: strategy.name,
           location,
           error: error instanceof Error ? error.message : String(error),
@@ -82,15 +236,176 @@ export class MountVacationClient {
 
     // If all strategies failed
     return {
-      error: `No accommodations found for '${location}'. Please try a different location or check the spelling.`,
+      error: `No accommodations found for '${location}'. This location may not be available in our database.`,
       suggestions: [
-        'Try a nearby city or resort name',
-        'Check if the location is a mountain destination',
-        'Verify the spelling of the location',
-        'Try broader search terms (e.g., "Alps" instead of specific village)',
+        'Try a popular ski resort name (e.g., "Madonna di Campiglio", "Cortina", "Val Gardena")',
+        'Use broader search terms (e.g., "Italian Dolomites", "Alps")',
+        'Check the spelling of the location name',
+        'Try nearby resort or city names',
       ],
+      available_locations: this.getSuggestedLocations(location),
       timestamp: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Find location mapping for a given location string
+   */
+  private findLocationMapping(location: string): LocationMapping | null {
+    const normalizedLocation = location.toLowerCase().trim();
+
+    // Direct match
+    if (LOCATION_MAPPINGS[normalizedLocation]) {
+      return LOCATION_MAPPINGS[normalizedLocation];
+    }
+
+    // Partial match - check if location contains any mapped location
+    for (const [mappedLocation, mapping] of Object.entries(LOCATION_MAPPINGS)) {
+      if (normalizedLocation.includes(mappedLocation) || mappedLocation.includes(normalizedLocation)) {
+        return mapping;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Build search strategies based on location mapping
+   */
+  private buildSearchStrategies(baseParams: Record<string, string>, mapping: LocationMapping, location: string) {
+    const strategies = [];
+
+    // Resort search (highest priority)
+    if (mapping.resort) {
+      strategies.push({
+        name: 'resort_mapped',
+        params: { ...baseParams, resort: mapping.resort.toString() }
+      });
+    }
+
+    // Skiarea search
+    if (mapping.skiarea) {
+      strategies.push({
+        name: 'skiarea_mapped',
+        params: { ...baseParams, skiarea: mapping.skiarea.toString() }
+      });
+    }
+
+    // City search
+    if (mapping.city) {
+      strategies.push({
+        name: 'city_mapped',
+        params: { ...baseParams, city: mapping.city.toString() }
+      });
+    }
+
+    // Region search
+    if (mapping.region) {
+      strategies.push({
+        name: 'region_mapped',
+        params: { ...baseParams, region: mapping.region.toString() }
+      });
+    }
+
+    // Geolocation search (fallback)
+    if (mapping.coordinates) {
+      strategies.push({
+        name: 'geolocation_mapped',
+        params: {
+          ...baseParams,
+          latitude: mapping.coordinates.lat.toString(),
+          longitude: mapping.coordinates.lng.toString(),
+          radius: (mapping.coordinates.radius || 50000).toString()
+        }
+      });
+    }
+
+    return strategies;
+  }
+
+  /**
+   * Build fallback search strategies for unmapped locations
+   */
+  private buildFallbackStrategies(baseParams: Record<string, string>, location: string) {
+    const strategies = [];
+    const normalizedLocation = location.toLowerCase();
+
+    // If location contains "italy" or "italian", try Italian regions
+    if (normalizedLocation.includes('italy') || normalizedLocation.includes('italian')) {
+      strategies.push({
+        name: 'italian_dolomites_fallback',
+        params: { ...baseParams, region: '4252' } // Italian Dolomites
+      });
+      strategies.push({
+        name: 'alto_adige_fallback',
+        params: { ...baseParams, region: '4251' } // Alto Adige
+      });
+    }
+
+    // If location contains "dolomites", try Dolomites region
+    if (normalizedLocation.includes('dolomit')) {
+      strategies.push({
+        name: 'dolomites_fallback',
+        params: { ...baseParams, region: '4252' }
+      });
+    }
+
+    // If location contains "alps", try major Alpine regions
+    if (normalizedLocation.includes('alps')) {
+      strategies.push({
+        name: 'italian_alps_fallback',
+        params: { ...baseParams, region: '4252' }
+      });
+      strategies.push({
+        name: 'french_alps_fallback',
+        params: { ...baseParams, region: '4254' }
+      });
+    }
+
+    // Generic Italy geolocation search
+    if (normalizedLocation.includes('italy') || normalizedLocation.includes('ski')) {
+      strategies.push({
+        name: 'italy_geolocation_fallback',
+        params: {
+          ...baseParams,
+          latitude: '46.4982',
+          longitude: '11.3548',
+          radius: '100000'
+        }
+      });
+    }
+
+    return strategies;
+  }
+
+  /**
+   * Get suggested locations based on user input
+   */
+  private getSuggestedLocations(location: string): string[] {
+    const normalizedLocation = location.toLowerCase();
+    const suggestions = [];
+
+    // If user searched for something Italian-related
+    if (normalizedLocation.includes('italy') || normalizedLocation.includes('italian') || normalizedLocation.includes('dolomit')) {
+      suggestions.push(
+        'Madonna di Campiglio',
+        'Cortina d\'Ampezzo',
+        'Val Gardena',
+        'Alta Badia',
+        'Italian Dolomites'
+      );
+    } else {
+      // General popular destinations
+      suggestions.push(
+        'Madonna di Campiglio',
+        'Chamonix',
+        'Zermatt',
+        'St. Anton',
+        'Val d\'Isère'
+      );
+    }
+
+    return suggestions;
   }
 
   /**

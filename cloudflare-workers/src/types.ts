@@ -123,6 +123,7 @@ export interface SearchResult {
   error?: string;
   message?: string;
   suggestions?: string[];
+  available_locations?: string[];
   timestamp?: string;
 }
 
@@ -175,6 +176,7 @@ export interface LogContext {
   data_size?: number;
   max_requests?: number;
   window_start?: string;
+  mapping?: any; // For location mapping information
 }
 
 export interface RateLimitInfo {
