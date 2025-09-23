@@ -155,10 +155,10 @@ export class MountVacationClient {
   private logger: Logger;
   private apiKey: string;
 
-  constructor(env: Env, logger: Logger) {
+  constructor(env: Env, logger: Logger, userApiKey: string) {
     this.timeout = parseInt(env.API_TIMEOUT_SECONDS) * 1000;
     this.logger = logger;
-    this.apiKey = env.MOUNTVACATION_API_KEY;
+    this.apiKey = userApiKey; // Use user-provided API key, not environment variable
   }
 
   /**

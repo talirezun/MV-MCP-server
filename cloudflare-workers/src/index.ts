@@ -108,24 +108,23 @@ export default {
 };
 
 async function handleMCPRequest(request: Request, env: Env, logger: any): Promise<Response> {
-  // Extract API key from headers (with MVP fallback)
+  // Extract API key from headers - PRODUCTION MODE: User API key required
   const apiKey = request.headers.get('X-MountVacation-API-Key') ||
-                 request.headers.get('Authorization')?.replace('Bearer ', '') ||
-                 env.MOUNTVACATION_API_KEY; // MVP fallback - remove for production
+                 request.headers.get('Authorization')?.replace('Bearer ', '');
 
-  // For production, uncomment this block to require user API keys:
-  /*
-  if (!apiKey || apiKey === env.MOUNTVACATION_API_KEY) {
+  // PRODUCTION: Require user API key - no fallback
+  if (!apiKey) {
     return new Response(JSON.stringify({
       jsonrpc: '2.0',
       id: null,
       error: {
         code: -32602,
-        message: 'API key required. Please provide your MountVacation API key.',
+        message: 'MountVacation API key required. Please provide your API key in the MCP client configuration.',
         data: {
           required_header: 'X-MountVacation-API-Key',
-          alternative_header: 'Authorization: Bearer <api_key>',
-          get_api_key: 'https://mountvacation.com/api',
+          alternative_header: 'Authorization: Bearer <your_api_key>',
+          get_api_key: 'https://www.mountvacation.si/',
+          setup_guide: 'Add MOUNTVACATION_API_KEY to your MCP client env variables',
           documentation: 'https://github.com/talirezun/MV-MCP-server#api-key-setup'
         }
       }
@@ -134,19 +133,17 @@ async function handleMCPRequest(request: Request, env: Env, logger: any): Promis
       headers: { 'Content-Type': 'application/json' },
     });
   }
-  */
 
-  if (!apiKey) {
+  // Validate API key format (basic validation)
+  if (apiKey.length < 10) {
     return new Response(JSON.stringify({
       jsonrpc: '2.0',
       id: null,
       error: {
         code: -32602,
-        message: 'Missing API key. Please provide X-MountVacation-API-Key header.',
+        message: 'Invalid API key format. Please check your MountVacation API key.',
         data: {
-          required_header: 'X-MountVacation-API-Key',
-          alternative_header: 'Authorization: Bearer <api_key>',
-          get_api_key: 'https://mountvacation.com/api',
+          get_api_key: 'https://www.mountvacation.si/',
           documentation: 'https://github.com/talirezun/MV-MCP-server#api-key-setup'
         }
       }
@@ -169,7 +166,7 @@ async function handleMCPRequest(request: Request, env: Env, logger: any): Promis
     logger
   );
 
-  const apiClient = new MountVacationClient(env, logger);
+  const apiClient = new MountVacationClient(env, logger, apiKey);
 
   // Rate limiting
   const clientId = rateLimiter.getClientId(request);

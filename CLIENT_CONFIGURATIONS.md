@@ -20,30 +20,18 @@ rm -rf temp-download
 chmod +x mountvacation-mcp.js
 ```
 
-### **Step 2: Get Your API Key (Optional)**
-- **For testing**: Skip this step, use the configuration as-is
-- **For production**:
-  1. Visit [MountVacation.si](https://www.mountvacation.si/)
-  2. Contact their team for API access
-  3. Set your API key: `export MOUNTVACATION_API_KEY="your_api_key_here"`
+### **Step 2: Get Your API Key (REQUIRED)**
+**⚠️ ESSENTIAL**: You MUST have a MountVacation API key to use this MCP server.
+
+1. Visit [MountVacation.si](https://www.mountvacation.si/)
+2. Contact their team to obtain your API key
+3. **Without an API key, the MCP server will not work**
 
 ## 📋 Client Configurations
 
 ### **Claude Desktop**
 
-**Copy this into your `claude_desktop_config.json`:**
-```json
-{
-  "mcpServers": {
-    "mountvacation": {
-      "command": "node",
-      "args": ["/full/path/to/your/mountvacation-mcp.js"]
-    }
-  }
-}
-```
-
-**With your own API key (production):**
+**Configuration with your API key (REQUIRED):**
 ```json
 {
   "mcpServers": {
@@ -57,6 +45,8 @@ chmod +x mountvacation-mcp.js
   }
 }
 ```
+
+**⚠️ Important**: Replace `your_api_key_here` with your actual MountVacation API key from [MountVacation.si](https://www.mountvacation.si/)
 
 **Configuration file location:**
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`

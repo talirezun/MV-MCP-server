@@ -68,20 +68,19 @@ chmod +x mountvacation-mcp.js
 }
 ```
 
-**That's it!** Restart Claude Desktop and start searching:
-> *"Find ski accommodations in Austrian Alps for March 2025"*
+**⚠️ This configuration will NOT work without an API key!** You must add your MountVacation API key (see below).
 
-### **Production with Your API Key**
+### **🔑 API Key Required (Essential Step)**
 
-For production use with your own MountVacation API key:
+**⚠️ IMPORTANT**: You MUST have your own MountVacation API key to use this MCP server.
 
-#### Get Your API Key
+#### Get Your MountVacation API Key
 1. Visit [MountVacation.si](https://www.mountvacation.si/)
-2. Contact them to get your API key
-3. Use the configuration below
+2. Contact them to obtain your API key
+3. **Without an API key, the MCP server will not work**
 
-#### Production Configuration
-**Add your API key to the configuration:**
+#### Configuration with Your API Key
+**Replace `your_api_key_here` with your actual API key:**
 
 ```json
 {
@@ -96,6 +95,8 @@ For production use with your own MountVacation API key:
   }
 }
 ```
+
+**⚠️ Note**: The MCP server now requires a valid API key - there is no testing mode without an API key.
 
 ### **Alternative: Local Python Server (Advanced)**
 
