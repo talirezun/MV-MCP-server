@@ -135,12 +135,34 @@ class MountVacationAPI:
             'lang': 'en'
         }
         
-        # Try multiple search strategies
-        search_strategies = [
-            {'resort': location},
-            {'city': location},
-            {'region': location}
-        ]
+        # Try multiple search strategies with location name to ID mapping
+        # Since API requires integer IDs, we need to map common location names
+        location_mappings = self._get_location_mappings()
+
+        search_strategies = []
+
+        # Try to find location in our mappings
+        location_lower = location.lower()
+        for mapping in location_mappings:
+            if location_lower in mapping['names']:
+                if mapping['type'] == 'resort':
+                    search_strategies.append({'resort': mapping['id']})
+                elif mapping['type'] == 'city':
+                    search_strategies.append({'city': mapping['id']})
+                elif mapping['type'] == 'region':
+                    search_strategies.append({'region': mapping['id']})
+                elif mapping['type'] == 'skiarea':
+                    search_strategies.append({'skiarea': mapping['id']})
+
+        # If no mappings found, try geolocation search for common ski areas
+        if not search_strategies:
+            geo_coords = self._get_geolocation_for_area(location_lower)
+            if geo_coords:
+                search_strategies.append({
+                    'latitude': geo_coords['lat'],
+                    'longitude': geo_coords['lng'],
+                    'radius': geo_coords['radius']
+                })
         
         for strategy in search_strategies:
             try:
@@ -220,6 +242,11 @@ class MountVacationAPI:
                 }
             }
         
+        # Check if user searched for unavailable location
+        location_warning = None
+        if location.lower() in ['colfosco', 'corvara', 'alta badia', 'val badia']:
+            location_warning = f"Note: {location} is not available in the MountVacation API. Showing results from the closest available Dolomites area (Anterselva/Kronplatz, about 1 hour drive from Alta Badia)."
+
         results = {
             'search_summary': {
                 'arrival_date': data.get('arrival'),
@@ -227,7 +254,9 @@ class MountVacationAPI:
                 'nights': data.get('nights'),
                 'persons_count': len(data.get('personsAges', [])),
                 'total_found': len(accommodations),
-                'currency': data.get('currency', 'EUR')
+                'currency': data.get('currency', 'EUR'),
+                'location_searched': location,
+                'location_warning': location_warning
             },
             'accommodations': []
         }
@@ -284,6 +313,107 @@ class MountVacationAPI:
             results['accommodations'].append(formatted_acc)
         
         return results
+
+    def _get_location_mappings(self) -> List[Dict[str, Any]]:
+        """Get location name to ID mappings for common ski destinations"""
+        return [
+            # Italian Dolomites & Alps (Working IDs found!)
+            {
+                'names': ['madonna di campiglio', 'campiglio', 'trentino'],
+                'type': 'resort',
+                'id': '7',
+                'description': 'Madonna di Campiglio - Famous Italian ski resort'
+            },
+            {
+                'names': ['anterselva', 'antholz', 'south tyrol', 'alto adige', 'dolomites', 'dolomiti'],
+                'type': 'resort',
+                'id': '11',
+                'description': 'Anterselva di Mezzo - South Tyrol Dolomites area'
+            },
+            {
+                'names': ['pinzolo', 'val rendena'],
+                'type': 'resort',
+                'id': '18',
+                'description': 'Pinzolo - Italian Alps'
+            },
+            {
+                'names': ['folgaria', 'alpe cimbra'],
+                'type': 'resort',
+                'id': '42',
+                'description': 'Folgaria - Italian ski area'
+            },
+            {
+                'names': ['chienes', 'kiens', 'val pusteria'],
+                'type': 'city',
+                'id': '82',
+                'description': 'Chienes - South Tyrol, close to Dolomites'
+            },
+            {
+                'names': ['bormio', 'valtellina'],
+                'type': 'skiarea',
+                'id': '19',
+                'description': 'Bormio - Famous Italian ski resort'
+            },
+            {
+                'names': ['vason', 'monte bondone'],
+                'type': 'skiarea',
+                'id': '4',
+                'description': 'Vason - Italian Alps ski area'
+            },
+            # Note: Colfosco/Corvara/Alta Badia not available in API
+            # Using closest available Dolomites locations
+            {
+                'names': ['colfosco', 'corvara', 'alta badia', 'val badia'],
+                'type': 'resort',
+                'id': '11',  # Anterselva/Kronplatz - closest available (1hr drive)
+                'description': 'Anterselva/Kronplatz area - closest to Colfosco/Corvara (Alta Badia not available in API)'
+            },
+            {
+                'names': ['italy dolomites', 'italian dolomites', 'dolomites', 'dolomiti'],
+                'type': 'resort',
+                'id': '7',  # Madonna di Campiglio - popular Italian ski resort
+                'description': 'Madonna di Campiglio - major Italian Dolomites ski resort'
+            },
+            # French Alps (Working IDs)
+            {
+                'names': ['val thorens', 'les trois vallees', '3 vallees'],
+                'type': 'resort',
+                'id': '10',
+                'description': 'Val Thorens - Highest ski resort in Europe'
+            },
+            {
+                'names': ['meribel', 'les bruyeres', 'courchevel area'],
+                'type': 'skiarea',
+                'id': '1',
+                'description': 'Méribel/Les Bruyères - Three Valleys ski area'
+            },
+            # Austrian/Slovenian Alps (Working IDs)
+            {
+                'names': ['cerklje', 'slovenia', 'kranj area'],
+                'type': 'resort',
+                'id': '142',
+                'description': 'Cerklje na Gorenjskem - Slovenian Alps'
+            },
+            {
+                'names': ['slovenia city', 'slovenian alps'],
+                'type': 'city',
+                'id': '1152',
+                'description': 'Slovenian Alps city area'
+            }
+        ]
+
+    def _get_geolocation_for_area(self, location: str) -> Optional[Dict[str, str]]:
+        """Get geolocation coordinates for common ski areas"""
+        # Fallback geolocation mapping for areas not in main mappings
+        fallback_coords = {
+            'italy': {'lat': '46.0', 'lng': '11.0', 'radius': '50000'},
+            'france': {'lat': '45.5', 'lng': '6.5', 'radius': '50000'},
+            'austria': {'lat': '47.0', 'lng': '11.0', 'radius': '50000'},
+            'switzerland': {'lat': '46.5', 'lng': '8.0', 'radius': '50000'},
+            'alps': {'lat': '46.0', 'lng': '8.0', 'radius': '100000'}
+        }
+
+        return fallback_coords.get(location)
 
 # Initialize API client
 api_client = MountVacationAPI()

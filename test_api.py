@@ -30,11 +30,14 @@ def test_api_connection():
     departure = (datetime.now() + timedelta(days=37)).strftime('%Y-%m-%d')
     
     # Test different search strategies
+    # Note: API expects integer IDs, not names. Let's try some common IDs and geolocation
     test_cases = [
         {
-            'name': 'Resort Search (Chamonix)',
+            'name': 'Geolocation Search (Chamonix area)',
             'params': {
-                'resort': 'Chamonix',
+                'latitude': '45.9237',
+                'longitude': '6.8694',
+                'radius': '10000',  # 10km radius
                 'arrival': arrival,
                 'departure': departure,
                 'personsAges': '30,28',
@@ -44,12 +47,50 @@ def test_api_connection():
             }
         },
         {
-            'name': 'City Search (Innsbruck)', 
+            'name': 'Geolocation Search (Dolomites - Colfosco area)',
             'params': {
-                'city': 'Innsbruck',
+                'latitude': '46.5951',
+                'longitude': '11.9073',
+                'radius': '15000',  # 15km radius
                 'arrival': arrival,
                 'departure': departure,
-                'personsAges': '25',
+                'personsAges': '30,28',
+                'currency': 'EUR',
+                'lang': 'en',
+                'apiKey': api_key
+            }
+        },
+        {
+            'name': 'Resort ID Test (trying common IDs)',
+            'params': {
+                'resort': '1',  # Try resort ID 1
+                'arrival': arrival,
+                'departure': departure,
+                'personsAges': '30',
+                'currency': 'EUR',
+                'lang': 'en',
+                'apiKey': api_key
+            }
+        },
+        {
+            'name': 'Resort ID Test (ID 142 - from API docs example)',
+            'params': {
+                'resort': '142',  # From API documentation example
+                'arrival': arrival,
+                'departure': departure,
+                'personsAges': '30,28',
+                'currency': 'EUR',
+                'lang': 'en',
+                'apiKey': api_key
+            }
+        },
+        {
+            'name': 'City ID Test (trying ID 1152 - from API docs)',
+            'params': {
+                'city': '1152',  # From API documentation example
+                'arrival': arrival,
+                'departure': departure,
+                'personsAges': '30',
                 'currency': 'EUR',
                 'lang': 'en',
                 'apiKey': api_key
@@ -124,11 +165,17 @@ def explore_api_structure():
     arrival = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
     departure = (datetime.now() + timedelta(days=37)).strftime('%Y-%m-%d')
     
+    # Use geolocation search for Dolomites area (Colfosco) - your specific request
+    arrival_dec = '2025-12-15'  # Second part of December 2025
+    departure_dec = '2025-12-18'  # 3 nights
+
     params = {
-        'resort': 'Chamonix',
-        'arrival': arrival,
-        'departure': departure,
-        'personsAges': '30',
+        'latitude': '46.5951',
+        'longitude': '11.9073',
+        'radius': '15000',
+        'arrival': arrival_dec,
+        'departure': departure_dec,
+        'personsAges': '30,28',  # 2 persons
         'currency': 'EUR',
         'lang': 'en',
         'apiKey': api_key

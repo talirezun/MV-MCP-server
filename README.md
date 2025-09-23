@@ -26,8 +26,7 @@ cp .env.example .env
 Edit `.env` file with your MountVacation API credentials:
 
 ```bash
-MOUNTVACATION_USERNAME=your_username
-MOUNTVACATION_PASSWORD=your_password
+MOUNTVACATION_API_KEY=your_api_key_here
 ```
 
 ### 3. Choose Your Implementation
