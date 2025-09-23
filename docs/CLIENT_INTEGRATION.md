@@ -1,6 +1,6 @@
 # MountVacation MCP Client Integration Guide
 
-This guide shows you how to integrate the MountVacation MCP Server with various AI clients.
+This guide shows you how to integrate the MountVacation MCP Server with various AI clients. The server provides comprehensive mountain vacation accommodation search with property links, image galleries, and detailed facility information.
 
 ## 🏠 Option 1: Local Python Server (Recommended)
 
@@ -9,10 +9,12 @@ This guide shows you how to integrate the MountVacation MCP Server with various 
 - MountVacation API key
 
 ✅ **Advantages:**
-- Full MCP protocol support
-- Tested and working
-- Direct API integration
-- Complete feature set
+- Full MCP protocol support with all 3 tools
+- Property page URLs and direct booking links
+- Rich image galleries with multiple formats
+- Detailed accommodation and facility properties
+- GPS coordinates and enhanced location data
+- Complete feature set with latest API coverage
 
 ### Setup
 

@@ -55,7 +55,7 @@ export default {
         return new Response(JSON.stringify({
           status: 'healthy',
           timestamp: new Date().toISOString(),
-          version: '1.0.0',
+          version: '2.0.0',
         }), {
           headers: { 
             'Content-Type': 'application/json',
@@ -72,8 +72,8 @@ export default {
       // Default response
       return new Response(JSON.stringify({
         name: 'MountVacation MCP Server',
-        version: '1.0.0',
-        description: 'A Model Context Protocol server for searching mountain vacation accommodations',
+        version: '2.0.0',
+        description: 'Comprehensive Model Context Protocol server for mountain vacation accommodations with property links, image galleries, and detailed facility information',
         endpoints: {
           mcp: '/mcp',
           health: '/health',

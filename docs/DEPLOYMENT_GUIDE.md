@@ -12,8 +12,8 @@ This guide covers deploying the MountVacation MCP Server to Cloudflare Workers f
    - Note your Account ID from the dashboard
 
 2. **MountVacation API Account**
-   - Get credentials from [api.mountvacation.com](https://api.mountvacation.com)
-   - Username and password for authentication
+   - Get API key from [api.mountvacation.com](https://api.mountvacation.com)
+   - API key for authentication (recommended over username/password)
 
 ### Required Tools
 1. **Node.js** (v18 or higher)

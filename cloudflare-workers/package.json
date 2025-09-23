@@ -1,7 +1,7 @@
 {
   "name": "mountvacation-mcp-worker",
-  "version": "1.0.0",
-  "description": "MountVacation MCP Server for Cloudflare Workers",
+  "version": "2.0.0",
+  "description": "Comprehensive MountVacation MCP Server with property links, image galleries, and detailed accommodation information",
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",

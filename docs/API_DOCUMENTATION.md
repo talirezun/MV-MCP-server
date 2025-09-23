@@ -2,9 +2,16 @@
 
 ## Overview
 
-The MountVacation MCP Server provides a Model Context Protocol interface for searching mountain vacation accommodations. It supports both local development (Python FastMCP) and production deployment (TypeScript on Cloudflare Workers).
+The MountVacation MCP Server provides a comprehensive Model Context Protocol interface for searching, exploring, and researching mountain vacation accommodations. It offers complete access to the MountVacation API suite including accommodation search, detailed property information, facility details, and booking capabilities.
 
-## Tool: search_accommodations
+**Supported Deployments:**
+- **Local Development**: Python FastMCP server
+- **Production**: TypeScript on Cloudflare Workers with global edge caching
+- **Cloud-Hosted**: Public server at `blocklabs-mountvacation-mcp-production.4thtech.workers.dev`
+
+## Available Tools
+
+### 1. search_accommodations (Primary Search Tool)
 
 ### Description
 
@@ -42,15 +49,21 @@ Search for mountain vacation accommodations using the MountVacation API. This to
         "city": "Chamonix",
         "country": "France",
         "resort": "Chamonix Mont-Blanc",
-        "full_address": "Chamonix, France"
+        "region": "Auvergne-Rhône-Alpes",
+        "full_address": "Chamonix, Chamonix Mont-Blanc, France",
+        "coordinates": {
+          "latitude": 45.9237,
+          "longitude": 6.8694
+        }
       },
       "property_details": {
-        "category": "Chalet",
-        "type": "Apartment",
+        "category": "4",
+        "type": "apartment",
         "beds": 4,
         "bedrooms": 2,
         "size_sqm": 85,
-        "max_occupancy": 6
+        "max_occupancy": 6,
+        "accommodation_id": 12345
       },
       "pricing": {
         "total_price": 2100,
@@ -64,7 +77,10 @@ Search for mountain vacation accommodations using the MountVacation API. This to
         "pets_allowed": false,
         "breakfast_included": false,
         "balcony": true,
-        "kitchen": true
+        "kitchen": true,
+        "pool": true,
+        "wellness": false,
+        "ski_in_out": true
       },
       "distances": {
         "to_resort_center": "200m",
@@ -72,15 +88,35 @@ Search for mountain vacation accommodations using the MountVacation API. This to
         "to_city_center": "500m"
       },
       "booking": {
-        "reservation_url": "https://mountvacation.com/book/12345",
+        "reservation_url": "https://www.mountvacation.co.uk/apartment/luxury-alpine-chalet_chamonix?arrival=2024-03-10&departure=2024-03-17&currency=EUR&lang=en&personsAges=18,18,12,8",
         "free_cancellation_until": "2024-03-05",
         "booking_conditions": "Standard terms apply"
       },
-      "property_url": "https://mountvacation.com/property/12345",
+      "property_url": "https://www.mountvacation.co.uk/apartment/luxury-alpine-chalet_chamonix",
+      "property_page_url": "https://www.mountvacation.co.uk/apartment/luxury-alpine-chalet_chamonix",
       "images": [
-        "https://images.mountvacation.com/12345/1.jpg",
-        "https://images.mountvacation.com/12345/2.jpg",
-        "https://images.mountvacation.com/12345/3.jpg"
+        "https://www.mountvacationmedia.com//a/12345/w/1",
+        "https://www.mountvacationmedia.com//a/12345/w/2",
+        "https://www.mountvacationmedia.com//a/12345/w/3",
+        "https://www.mountvacationmedia.com//a/12345/w/4",
+        "https://www.mountvacationmedia.com//a/12345/w/5"
+      ],
+      "image_gallery": {
+        "thumbnail_urls": [
+          "https://www.mountvacationmedia.com//a/12345/w/1/t",
+          "https://www.mountvacationmedia.com//a/12345/w/2/t",
+          "https://www.mountvacationmedia.com//a/12345/w/3/t",
+          "https://www.mountvacationmedia.com//a/12345/w/4/t",
+          "https://www.mountvacationmedia.com//a/12345/w/5/t"
+        ],
+        "full_size_urls": [
+          "https://www.mountvacationmedia.com//a/12345/w/1/o",
+          "https://www.mountvacationmedia.com//a/12345/w/2/o",
+          "https://www.mountvacationmedia.com//a/12345/w/3/o",
+          "https://www.mountvacationmedia.com//a/12345/w/4/o",
+          "https://www.mountvacationmedia.com//a/12345/w/5/o"
+        ]
+      }
       ]
     }
   ]
@@ -158,6 +194,136 @@ The server tries each strategy in order and returns the first successful result.
 - Persistent cache across worker instances
 - Automatic expiration based on TTL
 - Global edge caching for better performance
+
+### 2. get_accommodation_details (Property Details Tool)
+
+#### Description
+
+Get comprehensive property information for a specific accommodation including detailed amenities, facilities, contact information, and property features.
+
+#### Parameters
+
+| Parameter | Type | Required | Description | Example |
+|-----------|------|----------|-------------|---------|
+| `accommodation_id` | number | Yes | The accommodation ID from search results | 6307 |
+| `language` | string | No | Language for descriptions (default: "en") | "en", "de", "it", "fr" |
+| `include_facilities` | boolean | No | Include detailed facility properties (default: true) | true |
+
+#### Response Format
+
+```json
+{
+  "accommodation_details": {
+    "accommodation": 6307,
+    "properties": {
+      "main": {
+        "id": 6307,
+        "title": "Veronza Clubresidence",
+        "description": "Modern apartment complex with pool and wellness facilities...",
+        "category": 3,
+        "type": "apartment",
+        "city": "Carano",
+        "resort": "Val di Fiemme Alpe Cermis",
+        "country": "Italy"
+      },
+      "geolocation": {
+        "latitude": 46.290089,
+        "longitude": 11.433581
+      },
+      "accommodationContactInfo": {
+        "accommodationUrl": "https://www.mountvacation.co.uk/apartment/veronza-clubresidence_carano"
+      },
+      "wellness": {
+        "pool": true,
+        "sauna": false,
+        "massage": true
+      },
+      "distance": {
+        "distRuns": 4500,
+        "distResort": 4500,
+        "distCentre": 1100
+      }
+    },
+    "facilitiesProperties": {
+      "39646": {
+        "main": {
+          "id": 39646,
+          "title": "Two-bedroom apartment",
+          "beds": 4,
+          "bedrooms": 2,
+          "bathrooms": 1,
+          "sizeSqM": 28
+        },
+        "amenities": {
+          "balcony": true,
+          "kitchen": true,
+          "wifi": true
+        }
+      }
+    }
+  }
+}
+```
+
+### 3. get_facility_details (Room Details Tool)
+
+#### Description
+
+Get detailed properties for a specific room or facility within an accommodation, including amenities, views, kitchen facilities, and bathroom details.
+
+#### Parameters
+
+| Parameter | Type | Required | Description | Example |
+|-----------|------|----------|-------------|---------|
+| `accommodation_id` | number | Yes | The accommodation ID | 6307 |
+| `facility_id` | number | Yes | The facility/room ID | 39646 |
+| `language` | string | No | Language for descriptions (default: "en") | "en", "de", "it", "fr" |
+
+#### Response Format
+
+```json
+{
+  "facility_details": {
+    "facilityID": 39646,
+    "properties": {
+      "main": {
+        "id": 39646,
+        "accommodationID": 6307,
+        "beds": 4,
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "sizeSqM": 28,
+        "title": "Two-bedroom apartment",
+        "type": "apartment"
+      },
+      "amenities": {
+        "balcony": true,
+        "internet": true,
+        "internetWifi": true,
+        "safe": true,
+        "tv": true,
+        "equippedKitchenette": true
+      },
+      "bathroom": {
+        "bathroomShower": true,
+        "hairDryer": true,
+        "towelsIncluded": true
+      },
+      "kitchen": {
+        "refrigerator": true,
+        "cookingPlates": true,
+        "microwaveOven": true,
+        "coffeeMachine": true
+      },
+      "view": {
+        "mountainView": true,
+        "valleyView": false,
+        "southView": true
+      }
+    }
+  }
+}
+```
 
 ## Error Handling
 

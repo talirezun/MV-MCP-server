@@ -1,15 +1,37 @@
 # MountVacation MCP Server
 
-A robust Model Context Protocol (MCP) server that enables AI assistants to search for mountain vacation accommodations using the MountVacation API.
+A comprehensive Model Context Protocol (MCP) server that enables AI assistants to search, explore, and research mountain vacation accommodations using the complete MountVacation API suite.
 
 ## 🏔️ Features
 
-- **Multi-Strategy Search**: Resort, city, and geolocation-based searches
+### 🔍 **Accommodation Search & Discovery**
+- **Multi-Strategy Search**: Resort, city, region, and geolocation-based searches
+- **Italian Ski Destinations**: Specialized support for Dolomites, Trentino-Alto Adige, and major ski areas
+- **Smart Location Mapping**: 80+ ski destinations with intelligent fallback strategies
+
+### 🔗 **Complete Property Information**
+- **Direct Property Links**: MountVacation property pages with photos and descriptions
+- **Instant Booking URLs**: Pre-filled reservation links with dates and guest information
+- **Rich Image Galleries**: Thumbnail, standard, and full-resolution property photos
+- **GPS Coordinates**: Exact location data for mapping and navigation
+
+### 🏨 **Detailed Property Data**
+- **Comprehensive Amenities**: Pool, wellness, ski-in/out, WiFi, parking, and 50+ features
+- **Room-Level Details**: Individual facility properties, views, kitchen equipment, bathrooms
+- **Distance Information**: Precise distances to ski runs, resort centers, and amenities
+- **Pricing & Availability**: Real-time rates with currency conversion support
+
+### 🛠️ **Advanced API Tools**
+- **`search_accommodations`**: Primary search with enhanced property links and images
+- **`get_accommodation_details`**: Comprehensive property information and facilities
+- **`get_facility_details`**: Room-specific amenities, views, and equipment details
+
+### 🚀 **Production Infrastructure**
 - **AI Client Support**: Claude Desktop, VS Code (Cline), Cursor, LM Studio
-- **Production Ready**: Cloudflare Workers deployment with global edge caching
-- **Robust Error Handling**: Graceful fallbacks and comprehensive error messages
-- **Performance Optimized**: Sub-3-second response times with intelligent caching
-- **Secure**: Environment-based credential management and rate limiting
+- **Cloudflare Workers**: Global edge deployment with sub-3-second response times
+- **Intelligent Caching**: Optimized performance with TTL-based cache management
+- **Rate Limiting**: 60 requests/minute with graceful degradation
+- **Secure**: Environment-based API key management and encrypted secrets
 
 ## 🚀 Quick Start
 
@@ -154,13 +176,30 @@ wrangler deploy
 
 ## 📖 Usage Examples
 
+### 🔍 **Basic Search Queries**
 Ask your AI assistant:
 
 - "Find ski accommodations in Madonna di Campiglio for January 2026, 2 adults, 7 nights"
 - "Search for mountain hotels in the Italian Dolomites for March 2026, 4 people"
-- "Look for family-friendly places in the Alps with breakfast included"
+- "Look for family-friendly places in the Alps with breakfast included and pool access"
+- "Find luxury accommodations in Cortina d'Ampezzo with wellness facilities"
 
-**Available Locations**: Madonna di Campiglio, Italian Dolomites, Kronplatz area, and other European mountain destinations.
+### 🏨 **Detailed Property Research**
+- "Get detailed information about accommodation ID 6307 including all facilities"
+- "Show me room details for facility 39646 in accommodation 11127"
+- "What amenities are available at this property? Include wellness and dining options"
+
+### 🖼️ **Visual Property Exploration**
+- "Show me photos of this property including thumbnails and full-size images"
+- "What does the property look like? Include image gallery links"
+- "Get the property page URL so I can see more photos and details"
+
+### 📍 **Location & Booking Information**
+- "What's the exact location with GPS coordinates for this accommodation?"
+- "Give me the direct booking link with my dates and guest information pre-filled"
+- "How far is this property from the ski runs and resort center?"
+
+**Available Locations**: Madonna di Campiglio, Cortina d'Ampezzo, Val Gardena, Italian Dolomites, Trentino-Alto Adige, Valle d'Aosta, and 80+ European mountain destinations.
 
 ## 🧪 Testing
 
