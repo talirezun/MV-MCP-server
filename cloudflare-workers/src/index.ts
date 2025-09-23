@@ -252,6 +252,55 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
         required: ['location', 'arrival_date', 'departure_date', 'persons_ages'],
       },
     },
+    {
+      name: 'get_accommodation_details',
+      description: 'Get detailed properties and amenities for a specific accommodation including facilities, wellness options, distances, and comprehensive image galleries.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          accommodation_id: {
+            type: 'number',
+            description: 'The accommodation ID from search results',
+          },
+          language: {
+            type: 'string',
+            description: 'Language for descriptions (default: "en")',
+            enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
+            default: 'en',
+          },
+          include_facilities: {
+            type: 'boolean',
+            description: 'Include detailed facility properties (default: true)',
+            default: true,
+          },
+        },
+        required: ['accommodation_id'],
+      },
+    },
+    {
+      name: 'get_facility_details',
+      description: 'Get detailed properties for a specific room or facility within an accommodation, including amenities, views, kitchen facilities, and bathroom details.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          accommodation_id: {
+            type: 'number',
+            description: 'The accommodation ID',
+          },
+          facility_id: {
+            type: 'number',
+            description: 'The facility/room ID',
+          },
+          language: {
+            type: 'string',
+            description: 'Language for descriptions (default: "en")',
+            enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
+            default: 'en',
+          },
+        },
+        required: ['accommodation_id', 'facility_id'],
+      },
+    },
   ];
 
   logger.info('Tools list requested', { toolCount: tools.length });
@@ -269,33 +318,50 @@ async function handleToolCall(
 ): Promise<Response> {
   const { name, arguments: args } = request.params;
 
-  if (name === 'search_accommodations') {
-    try {
-      const result = await handleSearchAccommodations(
-        args as SearchParams,
-        env,
-        cacheManager,
-        apiClient,
-        logger
-      );
+  try {
+    switch (name) {
+      case 'search_accommodations':
+        const searchResult = await handleSearchAccommodations(
+          args as SearchParams,
+          env,
+          cacheManager,
+          apiClient,
+          logger
+        );
+        return createSuccessResponse(request.id, searchResult);
 
-      return createSuccessResponse(request.id, result);
-    } catch (error) {
-      logger.error('Tool call failed', {
-        tool: name,
-        error: error instanceof Error ? error.message : String(error),
-      });
+      case 'get_accommodation_details':
+        const accommodationDetails = await apiClient.getAccommodationProperties(
+          args.accommodation_id,
+          args.language || 'en',
+          args.include_facilities !== false
+        );
+        return createSuccessResponse(request.id, { accommodation_details: accommodationDetails });
 
-      return createErrorResponse(
-        request.id,
-        -32603,
-        'Internal error',
-        { tool: name, error: String(error) }
-      );
+      case 'get_facility_details':
+        const facilityDetails = await apiClient.getFacilityProperties(
+          args.accommodation_id,
+          args.facility_id,
+          args.language || 'en'
+        );
+        return createSuccessResponse(request.id, { facility_details: facilityDetails });
+
+      default:
+        return createErrorResponse(request.id, -32601, `Unknown tool: ${name}`);
     }
-  }
+  } catch (error) {
+    logger.error('Tool call failed', {
+      tool: name,
+      error: error instanceof Error ? error.message : String(error),
+    });
 
-  return createErrorResponse(request.id, -32601, `Unknown tool: ${name}`);
+    return createErrorResponse(
+      request.id,
+      -32603,
+      'Internal error',
+      { tool: name, error: String(error) }
+    );
+  }
 }
 
 async function handleSearchAccommodations(

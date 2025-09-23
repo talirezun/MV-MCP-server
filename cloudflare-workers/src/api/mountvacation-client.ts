@@ -8,7 +8,11 @@ import {
   SearchResult,
   APIResponse,
   RawAccommodation,
-  FormattedAccommodation
+  FormattedAccommodation,
+  AccommodationProperties,
+  FacilityProperties,
+  BookingRequest,
+  BookingResponse
 } from '../types';
 import { Logger } from '../utils/logger';
 
@@ -134,10 +138,12 @@ export class MountVacationClient {
   private searchEndpoint = '/accommodations/search/';
   private timeout: number;
   private logger: Logger;
+  private apiKey: string;
 
   constructor(env: Env, logger: Logger) {
     this.timeout = parseInt(env.API_TIMEOUT_SECONDS) * 1000;
     this.logger = logger;
+    this.apiKey = env.MOUNTVACATION_API_KEY;
   }
 
   /**
@@ -420,7 +426,7 @@ export class MountVacationClient {
     });
 
     // Add API key parameter
-    url.searchParams.append('apiKey', env.MOUNTVACATION_API_KEY || env.MOUNTVACATION_USERNAME || '');
+    url.searchParams.append('apiKey', this.apiKey);
 
     const requestOptions: RequestInit = {
       method: 'GET',
@@ -604,13 +610,39 @@ export class MountVacationClient {
       const offers = acc.offers || [];
       const bestOffer = offers[0] || {};
 
+      // Process images from pictures object
+      const imageUrls: string[] = [];
+      const thumbnailUrls: string[] = [];
+      const fullSizeUrls: string[] = [];
+
+      if (acc.pictures?.url && acc.pictures?.pictures) {
+        acc.pictures.pictures.forEach(pic => {
+          const baseUrl = `${acc.pictures!.url}${pic}`;
+          imageUrls.push(baseUrl); // Default size
+          thumbnailUrls.push(`${baseUrl}/t`); // Thumbnail
+          fullSizeUrls.push(`${baseUrl}/o`); // Original/full size
+        });
+      }
+
+      // Fallback to legacy images array
+      if (imageUrls.length === 0 && acc.images) {
+        imageUrls.push(...acc.images);
+        thumbnailUrls.push(...acc.images);
+        fullSizeUrls.push(...acc.images);
+      }
+
       return {
         name: acc.title || 'N/A',
         location: {
           city: acc.city || 'N/A',
           country: acc.country || 'N/A',
           resort: acc.resort || 'N/A',
-          full_address: `${acc.city || 'N/A'}, ${acc.country || 'N/A'}`,
+          region: acc.region || 'N/A',
+          full_address: `${acc.city || 'N/A'}, ${acc.resort || 'N/A'}, ${acc.country || 'N/A'}`,
+          coordinates: acc.latitude && acc.longitude ? {
+            latitude: acc.latitude,
+            longitude: acc.longitude
+          } : undefined,
         },
         property_details: {
           category: acc.category || 'N/A',
@@ -619,12 +651,13 @@ export class MountVacationClient {
           bedrooms: bestOffer.bedrooms || 'N/A',
           size_sqm: bestOffer.sizeSqM || 'N/A',
           max_occupancy: bestOffer.maxPersons || 'N/A',
+          accommodation_id: acc.accommodationID || acc.id || 'N/A',
         },
         pricing: {
           total_price: bestOffer.totalPrice || 'N/A',
           currency: data.currency || 'EUR',
           nights: data.nights || 'N/A',
-          price_per_night: bestOffer.totalPrice && data.nights 
+          price_per_night: bestOffer.totalPrice && data.nights
             ? Math.round((bestOffer.totalPrice / Math.max(data.nights, 1)) * 100) / 100
             : 'N/A',
         },
@@ -635,6 +668,9 @@ export class MountVacationClient {
           breakfast_included: bestOffer.breakfastIncluded || false,
           balcony: acc.balcony || false,
           kitchen: acc.kitchen || false,
+          pool: acc.pool || false,
+          wellness: acc.wellness || false,
+          ski_in_out: acc.skiInOut || false,
         },
         distances: {
           to_resort_center: acc.distResort ? `${acc.distResort}m` : 'N/A',
@@ -647,7 +683,12 @@ export class MountVacationClient {
           booking_conditions: bestOffer.conditions || 'Standard terms apply',
         },
         property_url: acc.url || 'N/A',
-        images: (acc.images || []).slice(0, 3), // Limit to first 3 images
+        property_page_url: acc.accommodationUrl || 'N/A', // Main MountVacation property page
+        images: imageUrls.slice(0, 5), // Limit to first 5 images
+        image_gallery: {
+          thumbnail_urls: thumbnailUrls.slice(0, 5),
+          full_size_urls: fullSizeUrls.slice(0, 5),
+        },
       };
     });
 
@@ -662,5 +703,141 @@ export class MountVacationClient {
       },
       accommodations: formattedAccommodations,
     };
+  }
+
+  /**
+   * Get detailed properties for a specific accommodation
+   */
+  async getAccommodationProperties(
+    accommodationId: number,
+    language: string = 'en',
+    includeFacilities: boolean = true
+  ): Promise<AccommodationProperties> {
+    const url = new URL(`${this.baseUrl}/accommodations/${accommodationId}/properties`);
+    url.searchParams.set('apiKey', this.apiKey);
+    url.searchParams.set('lang', language);
+    if (includeFacilities) {
+      url.searchParams.set('includeFacilitiesProperties', 'true');
+    }
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'MountVacation-MCP-Server/1.0',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch accommodation properties: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * Get detailed properties for a specific facility within an accommodation
+   */
+  async getFacilityProperties(
+    accommodationId: number,
+    facilityId: number,
+    language: string = 'en'
+  ): Promise<{ facilityID: number; properties: FacilityProperties }> {
+    const url = new URL(`${this.baseUrl}/accommodations/${accommodationId}/facilities/${facilityId}/properties`);
+    url.searchParams.set('apiKey', this.apiKey);
+    url.searchParams.set('lang', language);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'MountVacation-MCP-Server/1.0',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch facility properties: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * Submit a booking request
+   */
+  async submitBooking(bookingData: BookingRequest): Promise<BookingResponse> {
+    const url = new URL(`${this.baseUrl}/bookings/`);
+    url.searchParams.set('apiKey', this.apiKey);
+
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'User-Agent': 'MountVacation-MCP-Server/1.0',
+      },
+      body: JSON.stringify(bookingData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to submit booking: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * Get booking details
+   */
+  async getBooking(bookingId: number, securityToken: string, currency: string = 'EUR'): Promise<BookingResponse> {
+    const url = new URL(`${this.baseUrl}/bookings/${bookingId}`);
+    url.searchParams.set('apiKey', this.apiKey);
+    url.searchParams.set('securityToken', securityToken);
+    url.searchParams.set('currency', currency);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'MountVacation-MCP-Server/1.0',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch booking: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * Cancel a booking
+   */
+  async cancelBooking(bookingId: number, securityToken: string): Promise<{
+    ID: number;
+    price: number;
+    paid: number;
+    cancellationFee: number;
+    cancellationAdmCosts: number;
+    refund: number;
+  }> {
+    const url = new URL(`${this.baseUrl}/bookings/${bookingId}/cancel`);
+    url.searchParams.set('apiKey', this.apiKey);
+
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'User-Agent': 'MountVacation-MCP-Server/1.0',
+      },
+      body: JSON.stringify({ securityToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to cancel booking: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.json();
   }
 }

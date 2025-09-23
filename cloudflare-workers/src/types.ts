@@ -62,8 +62,25 @@ export interface RawAccommodation {
   distRuns?: number;
   distCentre?: number;
   url?: string;
+  accommodationUrl?: string; // Main property page URL
+  pictures?: {
+    url: string;
+    pictures: string[];
+  };
   images?: string[];
   offers?: AccommodationOffer[];
+  // Additional fields from API
+  id?: number;
+  accommodationID?: number;
+  latitude?: number;
+  longitude?: number;
+  region?: string;
+  regionID?: number;
+  skiarea?: string;
+  pool?: boolean;
+  wellness?: boolean;
+  skiInOut?: boolean;
+  priority?: number;
 }
 
 export interface FormattedAccommodation {
@@ -72,7 +89,12 @@ export interface FormattedAccommodation {
     city: string;
     country: string;
     resort: string;
+    region: string;
     full_address: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    } | undefined;
   };
   property_details: {
     category: string;
@@ -81,6 +103,7 @@ export interface FormattedAccommodation {
     bedrooms: number | string;
     size_sqm: number | string;
     max_occupancy: number | string;
+    accommodation_id: number | string;
   };
   pricing: {
     total_price: number | string;
@@ -95,6 +118,9 @@ export interface FormattedAccommodation {
     breakfast_included: boolean;
     balcony: boolean;
     kitchen: boolean;
+    pool: boolean;
+    wellness: boolean;
+    ski_in_out: boolean;
   };
   distances: {
     to_resort_center: string;
@@ -107,7 +133,12 @@ export interface FormattedAccommodation {
     booking_conditions: string;
   };
   property_url: string;
+  property_page_url: string; // Main MountVacation property page
   images: string[];
+  image_gallery: {
+    thumbnail_urls: string[];
+    full_size_urls: string[];
+  };
 }
 
 export interface SearchResult {
@@ -183,4 +214,142 @@ export interface RateLimitInfo {
   requests: number;
   windowStart: number;
   blocked: boolean;
+}
+
+// New interfaces for accommodation properties API
+export interface AccommodationProperties {
+  accommodation: number;
+  properties: {
+    main: {
+      id: number;
+      giataID?: number;
+      category: number;
+      type: string;
+      title: string;
+      description: string;
+      city: string;
+      resort: string;
+      country: string;
+      region?: string;
+      cityID?: number;
+      resortID?: number;
+      regionID?: number;
+      countryID?: number;
+      languages?: string;
+      picturesWinter?: {
+        url: string;
+        pictures: string[];
+      };
+      picturesSummer?: {
+        url: string;
+        pictures: string[];
+      };
+      cancellationPolicy?: Array<{
+        from: number;
+        to: number;
+        fee: string;
+      }>;
+      active: boolean;
+    };
+    geolocation?: {
+      latitude: number;
+      longitude: number;
+    };
+    accommodationContactInfo?: {
+      accommodationUrl?: string;
+      accommodationEmail?: string;
+      accommodationPhone?: string;
+      accommodationStreet?: string;
+      accommodationPostal?: string;
+    };
+    wellness?: Record<string, boolean>;
+    freetime?: Record<string, boolean>;
+    general?: Record<string, boolean>;
+    food?: Record<string, boolean>;
+    distance?: Record<string, number>;
+    [key: string]: any;
+  };
+  facilitiesProperties?: Record<string, FacilityProperties>;
+}
+
+export interface FacilityProperties {
+  main: {
+    id: number;
+    accommodationID: number;
+    beds: number;
+    bedsExtra?: number;
+    bedrooms: number;
+    bathrooms: number;
+    sizeSqM?: number;
+    title: string;
+    description: string;
+    type: string;
+    subtype?: string;
+    pictures?: {
+      url: string;
+      pictures: string[];
+    };
+    minOccupancy?: number;
+    maxAdults?: number;
+    minAdults?: number;
+    maxChildren?: number;
+    minChildren?: number;
+    maxAgeForChildren?: number;
+    inPrice?: string;
+    active: boolean;
+  };
+  amenities?: Record<string, boolean>;
+  bathroom?: Record<string, boolean>;
+  kitchen?: Record<string, boolean>;
+  view?: Record<string, boolean>;
+}
+
+// Booking API interfaces
+export interface BookingRequest {
+  offer: {
+    accommodation: number;
+    offer: number;
+    from: string;
+    to: string;
+  };
+  reservationHolder: {
+    title: string;
+    firstname: string;
+    lastname: string;
+    address: string;
+    postal: string;
+    city: string;
+    country: string;
+    phone: string;
+    company?: string;
+    vatID?: string;
+  };
+  passengers: Array<{
+    firstname: string;
+    lastname: string;
+    birthday: string;
+    offer: number;
+  }>;
+  payment: {
+    method: string;
+    numOfInstallments: number;
+  };
+  lang: string;
+}
+
+export interface BookingResponse {
+  ID: number;
+  totalPrice: number;
+  reservationHolder: any;
+  passengers: any[];
+  offer: any;
+  payment: any;
+  session: string;
+  installments: Record<string, any>;
+  services: any[];
+  discount: number;
+  isClosed: boolean;
+  isSubmitted: boolean;
+  canBeUpdated: boolean;
+  allowedPaymentMethods: string[];
 }
