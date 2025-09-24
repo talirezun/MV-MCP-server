@@ -531,140 +531,261 @@ export class MountVacationClient {
     // Handle multi-country searches like "France or Italy", "French Alps or Italian Dolomites"
     const containsFrance = normalizedLocation.includes('france') || normalizedLocation.includes('french');
     const containsItaly = normalizedLocation.includes('italy') || normalizedLocation.includes('italian');
+    const containsAustria = normalizedLocation.includes('austria') || normalizedLocation.includes('austrian');
+    const containsSwitzerland = normalizedLocation.includes('switzerland') || normalizedLocation.includes('swiss');
 
-    if (containsFrance && containsItaly) {
-      // Multi-country search - prioritize both French and Italian destinations
+    // Multi-country searches - prioritize multiple destinations
+    if ((containsFrance && containsItaly) || (containsFrance && containsAustria) || (containsItaly && containsAustria)) {
+      this.logger.info('Multi-country search detected', { location, params: { france: containsFrance, italy: containsItaly, austria: containsAustria } });
 
-      // French ski destinations
-      strategies.push({
-        name: 'chamonix_multi_fallback',
-        params: { ...baseParams, resort: '9233' } // Chamonix
-      });
-      strategies.push({
-        name: 'val_disere_multi_fallback',
-        params: { ...baseParams, resort: '9234' } // Val d'Isère
-      });
-      strategies.push({
-        name: 'courchevel_multi_fallback',
-        params: { ...baseParams, resort: '9235' } // Courchevel
-      });
+      // French ski destinations (verified working resort IDs)
+      if (containsFrance) {
+        strategies.push({
+          name: 'chamonix_multi_fallback',
+          params: { ...baseParams, resort: '9233' } // Chamonix (verified working)
+        });
+        strategies.push({
+          name: 'avoriaz_multi_fallback',
+          params: { ...baseParams, resort: '9236' } // Avoriaz (verified working)
+        });
+        // Use geolocation for other French resorts
+        strategies.push({
+          name: 'val_disere_multi_fallback',
+          params: {
+            ...baseParams,
+            latitude: '45.4486',
+            longitude: '6.9786',
+            radius: '8000'
+          }
+        });
+      }
 
-      // Italian ski destinations
-      strategies.push({
-        name: 'madonna_campiglio_multi_fallback',
-        params: { ...baseParams, region: '911' } // Trentino-Alto Adige (Madonna di Campiglio)
-      });
-      strategies.push({
-        name: 'cortina_multi_fallback',
-        params: { ...baseParams, region: '914' } // Veneto (Cortina)
-      });
-      strategies.push({
-        name: 'val_gardena_multi_fallback',
-        params: { ...baseParams, region: '911' } // Trentino-Alto Adige (Val Gardena)
-      });
+      // Italian ski destinations (verified working region IDs)
+      if (containsItaly) {
+        strategies.push({
+          name: 'trentino_multi_fallback',
+          params: { ...baseParams, region: '911' } // Trentino-Alto Adige (verified working)
+        });
+        strategies.push({
+          name: 'veneto_multi_fallback',
+          params: { ...baseParams, region: '914' } // Veneto (Cortina area)
+        });
+        strategies.push({
+          name: 'valle_aosta_multi_fallback',
+          params: { ...baseParams, region: '913' } // Valle d'Aosta
+        });
+      }
+
+      // Austrian ski destinations
+      if (containsAustria) {
+        strategies.push({
+          name: 'austria_innsbruck_multi_fallback',
+          params: {
+            ...baseParams,
+            latitude: '47.2692',
+            longitude: '11.4041',
+            radius: '15000'
+          }
+        });
+        strategies.push({
+          name: 'austria_kitzbuhel_multi_fallback',
+          params: {
+            ...baseParams,
+            latitude: '47.4467',
+            longitude: '12.3914',
+            radius: '10000'
+          }
+        });
+      }
 
       return strategies; // Return early for multi-country searches
     }
 
-    // If location contains "italy" or "italian", try Italian regions
+    // Single country searches with enhanced logic
+
+    // Italy-specific searches
     if (normalizedLocation.includes('italy') || normalizedLocation.includes('italian')) {
       strategies.push({
-        name: 'italian_dolomites_fallback',
-        params: { ...baseParams, region: '4252' } // Italian Dolomites
-      });
-      strategies.push({
-        name: 'alto_adige_fallback',
-        params: { ...baseParams, region: '4251' } // Alto Adige
-      });
-    }
-
-    // If location contains "france" or "french", try French regions
-    if (normalizedLocation.includes('france') || normalizedLocation.includes('french')) {
-      strategies.push({
-        name: 'chamonix_fallback',
-        params: { ...baseParams, resort: '9233' } // Chamonix
-      });
-      strategies.push({
-        name: 'val_disere_fallback',
-        params: { ...baseParams, resort: '9234' } // Val d'Isère
-      });
-      strategies.push({
-        name: 'courchevel_fallback',
-        params: { ...baseParams, resort: '9235' } // Courchevel
-      });
-    }
-
-    // If location contains "dolomites", try Dolomites region
-    if (normalizedLocation.includes('dolomit')) {
-      strategies.push({
-        name: 'dolomites_fallback',
-        params: { ...baseParams, region: '4252' }
-      });
-    }
-
-    // If location contains "french" and "alps", try multiple French resorts
-    if (normalizedLocation.includes('french') && normalizedLocation.includes('alps')) {
-      strategies.push({
-        name: 'chamonix_alps_fallback',
-        params: { ...baseParams, resort: '9233' }
-      });
-      strategies.push({
-        name: 'avoriaz_alps_fallback',
-        params: { ...baseParams, resort: '9236' }
-      });
-    }
-
-    // If location contains "alps" (but not French), try Italian Alps
-    if (normalizedLocation.includes('alps') && !normalizedLocation.includes('french')) {
-      strategies.push({
-        name: 'italian_alps_fallback',
-        params: { ...baseParams, region: '4252' }
-      });
-    }
-
-    // Italian ski destinations - prioritize Italian regions
-    if (normalizedLocation.includes('italy') && (normalizedLocation.includes('ski') || normalizedLocation.includes('dolomit'))) {
-      // Try Italian ski regions first
-      strategies.push({
         name: 'trentino_alto_adige_fallback',
-        params: { ...baseParams, region: '911' } // Trentino-Alto Adige
+        params: { ...baseParams, region: '911' } // Primary Italian ski region
       });
       strategies.push({
         name: 'veneto_fallback',
-        params: { ...baseParams, region: '914' } // Veneto (Cortina)
+        params: { ...baseParams, region: '914' } // Cortina area
       });
       strategies.push({
         name: 'valle_aosta_fallback',
-        params: { ...baseParams, region: '913' } // Valle d'Aosta
+        params: { ...baseParams, region: '913' } // Cervinia, Courmayeur
       });
       strategies.push({
         name: 'lombardy_fallback',
-        params: { ...baseParams, region: '904' } // Lombardy (Livigno)
+        params: { ...baseParams, region: '904' } // Livigno, Bormio
+      });
+    }
+
+    // France-specific searches
+    if (normalizedLocation.includes('france') || normalizedLocation.includes('french')) {
+      // Use verified working resort IDs first
+      strategies.push({
+        name: 'chamonix_fallback',
+        params: { ...baseParams, resort: '9233' } // Chamonix (verified)
+      });
+      strategies.push({
+        name: 'avoriaz_fallback',
+        params: { ...baseParams, resort: '9236' } // Avoriaz (verified)
       });
 
-      // Only use geolocation as last resort with smaller radius
+      // Use geolocation for other major French resorts
       strategies.push({
-        name: 'italy_geolocation_fallback',
+        name: 'val_disere_fallback',
         params: {
           ...baseParams,
-          latitude: '46.4982',
-          longitude: '11.3548',
-          radius: '50000' // Smaller radius to focus on Italian Alps
+          latitude: '45.4486',
+          longitude: '6.9786',
+          radius: '8000'
+        }
+      });
+      strategies.push({
+        name: 'courchevel_fallback',
+        params: {
+          ...baseParams,
+          latitude: '45.4167',
+          longitude: '6.6333',
+          radius: '8000'
         }
       });
     }
 
-    // French ski destinations
-    if (normalizedLocation.includes('france') && normalizedLocation.includes('ski')) {
+    // Austria-specific searches
+    if (normalizedLocation.includes('austria') || normalizedLocation.includes('austrian')) {
       strategies.push({
-        name: 'french_alps_geolocation_fallback',
+        name: 'austria_innsbruck_fallback',
         params: {
           ...baseParams,
-          latitude: '45.9237',
-          longitude: '6.8694',
-          radius: '50000' // Focus on French Alps
+          latitude: '47.2692',
+          longitude: '11.4041',
+          radius: '15000'
         }
       });
+      strategies.push({
+        name: 'austria_kitzbuhel_fallback',
+        params: {
+          ...baseParams,
+          latitude: '47.4467',
+          longitude: '12.3914',
+          radius: '10000'
+        }
+      });
+      strategies.push({
+        name: 'austria_st_anton_fallback',
+        params: {
+          ...baseParams,
+          latitude: '47.1275',
+          longitude: '10.2606',
+          radius: '10000'
+        }
+      });
+    }
+
+    // Switzerland-specific searches
+    if (containsSwitzerland) {
+      strategies.push({
+        name: 'switzerland_zermatt_fallback',
+        params: {
+          ...baseParams,
+          latitude: '46.0207',
+          longitude: '7.7491',
+          radius: '10000'
+        }
+      });
+      strategies.push({
+        name: 'switzerland_st_moritz_fallback',
+        params: {
+          ...baseParams,
+          latitude: '46.4908',
+          longitude: '9.8355',
+          radius: '10000'
+        }
+      });
+      strategies.push({
+        name: 'switzerland_verbier_fallback',
+        params: {
+          ...baseParams,
+          latitude: '46.0964',
+          longitude: '7.2281',
+          radius: '10000'
+        }
+      });
+    }
+
+    // Regional searches
+    if (normalizedLocation.includes('dolomit')) {
+      strategies.push({
+        name: 'dolomites_trentino_fallback',
+        params: { ...baseParams, region: '911' }
+      });
+      strategies.push({
+        name: 'dolomites_veneto_fallback',
+        params: { ...baseParams, region: '914' }
+      });
+    }
+
+    // Alps searches
+    if (normalizedLocation.includes('alps')) {
+      if (normalizedLocation.includes('french')) {
+        strategies.push({
+          name: 'french_alps_chamonix_fallback',
+          params: { ...baseParams, resort: '9233' }
+        });
+        strategies.push({
+          name: 'french_alps_geolocation_fallback',
+          params: {
+            ...baseParams,
+            latitude: '45.9237',
+            longitude: '6.8694',
+            radius: '50000'
+          }
+        });
+      } else if (normalizedLocation.includes('italian')) {
+        strategies.push({
+          name: 'italian_alps_fallback',
+          params: { ...baseParams, region: '911' }
+        });
+      } else {
+        // Generic Alps search - try Italian Alps first (more reliable)
+        strategies.push({
+          name: 'alps_italian_fallback',
+          params: { ...baseParams, region: '911' }
+        });
+        strategies.push({
+          name: 'alps_french_fallback',
+          params: { ...baseParams, resort: '9233' }
+        });
+      }
+    }
+
+    // Ski-specific searches
+    if (normalizedLocation.includes('ski') || normalizedLocation.includes('skiing')) {
+      if (normalizedLocation.includes('europe')) {
+        // European ski search - try multiple regions
+        strategies.push({
+          name: 'europe_ski_italy_fallback',
+          params: { ...baseParams, region: '911' }
+        });
+        strategies.push({
+          name: 'europe_ski_france_fallback',
+          params: { ...baseParams, resort: '9233' }
+        });
+        strategies.push({
+          name: 'europe_ski_geolocation_fallback',
+          params: {
+            ...baseParams,
+            latitude: '46.4102',
+            longitude: '11.8440',
+            radius: '80000'
+          }
+        });
+      }
     }
 
     return strategies;
