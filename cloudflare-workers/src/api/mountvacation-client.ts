@@ -77,43 +77,51 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'pila': { region: 913 }, // Valle d'Aosta
   'via lattea': { region: 906 }, // Piedmont
 
-  // French Alps
-  'chamonix': { resort: 9471 },
-  'val d\'isere': { resort: 9472 },
-  'tignes': { resort: 9473 },
-  'les arcs': { resort: 9474 },
-  'la plagne': { resort: 9475 },
-  'courchevel': { resort: 9476 },
-  'meribel': { resort: 9477 },
-  'val thorens': { resort: 9478 },
-  'les menuires': { resort: 9479 },
-  'alpe d\'huez': { resort: 9480 },
-  'les deux alpes': { resort: 9481 },
-  'serre chevalier': { resort: 9482 },
+  // French Alps - CORRECTED RESORT IDs (verified with API)
+  'chamonix': { resort: 9233 },
+  'chamonix mont blanc': { resort: 9233 },
+  'avoriaz': { resort: 9236 },
+  // Note: Other French resort IDs need to be discovered from API
+  // For now, using coordinates for reliable search
+  'val d\'isere': { coordinates: { lat: 45.4486, lng: 6.9786, radius: 8000 } },
+  'val d\'isère': { coordinates: { lat: 45.4486, lng: 6.9786, radius: 8000 } },
+  'tignes': { coordinates: { lat: 45.4669, lng: 6.9062, radius: 8000 } },
+  'les arcs': { coordinates: { lat: 45.5707, lng: 6.8125, radius: 8000 } },
+  'la plagne': { coordinates: { lat: 45.5133, lng: 6.6778, radius: 8000 } },
+  'courchevel': { coordinates: { lat: 45.4167, lng: 6.6333, radius: 8000 } },
+  'meribel': { coordinates: { lat: 45.3833, lng: 6.5667, radius: 8000 } },
+  'méribel': { coordinates: { lat: 45.3833, lng: 6.5667, radius: 8000 } },
+  'val thorens': { coordinates: { lat: 45.2983, lng: 6.5797, radius: 8000 } },
+  'les menuires': { coordinates: { lat: 45.3167, lng: 6.5333, radius: 8000 } },
+  'alpe d\'huez': { coordinates: { lat: 45.0906, lng: 6.0678, radius: 8000 } },
+  'les deux alpes': { coordinates: { lat: 45.0133, lng: 6.1233, radius: 8000 } },
+  'serre chevalier': { coordinates: { lat: 44.9417, lng: 6.5500, radius: 8000 } },
 
-  // Austrian Alps
-  'innsbruck': { city: 1152 },
-  'kitzbuhel': { resort: 9483 },
-  'st anton': { resort: 9484 },
-  'st. anton am arlberg': { resort: 9484 },
-  'zell am see': { resort: 9485 },
-  'kaprun': { resort: 9486 },
-  'saalbach': { resort: 9487 },
-  'hinterglemm': { resort: 9488 },
-  'bad gastein': { resort: 9489 },
-  'schladming': { resort: 9490 },
+  // Austrian Alps - Using coordinates for reliable search
+  'innsbruck': { coordinates: { lat: 47.2692, lng: 11.4041, radius: 15000 } },
+  'kitzbuhel': { coordinates: { lat: 47.4467, lng: 12.3914, radius: 10000 } },
+  'kitzbühel': { coordinates: { lat: 47.4467, lng: 12.3914, radius: 10000 } },
+  'st anton': { coordinates: { lat: 47.1275, lng: 10.2606, radius: 10000 } },
+  'st. anton am arlberg': { coordinates: { lat: 47.1275, lng: 10.2606, radius: 10000 } },
+  'zell am see': { coordinates: { lat: 47.3254, lng: 12.7941, radius: 10000 } },
+  'kaprun': { coordinates: { lat: 47.2697, lng: 12.7558, radius: 10000 } },
+  'saalbach': { coordinates: { lat: 47.3889, lng: 12.6347, radius: 10000 } },
+  'hinterglemm': { coordinates: { lat: 47.3889, lng: 12.6347, radius: 10000 } },
+  'bad gastein': { coordinates: { lat: 47.1156, lng: 13.1344, radius: 10000 } },
+  'schladming': { coordinates: { lat: 47.3928, lng: 13.6872, radius: 10000 } },
 
-  // Swiss Alps
-  'zermatt': { resort: 9491 },
-  'st moritz': { resort: 9492 },
-  'davos': { resort: 9493 },
-  'klosters': { resort: 9494 },
-  'verbier': { resort: 9495 },
-  'crans montana': { resort: 9496 },
-  'saas fee': { resort: 9497 },
-  'grindelwald': { resort: 9498 },
-  'wengen': { resort: 9499 },
-  'murren': { resort: 9500 },
+  // Swiss Alps - Using coordinates for reliable search
+  'zermatt': { coordinates: { lat: 46.0207, lng: 7.7491, radius: 10000 } },
+  'st moritz': { coordinates: { lat: 46.4908, lng: 9.8355, radius: 10000 } },
+  'davos': { coordinates: { lat: 46.8043, lng: 9.8307, radius: 10000 } },
+  'klosters': { coordinates: { lat: 46.8781, lng: 9.8775, radius: 10000 } },
+  'verbier': { coordinates: { lat: 46.0964, lng: 7.2281, radius: 10000 } },
+  'crans montana': { coordinates: { lat: 46.3111, lng: 7.4850, radius: 10000 } },
+  'saas fee': { coordinates: { lat: 46.1097, lng: 7.9286, radius: 10000 } },
+  'grindelwald': { coordinates: { lat: 46.6244, lng: 8.0411, radius: 10000 } },
+  'wengen': { coordinates: { lat: 46.6081, lng: 7.9219, radius: 10000 } },
+  'murren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 10000 } },
+  'mürren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 10000 } },
 
   // Generic regions for broader searches
   'dolomites': { region: 4252 },
@@ -122,7 +130,6 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'alto adige': { region: 4251 },
   'south tyrol': { region: 4251 },
   'italian alps': { region: 4252 },
-  'french alps': { region: 4254 },
   'austrian alps': { region: 4255 },
   'swiss alps': { region: 4256 },
   'alps': { region: 4252 }, // Default to Italian Dolomites
@@ -181,6 +188,12 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   // Fallback coordinates for major areas (if IDs don't work)
   'italy skiing fallback': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 50000 } },
   'italy ski fallback': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 50000 } },
+
+  // Additional French Alps destinations - using multiple search strategies
+  'french alps': { resort: 9233 }, // Default to Chamonix for French Alps searches
+  'les trois vallees': { coordinates: { lat: 45.3333, lng: 6.6000, radius: 12000 } },
+  'paradiski': { coordinates: { lat: 45.5420, lng: 6.7450, radius: 12000 } },
+  'espace killy': { coordinates: { lat: 45.4577, lng: 6.9423, radius: 12000 } },
 };
 
 export class MountVacationClient {
