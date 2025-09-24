@@ -122,18 +122,23 @@ class MountVacationMCPServer {
 // Main execution
 async function main() {
   const server = new MountVacationMCPServer();
-  
-  // Read from stdin
-  process.stdin.setEncoding('utf8');
-  let buffer = '';
 
-  process.stdin.on('data', (chunk) => {
-    buffer += chunk;
+  // Send initialization notification (some MCP clients expect this)
+  console.log(JSON.stringify({
+    jsonrpc: '2.0',
+    method: 'notifications/initialized'
+  }));
+
+  // Handle stdin input line by line (proper MCP protocol)
+  const readline = require('readline');
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
   });
 
-  process.stdin.on('end', async () => {
+  rl.on('line', async (line) => {
     try {
-      const request = JSON.parse(buffer.trim());
+      const request = JSON.parse(line.trim());
       const response = await server.handleRequest(request);
       console.log(JSON.stringify(response));
     } catch (error) {
@@ -147,6 +152,19 @@ async function main() {
       }));
     }
   });
+
+  // Handle process termination gracefully
+  process.on('SIGINT', () => {
+    rl.close();
+    process.exit(0);
+  });
+
+  process.on('SIGTERM', () => {
+    rl.close();
+    process.exit(0);
+  });
 }
 
-main().catch(console.error);
+if (require.main === module) {
+  main().catch(console.error);
+}
