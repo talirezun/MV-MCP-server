@@ -127,7 +127,15 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'swiss alps': { region: 4256 },
   'alps': { region: 4252 }, // Default to Italian Dolomites
 
-  // Italian ski destinations (prioritize Italian regions)
+  // European mountain destinations - broader terms
+  'europe ski': { region: 4252 }, // Start with popular Italian region
+  'european ski resorts': { region: 4252 },
+  'europe skiing': { region: 4252 },
+  'european alps': { region: 4252 },
+  'mountain vacation europe': { region: 4252 },
+  'ski vacation europe': { region: 4252 },
+
+  // Country-specific ski destinations
   'italy ski resort': { region: 911 }, // Trentino-Alto Adige
   'italy ski resorts': { region: 911 },
   'italian ski resort': { region: 911 },
@@ -142,6 +150,33 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'skiing italy': { region: 911 },
   'ski in italy': { region: 911 },
   'skiing in italy': { region: 911 },
+
+  // French ski destinations
+  'france ski': { region: 4254 },
+  'french ski': { region: 4254 },
+  'france skiing': { region: 4254 },
+  'french skiing': { region: 4254 },
+  'ski france': { region: 4254 },
+  'skiing france': { region: 4254 },
+  'ski in france': { region: 4254 },
+
+  // Austrian ski destinations
+  'austria ski': { region: 4255 },
+  'austrian ski': { region: 4255 },
+  'austria skiing': { region: 4255 },
+  'austrian skiing': { region: 4255 },
+  'ski austria': { region: 4255 },
+  'skiing austria': { region: 4255 },
+  'ski in austria': { region: 4255 },
+
+  // Swiss ski destinations
+  'switzerland ski': { region: 4256 },
+  'swiss ski': { region: 4256 },
+  'switzerland skiing': { region: 4256 },
+  'swiss skiing': { region: 4256 },
+  'ski switzerland': { region: 4256 },
+  'skiing switzerland': { region: 4256 },
+  'ski in switzerland': { region: 4256 },
 
   // Fallback coordinates for major areas (if IDs don't work)
   'italy skiing fallback': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 50000 } },
@@ -165,7 +200,25 @@ export class MountVacationClient {
    * Search for accommodations using location mapping and multiple strategies
    */
   async searchAccommodations(params: SearchParams, env: Env): Promise<SearchResult> {
-    const { location, arrival_date, departure_date, nights, persons_ages, currency = 'EUR', max_results = 5 } = params;
+    const {
+      location,
+      accommodation_id,
+      accommodation_ids,
+      resort_id,
+      city_id,
+      latitude,
+      longitude,
+      radius,
+      arrival_date,
+      departure_date,
+      nights,
+      persons_ages,
+      persons,
+      currency = 'EUR',
+      language = 'en',
+      include_additional_fees = false,
+      max_results = 5
+    } = params;
 
     // Calculate departure_date if not provided but nights is provided
     let finalDepartureDate = departure_date;
@@ -186,27 +239,112 @@ export class MountVacationClient {
       return dateValidation;
     }
 
+    // Handle persons parameter - convert to persons_ages format if needed
+    let finalPersonsAges = persons_ages;
+    if (!persons_ages && persons) {
+      // Convert persons count to ages (assume all adults age 30)
+      finalPersonsAges = Array(persons).fill(30).join(',');
+    }
+
     // Base search parameters
     const baseParams: Record<string, string> = {
       arrival: arrival_date,
       departure: finalDepartureDate!,
-      personsAges: persons_ages || '',
+      personsAges: finalPersonsAges || '',
       currency: currency.toUpperCase(),
-      lang: 'en',
+      lang: language,
+      ...(include_additional_fees && { includeAdditionalFees: 'true' }),
     };
 
-    // Try to find location mapping
-    const locationMapping = location ? this.findLocationMapping(location) : null;
+    // Handle direct ID searches first (highest priority)
+    if (accommodation_id) {
+      return await this.searchByDirectParams({
+        ...baseParams,
+        accommodation: accommodation_id.toString()
+      }, env, max_results, 'accommodation_id');
+    }
 
-    if (locationMapping) {
-      // Use mapped location data
-      const searchStrategies = this.buildSearchStrategies(baseParams, locationMapping, location || '');
+    if (accommodation_ids && accommodation_ids.length > 0) {
+      return await this.searchByDirectParams({
+        ...baseParams,
+        accommodations: accommodation_ids.join(',')
+      }, env, max_results, 'accommodation_ids');
+    }
 
-      for (const strategy of searchStrategies) {
+    if (resort_id) {
+      return await this.searchByDirectParams({
+        ...baseParams,
+        resort: resort_id.toString()
+      }, env, max_results, 'resort_id');
+    }
+
+    if (city_id) {
+      return await this.searchByDirectParams({
+        ...baseParams,
+        city: city_id.toString()
+      }, env, max_results, 'city_id');
+    }
+
+    if (latitude && longitude && radius) {
+      return await this.searchByDirectParams({
+        ...baseParams,
+        latitude: latitude.toString(),
+        longitude: longitude.toString(),
+        radius: radius.toString()
+      }, env, max_results, 'geolocation');
+    }
+
+    // Handle location-based search
+    if (location) {
+      // Try to find location mapping
+      const locationMapping = this.findLocationMapping(location);
+
+      if (locationMapping) {
+        // Use mapped location data
+        const searchStrategies = this.buildSearchStrategies(baseParams, locationMapping, location);
+
+        for (const strategy of searchStrategies) {
+          try {
+            this.logger.debug('Trying mapped search strategy', {
+              strategy: strategy.name,
+              location: location,
+              params: strategy.params
+            });
+
+            const result = await this.makeApiRequest(strategy.params, env);
+
+            if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
+              const formatted = this.formatResults(result, max_results);
+              this.logger.info('Search successful with mapping', {
+                strategy: strategy.name,
+                location: location,
+                mapping: locationMapping,
+                results_count: formatted.accommodations?.length || 0,
+              });
+              return formatted;
+            }
+          } catch (error) {
+            this.logger.warn('Mapped search strategy failed', {
+              strategy: strategy.name,
+              location: location,
+              error: error instanceof Error ? error.message : String(error),
+            });
+            continue;
+          }
+        }
+      }
+
+      // If mapping failed or no mapping found, try fallback strategies
+      this.logger.info('No results with location mapping, trying fallback strategies', { location: location });
+
+      // Fallback: try generic region searches for common terms
+      const fallbackStrategies = this.buildFallbackStrategies(baseParams, location);
+
+      for (const strategy of fallbackStrategies) {
         try {
-          this.logger.debug('Trying mapped search strategy', {
+          this.logger.debug('Trying fallback search strategy', {
             strategy: strategy.name,
-            location: location || 'unknown',
+            location: location,
             params: strategy.params
           });
 
@@ -214,72 +352,82 @@ export class MountVacationClient {
 
           if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
             const formatted = this.formatResults(result, max_results);
-            this.logger.info('Search successful with mapping', {
+            this.logger.info('Search successful with fallback', {
               strategy: strategy.name,
-              location: location || 'unknown',
-              mapping: locationMapping,
+              location: location,
               results_count: formatted.accommodations?.length || 0,
             });
             return formatted;
           }
         } catch (error) {
-          this.logger.warn('Mapped search strategy failed', {
+          this.logger.warn('Fallback search strategy failed', {
             strategy: strategy.name,
-            location: location || 'unknown',
+            location: location,
             error: error instanceof Error ? error.message : String(error),
           });
           continue;
         }
       }
+
+      // If all strategies failed
+      return {
+        error: `No accommodations found for '${location}'. This location may not be available in our database.`,
+        suggestions: [
+          'Try a popular ski resort name (e.g., "Madonna di Campiglio", "Cortina", "Val Gardena")',
+          'Use broader search terms (e.g., "Italian Dolomites", "Alps")',
+          'Check the spelling of the location name',
+          'Try nearby resort or city names',
+        ],
+        available_locations: this.getSuggestedLocations(location),
+        timestamp: new Date().toISOString(),
+      };
     }
 
-    // If mapping failed or no mapping found, try fallback strategies
-    this.logger.info('No results with location mapping, trying fallback strategies', { location: location || 'unknown' });
-
-    // Fallback: try generic region searches for common terms
-    const fallbackStrategies = this.buildFallbackStrategies(baseParams, location || '');
-
-    for (const strategy of fallbackStrategies) {
-      try {
-        this.logger.debug('Trying fallback search strategy', {
-          strategy: strategy.name,
-          location: location || 'unknown',
-          params: strategy.params
-        });
-
-        const result = await this.makeApiRequest(strategy.params, env);
-
-        if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
-          const formatted = this.formatResults(result, max_results);
-          this.logger.info('Search successful with fallback', {
-            strategy: strategy.name,
-            location: location || 'unknown',
-            results_count: formatted.accommodations?.length || 0,
-          });
-          return formatted;
-        }
-      } catch (error) {
-        this.logger.warn('Fallback search strategy failed', {
-          strategy: strategy.name,
-          location: location || 'unknown',
-          error: error instanceof Error ? error.message : String(error),
-        });
-        continue;
-      }
-    }
-
-    // If all strategies failed
+    // If no search parameters provided
     return {
-      error: `No accommodations found for '${location}'. This location may not be available in our database.`,
-      suggestions: [
-        'Try a popular ski resort name (e.g., "Madonna di Campiglio", "Cortina", "Val Gardena")',
-        'Use broader search terms (e.g., "Italian Dolomites", "Alps")',
-        'Check the spelling of the location name',
-        'Try nearby resort or city names',
-      ],
-      available_locations: this.getSuggestedLocations(location || ''),
+      error: 'No search parameters provided. Please specify a location, accommodation ID, resort ID, city ID, or coordinates.',
       timestamp: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Search using direct API parameters (accommodation ID, resort ID, etc.)
+   */
+  private async searchByDirectParams(
+    params: Record<string, string>,
+    env: Env,
+    maxResults: number,
+    searchType: string
+  ): Promise<SearchResult> {
+    try {
+      this.logger.info('Direct parameter search', { searchType, params });
+
+      const result = await this.makeApiRequest(params, env);
+
+      if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
+        const formatted = this.formatResults(result, maxResults);
+        this.logger.info('Direct search successful', {
+          searchType,
+          results_count: formatted.accommodations?.length || 0,
+        });
+        return formatted;
+      } else {
+        return {
+          error: `No accommodations found for the specified ${searchType}.`,
+          timestamp: new Date().toISOString(),
+        };
+      }
+    } catch (error) {
+      this.logger.error('Direct parameter search failed', {
+        searchType,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      return {
+        error: `Search failed: ${error instanceof Error ? error.message : String(error)}`,
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 
   /**
@@ -676,6 +824,19 @@ export class MountVacationClient {
       const offers = acc.offers || [];
       const bestOffer = offers[0] || {};
 
+      // Process multiple offers for booking options
+      const bookingOffers = offers.slice(0, 3).map((offer: any) => ({
+        facility_title: offer.facilityTitle || offer.title || 'Room',
+        price: offer.totalPrice || offer.price || 'N/A',
+        currency: data.currency || 'EUR',
+        beds: offer.beds || 'N/A',
+        service_type: offer.service ? Object.keys(offer.service)[0] || 'N/A' : 'N/A',
+        booking_url: offer.reservationUrl || 'N/A',
+        free_cancellation_until: offer.freeCancellationBefore || 'Check policy',
+        breakfast_included: Boolean(offer.breakfastIncluded),
+        promotion: offer.promotion || null,
+      }));
+
       // Process images from pictures object
       const imageUrls: string[] = [];
       const thumbnailUrls: string[] = [];
@@ -744,10 +905,14 @@ export class MountVacationClient {
           to_city_center: acc.distCentre ? `${acc.distCentre}m` : 'N/A',
         },
         booking: {
-          reservation_url: bestOffer.reservationUrl || 'N/A',
+          primary_booking_url: bestOffer.reservationUrl || 'N/A',
           free_cancellation_until: bestOffer.freeCancellationBefore || 'Check policy',
           booking_conditions: bestOffer.conditions || 'Standard terms apply',
         },
+        // NEW: Multiple booking offers with direct links
+        booking_offers: bookingOffers,
+        // NEW: Quick booking link (most prominent)
+        book_now_url: bestOffer.reservationUrl || 'N/A',
         property_url: acc.url || 'N/A',
         property_page_url: acc.accommodationUrl || 'N/A', // Main MountVacation property page
         images: imageUrls.slice(0, 5), // Limit to first 5 images

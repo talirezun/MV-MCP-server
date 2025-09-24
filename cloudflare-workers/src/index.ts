@@ -581,6 +581,56 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
         required: ['latitude', 'longitude', 'radius', 'arrival_date'],
       },
     },
+    {
+      name: 'get_booking_links',
+      description: 'Get direct booking links for specific accommodations. This tool extracts and formats booking URLs prominently for easy access.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          accommodation_id: {
+            type: 'integer',
+            description: 'The accommodation ID to get booking links for',
+          },
+          arrival_date: {
+            type: 'string',
+            description: 'Check-in date in YYYY-MM-DD format',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          departure_date: {
+            type: 'string',
+            description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          nights: {
+            type: 'integer',
+            description: 'Number of nights. Alternative to departure_date',
+            minimum: 1,
+          },
+          persons_ages: {
+            type: 'string',
+            description: 'Ages separated by commas (e.g., "30,28,8")',
+            pattern: '^\\d+(,\\d+)*$',
+          },
+          persons: {
+            type: 'integer',
+            description: 'Number of persons (all adults). Alternative to persons_ages',
+            minimum: 1,
+          },
+          currency: {
+            type: 'string',
+            description: 'Currency code (default: EUR)',
+            default: 'EUR',
+          },
+          language: {
+            type: 'string',
+            description: 'Language code (default: en)',
+            enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
+            default: 'en',
+          },
+        },
+        required: ['accommodation_id', 'arrival_date'],
+      },
+    },
   ];
 
   logger.info('Tools list requested', { toolCount: tools.length });
@@ -655,6 +705,16 @@ async function handleToolCall(
           logger
         );
         return createSuccessResponse(request.id, geoSearchResult);
+
+      case 'get_booking_links':
+        const bookingLinksResult = await handleGetBookingLinks(
+          args,
+          env,
+          cacheManager,
+          apiClient,
+          logger
+        );
+        return createSuccessResponse(request.id, bookingLinksResult);
 
       default:
         return createErrorResponse(request.id, -32601, `Unknown tool: ${name}`);
@@ -951,6 +1011,102 @@ async function handleSearchByGeolocation(
           text: JSON.stringify({
             error: `Geolocation search failed: ${error instanceof Error ? error.message : String(error)}`,
             coordinates: { latitude: args.latitude, longitude: args.longitude, radius: args.radius },
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      ],
+    };
+  }
+}
+
+async function handleGetBookingLinks(
+  args: any,
+  env: Env,
+  cacheManager: CacheManager,
+  apiClient: MountVacationClient,
+  logger: any
+) {
+  try {
+    logger.info('Getting booking links', { accommodation_id: args.accommodation_id });
+
+    // Build search parameters for the specific accommodation
+    const searchParams: SearchParams = {
+      accommodation_id: args.accommodation_id,
+      arrival_date: args.arrival_date,
+      departure_date: args.departure_date,
+      nights: args.nights,
+      persons_ages: args.persons_ages,
+      persons: args.persons,
+      currency: args.currency || 'EUR',
+      language: args.language || 'en',
+      max_results: 1, // Only need this one accommodation
+    };
+
+    const result = await apiClient.searchAccommodations(searchParams, env);
+
+    if (result.error || !result.accommodations || result.accommodations.length === 0) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: 'No booking links found for this accommodation.',
+              accommodation_id: args.accommodation_id,
+              timestamp: new Date().toISOString(),
+            }),
+          },
+        ],
+      };
+    }
+
+    const accommodation = result.accommodations[0];
+
+    if (!accommodation) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: 'No accommodation data found.',
+              accommodation_id: args.accommodation_id,
+              timestamp: new Date().toISOString(),
+            }),
+          },
+        ],
+      };
+    }
+
+    // Format booking links prominently
+    const bookingInfo = {
+      accommodation_name: accommodation.name,
+      location: accommodation.location.full_address,
+      primary_booking_url: accommodation.book_now_url,
+      booking_offers: accommodation.booking_offers,
+      search_summary: result.search_summary,
+      message: `Found ${accommodation.booking_offers.length} booking option(s) for ${accommodation.name}`,
+    };
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(bookingInfo),
+        },
+      ],
+    };
+  } catch (error) {
+    logger.error('Get booking links failed', {
+      accommodation_id: args.accommodation_id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            error: `Failed to get booking links: ${error instanceof Error ? error.message : String(error)}`,
+            accommodation_id: args.accommodation_id,
             timestamp: new Date().toISOString(),
           }),
         },

@@ -147,10 +147,24 @@ export interface FormattedAccommodation {
     to_city_center: string;
   };
   booking: {
-    reservation_url: string;
+    primary_booking_url: string;
     free_cancellation_until: string;
     booking_conditions: string;
   };
+  // NEW: Multiple booking offers with direct links
+  booking_offers: Array<{
+    facility_title: string;
+    price: number | string;
+    currency: string;
+    beds: number | string;
+    service_type: string;
+    booking_url: string;
+    free_cancellation_until: string;
+    breakfast_included: boolean;
+    promotion: string | null;
+  }>;
+  // NEW: Quick booking link (most prominent)
+  book_now_url: string;
   property_url: string;
   property_page_url: string; // Main MountVacation property page
   images: string[];
@@ -227,6 +241,7 @@ export interface LogContext {
   max_requests?: number;
   window_start?: string;
   mapping?: any; // For location mapping information
+  searchType?: string; // For search type logging
   // Debug fields
   api_key_length?: number;
   api_key_prefix?: string;

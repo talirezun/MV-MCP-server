@@ -19,13 +19,14 @@ A comprehensive Model Context Protocol (MCP) server that provides **complete acc
 
 ## 🛠️ Complete API Integration
 
-### **6 Comprehensive MCP Tools**
-1. **`search_accommodations`** - Main search with location/geolocation support
-2. **`get_accommodation_details`** - Detailed property information with photos
-3. **`get_facility_details`** - Room-specific amenities and equipment
-4. **`search_by_resort_id`** - Resort-based search for ski areas
-5. **`search_by_city_id`** - City-based search for urban areas
-6. **`search_by_geolocation`** - GPS coordinate search with radius
+### **7 Comprehensive MCP Tools**
+1. **`search_accommodations`** - Main search with location/geolocation support + **🔗 Prominent booking links**
+2. **`get_booking_links`** - **NEW!** Direct booking URLs with multiple offers per accommodation
+3. **`get_accommodation_details`** - Detailed property information with photos
+4. **`get_facility_details`** - Room-specific amenities and equipment
+5. **`search_by_resort_id`** - Resort-based search for ski areas
+6. **`search_by_city_id`** - City-based search for urban areas
+7. **`search_by_geolocation`** - GPS coordinate search with radius
 
 ### **Complete Parameter Support**
 - **Search Methods**: Location name, resort ID, city ID, GPS coordinates, accommodation IDs
@@ -33,7 +34,7 @@ A comprehensive Model Context Protocol (MCP) server that provides **complete acc
 - **Guest Parameters**: Person ages, guest count, group configurations
 - **Localization**: Multi-currency (EUR, USD, GBP, etc.), multi-language (EN, DE, IT, FR, ES, etc.)
 - **Advanced Options**: Additional fees, pagination, result limits
-- **Booking Integration**: Direct booking URLs with pre-filled guest information
+- **🔗 Enhanced Booking Integration**: Prominent "BOOK NOW" links + multiple booking offers per accommodation
 
 ### **Rich Property Data**
 - **Property Information**: Photos, descriptions, amenities, GPS coordinates
