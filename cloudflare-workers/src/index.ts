@@ -260,6 +260,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
       description: 'Search for accommodations using the MountVacation API. Supports location-based search (city, resort, region names), specific accommodation IDs, resort IDs, city IDs, and geolocation-based search. Returns comprehensive accommodation details including pricing, amenities, pictures, distances, and booking information.',
       inputSchema: {
         type: 'object',
+        additionalProperties: false,
         properties: {
           // Search by location name (most common)
           location: {
@@ -363,9 +364,10 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
       description: 'Get detailed properties and amenities for a specific accommodation including facilities, wellness options, distances, and comprehensive image galleries.',
       inputSchema: {
         type: 'object',
+        additionalProperties: false,
         properties: {
           accommodation_id: {
-            type: 'number',
+            type: 'integer',
             description: 'The accommodation ID from search results',
           },
           language: {
@@ -388,13 +390,14 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
       description: 'Get detailed properties for a specific room or facility within an accommodation, including amenities, views, kitchen facilities, and bathroom details.',
       inputSchema: {
         type: 'object',
+        additionalProperties: false,
         properties: {
           accommodation_id: {
-            type: 'number',
+            type: 'integer',
             description: 'The accommodation ID',
           },
           facility_id: {
-            type: 'number',
+            type: 'integer',
             description: 'The facility/room ID',
           },
           language: {
@@ -412,6 +415,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
       description: 'Search all accommodations in a specific resort using resort ID. Returns all available accommodations in that resort with full details.',
       inputSchema: {
         type: 'object',
+        additionalProperties: false,
         properties: {
           resort_id: {
             type: 'integer',
@@ -467,6 +471,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
       description: 'Search all accommodations in a specific city using city ID. Returns all available accommodations in that city with full details.',
       inputSchema: {
         type: 'object',
+        additionalProperties: false,
         properties: {
           city_id: {
             type: 'integer',
@@ -522,6 +527,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
       description: 'Search accommodations within a specific radius from geographic coordinates. Useful for finding accommodations near specific locations.',
       inputSchema: {
         type: 'object',
+        additionalProperties: false,
         properties: {
           latitude: {
             type: 'number',
@@ -586,6 +592,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
       description: 'Get direct booking links for specific accommodations. This tool extracts and formats booking URLs prominently for easy access.',
       inputSchema: {
         type: 'object',
+        additionalProperties: false,
         properties: {
           accommodation_id: {
             type: 'integer',
@@ -636,6 +643,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
       description: 'Advanced research tool that mimics human vacation booking behavior - searches multiple regions, finds best dates, applies filters, and compares options',
       inputSchema: {
         type: 'object',
+        additionalProperties: false,
         properties: {
           regions: {
             type: 'array',
@@ -644,6 +652,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
           },
           preferred_dates: {
             type: 'object',
+            additionalProperties: false,
             properties: {
               arrival: { type: 'string', description: 'Preferred arrival date (YYYY-MM-DD)' },
               departure: { type: 'string', description: 'Preferred departure date (YYYY-MM-DD)' },
@@ -657,6 +666,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
           },
           budget: {
             type: 'object',
+            additionalProperties: false,
             properties: {
               max_total: { type: 'number', description: 'Maximum total budget for the stay' },
               currency: { type: 'string', description: 'Currency code', default: 'EUR' }
@@ -664,6 +674,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
           },
           requirements: {
             type: 'object',
+            additionalProperties: false,
             properties: {
               accommodation_type: { type: 'string', description: 'hotel, apartment, etc.' },
               board_type: { type: 'string', description: 'HB (half board), BB (bed & breakfast), OV (self catered), FB (full board)' },
@@ -674,6 +685,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
               },
               proximity: {
                 type: 'object',
+                additionalProperties: false,
                 properties: {
                   ski_slopes: { type: 'integer', description: 'Max distance to ski slopes in meters' },
                   center: { type: 'integer', description: 'Max distance to center in meters' }
