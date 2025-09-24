@@ -68,7 +68,6 @@ Copy this configuration to your MCP client settings, replacing the paths and API
 - **Augment Code**: Restart the application completely
 - **Claude Desktop**: Restart the application
 - **Other clients**: Follow their restart procedures
-
 You should see a green dot next to "mountvacation" with 8 tools available.
 
 ### Step 5: Test It Works
