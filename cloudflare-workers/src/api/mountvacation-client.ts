@@ -545,15 +545,23 @@ export class MountVacationClient {
       });
     }
 
-    // If location contains "alps", try major Alpine regions
-    if (normalizedLocation.includes('alps')) {
+    // If location contains "french" and "alps", try multiple French resorts
+    if (normalizedLocation.includes('french') && normalizedLocation.includes('alps')) {
+      strategies.push({
+        name: 'chamonix_fallback',
+        params: { ...baseParams, resort: '9233' }
+      });
+      strategies.push({
+        name: 'avoriaz_fallback',
+        params: { ...baseParams, resort: '9236' }
+      });
+    }
+
+    // If location contains "alps" (but not French), try Italian Alps
+    if (normalizedLocation.includes('alps') && !normalizedLocation.includes('french')) {
       strategies.push({
         name: 'italian_alps_fallback',
         params: { ...baseParams, region: '4252' }
-      });
-      strategies.push({
-        name: 'french_alps_fallback',
-        params: { ...baseParams, region: '4254' }
       });
     }
 
