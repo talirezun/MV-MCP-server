@@ -94,7 +94,7 @@ This means you're using the old version. Fix:
 
 - Check the path to the server file is correct
 - Verify Node.js is installed: `node --version`
-- Make script executable: `chmod +x /Users/talirezun/mountvacation-mcp-server.js`
+- Make script executable: `chmod +x /Users/your_project_folder/mountvacation-mcp-server.js`
 
 ### ❌ Red Dot in MCP Settings?
 
@@ -107,7 +107,7 @@ This means you're using the old version. Fix:
 Test the server directly:
 ```bash
 # Test multi-country search
-echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "search_accommodations", "arguments": {"location": "France or Italy", "arrival_date": "2025-12-15", "departure_date": "2025-12-20", "persons_ages": "30,30", "currency": "EUR", "max_results": 2}}}' | node /Users/talirezun/mountvacation-mcp-server.js
+echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "search_accommodations", "arguments": {"location": "France or Italy", "arrival_date": "2025-12-15", "departure_date": "2025-12-20", "persons_ages": "30,30", "currency": "EUR", "max_results": 2}}}' | node /Users/your_project_folder/mountvacation-mcp-server.js
 ```
 
 **Expected Output**: Should show French accommodations (Chamonix, etc.)
