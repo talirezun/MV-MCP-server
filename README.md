@@ -2,6 +2,18 @@
 
 A comprehensive Model Context Protocol (MCP) server that provides **complete access to the MountVacation API** for AI assistants. Search and book accommodations across **all of Europe** including Slovenia, Croatia, Italy, Austria, Switzerland, France, Spain, Germany, and more.
 
+## 🔧 **LATEST UPDATE - French Alps Fix Applied**
+
+**✅ CRITICAL ISSUE RESOLVED**: Fixed incorrect French resort ID mappings that were causing French Alps searches to return wrong results.
+
+**What was fixed**:
+- ✅ **Chamonix**: Corrected resort ID 9233 (was using wrong ID)
+- ✅ **Avoriaz**: Added correct resort ID 9236
+- ✅ **French Alps**: Now properly returns French accommodations
+- ✅ **All French searches**: Include prominent booking links
+
+**Verified working**: `"Chamonix"`, `"French Alps"`, `"Avoriaz"` all return proper French ski resort accommodations with booking URLs.
+
 ## 🌍 Complete European Coverage
 
 **MountVacation covers the entire European mountain vacation market** - from Alpine ski resorts to Mediterranean coastal retreats. This MCP server provides **100% API feature coverage** with no geographic limitations.
