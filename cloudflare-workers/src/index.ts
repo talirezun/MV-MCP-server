@@ -631,6 +631,65 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
         required: ['accommodation_id', 'arrival_date'],
       },
     },
+    {
+      name: 'research_accommodations',
+      description: 'Advanced research tool that mimics human vacation booking behavior - searches multiple regions, finds best dates, applies filters, and compares options',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          regions: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'List of regions to search (e.g., ["French Alps", "Italian Dolomites"])'
+          },
+          preferred_dates: {
+            type: 'object',
+            properties: {
+              arrival: { type: 'string', description: 'Preferred arrival date (YYYY-MM-DD)' },
+              departure: { type: 'string', description: 'Preferred departure date (YYYY-MM-DD)' },
+              flexible_days: { type: 'integer', description: 'Days of flexibility (+/- around preferred dates)', default: 3 }
+            },
+            required: ['arrival', 'departure']
+          },
+          persons_ages: {
+            type: 'string',
+            description: 'Comma-separated list of person ages (e.g., "18,18" for 2 adults)'
+          },
+          budget: {
+            type: 'object',
+            properties: {
+              max_total: { type: 'number', description: 'Maximum total budget for the stay' },
+              currency: { type: 'string', description: 'Currency code', default: 'EUR' }
+            }
+          },
+          requirements: {
+            type: 'object',
+            properties: {
+              accommodation_type: { type: 'string', description: 'hotel, apartment, etc.' },
+              board_type: { type: 'string', description: 'HB (half board), BB (bed & breakfast), OV (self catered), FB (full board)' },
+              amenities: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Required amenities: pool, wellness, fitness, parking, wifi, pets'
+              },
+              proximity: {
+                type: 'object',
+                properties: {
+                  ski_slopes: { type: 'integer', description: 'Max distance to ski slopes in meters' },
+                  center: { type: 'integer', description: 'Max distance to center in meters' }
+                }
+              }
+            }
+          },
+          results_per_region: {
+            type: 'integer',
+            description: 'Number of best results to return per region',
+            default: 3
+          }
+        },
+        required: ['regions', 'preferred_dates', 'persons_ages']
+      }
+    },
   ];
 
   logger.info('Tools list requested', { toolCount: tools.length });
@@ -715,6 +774,16 @@ async function handleToolCall(
           logger
         );
         return createSuccessResponse(request.id, bookingLinksResult);
+
+      case 'research_accommodations':
+        const researchResult = await handleResearchAccommodations(
+          args,
+          env,
+          cacheManager,
+          apiClient,
+          logger
+        );
+        return createSuccessResponse(request.id, researchResult);
 
       default:
         return createErrorResponse(request.id, -32601, `Unknown tool: ${name}`);
@@ -1107,6 +1176,52 @@ async function handleGetBookingLinks(
           text: JSON.stringify({
             error: `Failed to get booking links: ${error instanceof Error ? error.message : String(error)}`,
             accommodation_id: args.accommodation_id,
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      ],
+    };
+  }
+}
+
+async function handleResearchAccommodations(
+  args: any,
+  env: Env,
+  cacheManager: CacheManager,
+  apiClient: MountVacationClient,
+  logger: any
+) {
+  try {
+    logger.info('Starting accommodation research', {
+      regions: args.regions,
+      dates: args.preferred_dates,
+      budget: args.budget
+    });
+
+    const result = await apiClient.researchAccommodations(args, env);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+
+  } catch (error) {
+    logger.error('Research accommodations failed', {
+      error: error instanceof Error ? error.message : String(error),
+      regions: args.regions,
+    });
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            error: `Failed to research accommodations: ${error instanceof Error ? error.message : String(error)}`,
+            regions: args.regions,
             timestamp: new Date().toISOString(),
           }),
         },

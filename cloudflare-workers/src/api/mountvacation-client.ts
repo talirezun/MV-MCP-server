@@ -24,6 +24,9 @@ interface LocationMapping {
   region?: number;
   skiarea?: number;
   coordinates?: { lat: number; lng: number; radius?: number };
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
 }
 
 const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
@@ -123,24 +126,24 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'murren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 10000 } },
   'mürren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 10000 } },
 
-  // Generic regions for broader searches
-  'dolomites': { region: 4252 },
-  'dolomiti': { region: 4252 },
-  'trentino': { region: 4252 },
-  'alto adige': { region: 4251 },
-  'south tyrol': { region: 4251 },
-  'italian alps': { region: 4252 },
-  'austrian alps': { region: 4255 },
-  'swiss alps': { region: 4256 },
-  'alps': { region: 4252 }, // Default to Italian Dolomites
+  // Generic regions for broader searches - Use coordinates for reliability
+  'dolomites': { latitude: 46.4102, longitude: 11.8440, radius: 50000 }, // Dolomites center
+  'dolomiti': { latitude: 46.4102, longitude: 11.8440, radius: 50000 },
+  'trentino': { latitude: 46.0664, longitude: 11.1257, radius: 40000 }, // Trento area
+  'alto adige': { latitude: 46.4982, longitude: 11.3548, radius: 40000 }, // Bolzano area
+  'south tyrol': { latitude: 46.4982, longitude: 11.3548, radius: 40000 },
+  'italian alps': { latitude: 46.4102, longitude: 11.8440, radius: 60000 }, // Broader Italian Alps
+  'austrian alps': { latitude: 47.2692, longitude: 11.4041, radius: 60000 }, // Austrian Alps
+  'swiss alps': { latitude: 46.8182, longitude: 8.2275, radius: 60000 }, // Swiss Alps
+  'alps': { latitude: 46.4102, longitude: 11.8440, radius: 50000 }, // Default to Dolomites
 
-  // European mountain destinations - broader terms
-  'europe ski': { region: 4252 }, // Start with popular Italian region
-  'european ski resorts': { region: 4252 },
-  'europe skiing': { region: 4252 },
-  'european alps': { region: 4252 },
-  'mountain vacation europe': { region: 4252 },
-  'ski vacation europe': { region: 4252 },
+  // European mountain destinations - Use Dolomites coordinates for reliability
+  'europe ski': { latitude: 46.4102, longitude: 11.8440, radius: 80000 }, // Broad European Alps
+  'european ski resorts': { latitude: 46.4102, longitude: 11.8440, radius: 80000 },
+  'europe skiing': { latitude: 46.4102, longitude: 11.8440, radius: 80000 },
+  'european alps': { latitude: 46.4102, longitude: 11.8440, radius: 80000 },
+  'mountain vacation europe': { latitude: 46.4102, longitude: 11.8440, radius: 80000 },
+  'ski vacation europe': { latitude: 46.4102, longitude: 11.8440, radius: 80000 },
 
   // Country-specific ski destinations
   'italy ski resort': { region: 911 }, // Trentino-Alto Adige
@@ -158,32 +161,32 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'ski in italy': { region: 911 },
   'skiing in italy': { region: 911 },
 
-  // French ski destinations
-  'france ski': { region: 4254 },
-  'french ski': { region: 4254 },
-  'france skiing': { region: 4254 },
-  'french skiing': { region: 4254 },
-  'ski france': { region: 4254 },
-  'skiing france': { region: 4254 },
-  'ski in france': { region: 4254 },
+  // French ski destinations - Use major resort IDs instead of broken regions
+  'france ski': { resort: 9233 }, // Chamonix
+  'french ski': { resort: 9233 },
+  'france skiing': { resort: 9233 },
+  'french skiing': { resort: 9233 },
+  'ski france': { resort: 9233 },
+  'skiing france': { resort: 9233 },
+  'ski in france': { resort: 9233 },
 
-  // Austrian ski destinations
-  'austria ski': { region: 4255 },
-  'austrian ski': { region: 4255 },
-  'austria skiing': { region: 4255 },
-  'austrian skiing': { region: 4255 },
-  'ski austria': { region: 4255 },
-  'skiing austria': { region: 4255 },
-  'ski in austria': { region: 4255 },
+  // Austrian ski destinations - Use coordinates instead of broken regions
+  'austria ski': { latitude: 47.2692, longitude: 11.4041, radius: 50000 }, // Innsbruck area
+  'austrian ski': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
+  'austria skiing': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
+  'austrian skiing': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
+  'ski austria': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
+  'skiing austria': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
+  'ski in austria': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
 
-  // Swiss ski destinations
-  'switzerland ski': { region: 4256 },
-  'swiss ski': { region: 4256 },
-  'switzerland skiing': { region: 4256 },
-  'swiss skiing': { region: 4256 },
-  'ski switzerland': { region: 4256 },
-  'skiing switzerland': { region: 4256 },
-  'ski in switzerland': { region: 4256 },
+  // Swiss ski destinations - Use coordinates instead of broken regions
+  'switzerland ski': { latitude: 46.8182, longitude: 8.2275, radius: 50000 }, // Central Switzerland
+  'swiss ski': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
+  'switzerland skiing': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
+  'swiss skiing': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
+  'ski switzerland': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
+  'skiing switzerland': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
+  'ski in switzerland': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
 
   // Fallback coordinates for major areas (if IDs don't work)
   'italy skiing fallback': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 50000 } },
@@ -598,6 +601,312 @@ export class MountVacationClient {
     }
 
     return strategies;
+  }
+
+  /**
+   * Advanced research method that mimics human vacation booking behavior
+   */
+  async researchAccommodations(params: {
+    regions: string[];
+    preferred_dates: {
+      arrival: string;
+      departure: string;
+      flexible_days?: number;
+    };
+    persons_ages: string;
+    budget?: {
+      max_total: number;
+      currency?: string;
+    };
+    requirements?: {
+      accommodation_type?: string;
+      board_type?: string;
+      amenities?: string[];
+      proximity?: {
+        ski_slopes?: number;
+        center?: number;
+      };
+    };
+    results_per_region?: number;
+  }, env: Env): Promise<any> {
+    const results = {
+      search_summary: {
+        regions_searched: params.regions,
+        preferred_dates: params.preferred_dates,
+        budget: params.budget,
+        requirements: params.requirements,
+        total_regions: params.regions.length,
+        results_per_region: params.results_per_region || 3
+      },
+      regional_results: [] as any[],
+      best_overall: [] as any[],
+      alternative_dates: [] as any[]
+    };
+
+    // Search each region
+    for (const region of params.regions) {
+      try {
+        this.logger.info('Researching region', { location: region } as any);
+
+        // Try preferred dates first
+        const regionResult = await this.searchRegionWithFilters(
+          region,
+          params.preferred_dates.arrival,
+          params.preferred_dates.departure,
+          params.persons_ages,
+          env,
+          params.budget,
+          params.requirements,
+          params.results_per_region || 3
+        );
+
+        results.regional_results.push({
+          region: region,
+          preferred_dates_results: regionResult,
+          alternative_dates_results: []
+        });
+
+        // If flexible dates and few results, try alternative dates
+        if (regionResult.accommodations.length < (params.results_per_region || 3) &&
+            params.preferred_dates.flexible_days && params.preferred_dates.flexible_days > 0) {
+
+          const alternativeDates = this.generateAlternativeDates(
+            params.preferred_dates.arrival,
+            params.preferred_dates.departure,
+            params.preferred_dates.flexible_days
+          );
+
+          for (const altDate of alternativeDates.slice(0, 2)) { // Try 2 alternative date ranges
+            const altResult = await this.searchRegionWithFilters(
+              region,
+              altDate.arrival,
+              altDate.departure,
+              params.persons_ages,
+              env,
+              params.budget,
+              params.requirements,
+              params.results_per_region || 3
+            );
+
+            if (altResult.accommodations.length > 0) {
+              results.regional_results[results.regional_results.length - 1].alternative_dates_results.push({
+                dates: altDate,
+                results: altResult
+              });
+            }
+          }
+        }
+
+      } catch (error) {
+        this.logger.error('Region research failed', { location: region, error: error instanceof Error ? error.message : String(error) } as any);
+        results.regional_results.push({
+          region: region,
+          error: 'Search failed for this region',
+          preferred_dates_results: { accommodations: [] },
+          alternative_dates_results: []
+        });
+      }
+    }
+
+    // Compile best overall results across all regions
+    results.best_overall = this.compileBestOverallResults(results.regional_results, params.budget);
+
+    return results;
+  }
+
+  /**
+   * Search a region with advanced filtering
+   */
+  private async searchRegionWithFilters(
+    region: string,
+    arrival: string,
+    departure: string,
+    persons_ages: string,
+    env: Env,
+    budget?: { max_total: number; currency?: string },
+    requirements?: {
+      accommodation_type?: string;
+      board_type?: string;
+      amenities?: string[];
+      proximity?: { ski_slopes?: number; center?: number };
+    },
+    maxResults: number = 3
+  ): Promise<any> {
+    // First do basic search
+    const searchResult = await this.searchAccommodations({
+      location: region,
+      arrival_date: arrival,
+      departure_date: departure,
+      persons_ages: persons_ages,
+      currency: budget?.currency || 'EUR',
+      max_results: maxResults * 3 // Get more to filter from
+    }, env);
+
+    if (!searchResult.accommodations || searchResult.accommodations.length === 0) {
+      return { accommodations: [], search_summary: searchResult.search_summary };
+    }
+
+    // Apply filters
+    let filteredAccommodations = searchResult.accommodations;
+
+    // Budget filter - work with processed format
+    if (budget?.max_total) {
+      filteredAccommodations = filteredAccommodations.filter((acc: any) => {
+        const totalPrice = acc.pricing?.total_price || Infinity;
+        return totalPrice <= budget.max_total;
+      });
+    }
+
+    // Amenities filter - work with processed format
+    if (requirements?.amenities && requirements.amenities.length > 0) {
+      filteredAccommodations = filteredAccommodations.filter((acc: any) => {
+        return requirements.amenities!.every(amenity => {
+          switch (amenity.toLowerCase()) {
+            case 'pool': return acc.amenities?.pool === true;
+            case 'wellness': return acc.amenities?.wellness === true;
+            case 'fitness': return acc.amenities?.fitness === true;
+            case 'parking': return acc.amenities?.parking === true;
+            case 'wifi': return acc.amenities?.wifi === true;
+            case 'pets': return acc.amenities?.pets === true;
+            default: return true;
+          }
+        });
+      });
+    }
+
+    // Proximity filter - work with processed format
+    if (requirements?.proximity) {
+      filteredAccommodations = filteredAccommodations.filter((acc: any) => {
+        let passesProximity = true;
+        if (requirements.proximity!.ski_slopes && acc.distances?.ski_slopes) {
+          passesProximity = passesProximity && acc.distances.ski_slopes <= requirements.proximity!.ski_slopes;
+        }
+        if (requirements.proximity!.center && acc.distances?.center) {
+          passesProximity = passesProximity && acc.distances.center <= requirements.proximity!.center;
+        }
+        return passesProximity;
+      });
+    }
+
+    // Board type filter - work with processed format
+    if (requirements?.board_type) {
+      filteredAccommodations = filteredAccommodations.filter((acc: any) => {
+        if (!acc.booking_offers) return false;
+        return acc.booking_offers.some((offer: any) =>
+          offer.board_type === requirements.board_type
+        );
+      });
+    }
+
+    // Sort by best value (price vs amenities) - work with processed format
+    filteredAccommodations.sort((a: any, b: any) => {
+      const aPrice = a.pricing?.total_price || Infinity;
+      const bPrice = b.pricing?.total_price || Infinity;
+
+      // Factor in amenities score
+      const aAmenities = (a.amenities?.pool ? 1 : 0) + (a.amenities?.wellness ? 1 : 0) + (a.amenities?.fitness ? 1 : 0) + (a.amenities?.parking ? 1 : 0);
+      const bAmenities = (b.amenities?.pool ? 1 : 0) + (b.amenities?.wellness ? 1 : 0) + (b.amenities?.fitness ? 1 : 0) + (b.amenities?.parking ? 1 : 0);
+
+      // Best value = lower price + more amenities
+      const aScore = aPrice - (aAmenities * 50); // Each amenity worth 50 EUR discount
+      const bScore = bPrice - (bAmenities * 50);
+
+      return aScore - bScore;
+    });
+
+    return {
+      accommodations: filteredAccommodations.slice(0, maxResults),
+      search_summary: {
+        ...searchResult.search_summary,
+        filters_applied: {
+          budget: budget,
+          requirements: requirements,
+          original_count: searchResult.accommodations.length,
+          filtered_count: filteredAccommodations.length
+        }
+      }
+    };
+  }
+
+  /**
+   * Generate alternative date ranges
+   */
+  private generateAlternativeDates(arrival: string, departure: string, flexibleDays: number): Array<{arrival: string, departure: string}> {
+    const arrivalDate = new Date(arrival);
+    const departureDate = new Date(departure);
+    const stayDuration = Math.ceil((departureDate.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    const alternatives = [];
+
+    // Earlier dates
+    for (let i = 1; i <= flexibleDays; i++) {
+      const newArrival = new Date(arrivalDate);
+      newArrival.setDate(newArrival.getDate() - i);
+      const newDeparture = new Date(newArrival);
+      newDeparture.setDate(newDeparture.getDate() + stayDuration);
+
+      alternatives.push({
+        arrival: newArrival.toISOString().split('T')[0] as string,
+        departure: newDeparture.toISOString().split('T')[0] as string
+      });
+    }
+
+    // Later dates
+    for (let i = 1; i <= flexibleDays; i++) {
+      const newArrival = new Date(arrivalDate);
+      newArrival.setDate(newArrival.getDate() + i);
+      const newDeparture = new Date(newArrival);
+      newDeparture.setDate(newDeparture.getDate() + stayDuration);
+
+      alternatives.push({
+        arrival: newArrival.toISOString().split('T')[0] as string,
+        departure: newDeparture.toISOString().split('T')[0] as string
+      });
+    }
+
+    return alternatives;
+  }
+
+  /**
+   * Compile best overall results across regions
+   */
+  private compileBestOverallResults(regionalResults: any[], budget?: { max_total: number; currency?: string }): any[] {
+    const allAccommodations = [];
+
+    for (const regionResult of regionalResults) {
+      if (regionResult.preferred_dates_results?.accommodations) {
+        for (const acc of regionResult.preferred_dates_results.accommodations) {
+          allAccommodations.push({
+            ...acc,
+            search_region: regionResult.region,
+            date_type: 'preferred'
+          });
+        }
+      }
+
+      if (regionResult.alternative_dates_results) {
+        for (const altResult of regionResult.alternative_dates_results) {
+          for (const acc of altResult.results.accommodations) {
+            allAccommodations.push({
+              ...acc,
+              search_region: regionResult.region,
+              date_type: 'alternative',
+              alternative_dates: altResult.dates
+            });
+          }
+        }
+      }
+    }
+
+    // Sort by best overall value - work with processed format
+    allAccommodations.sort((a: any, b: any) => {
+      const aPrice = a.pricing?.total_price || Infinity;
+      const bPrice = b.pricing?.total_price || Infinity;
+
+      return aPrice - bPrice;
+    });
+
+    return allAccommodations.slice(0, 6); // Top 6 overall
   }
 
   /**
