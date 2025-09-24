@@ -27,16 +27,16 @@ Copy this configuration to your Augment Code MCP settings:
   "mcpServers": {
     "mountvacation": {
       "command": "node",
-      "args": ["/Users/talirezun/mountvacation-mcp-server.js"],
+      "args": ["/Users/your folder/mountvacation-mcp-server.js"],
       "env": {
-        "MOUNTVACATION_API_KEY": "0e9147e2a4316bfd6c69a8d1ae6044e4879764a7783f8898a87ec976b420800e2570d234863e2a2ac62dfe0d595014e145ea3a89d69dc6213ef99d94cb3a71e2"
+        "MOUNTVACATION_API_KEY": "your Mount Vacation API Key"
       }
     }
   }
 }
 ```
 
-### Step 3: Restart Augment Code
+### Step 3: Restart your Client
 You should see a green dot next to "mountvacation" with 8 tools available.
 
 ### Step 4: Test It Works
