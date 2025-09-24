@@ -528,6 +528,44 @@ export class MountVacationClient {
     const strategies = [];
     const normalizedLocation = location.toLowerCase();
 
+    // Handle multi-country searches like "France or Italy", "French Alps or Italian Dolomites"
+    const containsFrance = normalizedLocation.includes('france') || normalizedLocation.includes('french');
+    const containsItaly = normalizedLocation.includes('italy') || normalizedLocation.includes('italian');
+
+    if (containsFrance && containsItaly) {
+      // Multi-country search - prioritize both French and Italian destinations
+
+      // French ski destinations
+      strategies.push({
+        name: 'chamonix_multi_fallback',
+        params: { ...baseParams, resort: '9233' } // Chamonix
+      });
+      strategies.push({
+        name: 'val_disere_multi_fallback',
+        params: { ...baseParams, resort: '9234' } // Val d'Isère
+      });
+      strategies.push({
+        name: 'courchevel_multi_fallback',
+        params: { ...baseParams, resort: '9235' } // Courchevel
+      });
+
+      // Italian ski destinations
+      strategies.push({
+        name: 'madonna_campiglio_multi_fallback',
+        params: { ...baseParams, region: '911' } // Trentino-Alto Adige (Madonna di Campiglio)
+      });
+      strategies.push({
+        name: 'cortina_multi_fallback',
+        params: { ...baseParams, region: '914' } // Veneto (Cortina)
+      });
+      strategies.push({
+        name: 'val_gardena_multi_fallback',
+        params: { ...baseParams, region: '911' } // Trentino-Alto Adige (Val Gardena)
+      });
+
+      return strategies; // Return early for multi-country searches
+    }
+
     // If location contains "italy" or "italian", try Italian regions
     if (normalizedLocation.includes('italy') || normalizedLocation.includes('italian')) {
       strategies.push({
@@ -537,6 +575,22 @@ export class MountVacationClient {
       strategies.push({
         name: 'alto_adige_fallback',
         params: { ...baseParams, region: '4251' } // Alto Adige
+      });
+    }
+
+    // If location contains "france" or "french", try French regions
+    if (normalizedLocation.includes('france') || normalizedLocation.includes('french')) {
+      strategies.push({
+        name: 'chamonix_fallback',
+        params: { ...baseParams, resort: '9233' } // Chamonix
+      });
+      strategies.push({
+        name: 'val_disere_fallback',
+        params: { ...baseParams, resort: '9234' } // Val d'Isère
+      });
+      strategies.push({
+        name: 'courchevel_fallback',
+        params: { ...baseParams, resort: '9235' } // Courchevel
       });
     }
 
@@ -551,11 +605,11 @@ export class MountVacationClient {
     // If location contains "french" and "alps", try multiple French resorts
     if (normalizedLocation.includes('french') && normalizedLocation.includes('alps')) {
       strategies.push({
-        name: 'chamonix_fallback',
+        name: 'chamonix_alps_fallback',
         params: { ...baseParams, resort: '9233' }
       });
       strategies.push({
-        name: 'avoriaz_fallback',
+        name: 'avoriaz_alps_fallback',
         params: { ...baseParams, resort: '9236' }
       });
     }
@@ -596,6 +650,19 @@ export class MountVacationClient {
           latitude: '46.4982',
           longitude: '11.3548',
           radius: '50000' // Smaller radius to focus on Italian Alps
+        }
+      });
+    }
+
+    // French ski destinations
+    if (normalizedLocation.includes('france') && normalizedLocation.includes('ski')) {
+      strategies.push({
+        name: 'french_alps_geolocation_fallback',
+        params: {
+          ...baseParams,
+          latitude: '45.9237',
+          longitude: '6.8694',
+          radius: '50000' // Focus on French Alps
         }
       });
     }
