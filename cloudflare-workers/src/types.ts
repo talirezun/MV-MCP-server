@@ -198,6 +198,10 @@ export interface APIResponse {
   nights?: number;
   personsAges?: number[];
   currency?: string;
+  links?: {
+    extendedAreaSearch?: string;
+    [key: string]: any;
+  };
 }
 
 export interface CacheEntry {
@@ -228,6 +232,7 @@ export interface LogContext {
   cache_key?: string;
   client_id?: string;
   removed_entries?: number;
+  match?: any; // For dynamic ID mapping matches
   cleaned_entries?: number;
   remaining_entries?: number;
   timeout_ms?: number;
@@ -249,6 +254,9 @@ export interface LogContext {
   has_accommodations?: boolean;
   response_keys?: string[];
   first_accommodation?: any;
+  has_extended_search?: boolean;
+  extended_search_url?: string;
+  extended_search_used?: boolean;
 }
 
 export interface RateLimitInfo {

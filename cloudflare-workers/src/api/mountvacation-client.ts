@@ -15,6 +15,7 @@ import {
   BookingResponse
 } from '../types';
 import { Logger } from '../utils/logger';
+import { IdMappingManager, LocationMatch } from './id-mapping';
 
 // Location mapping for popular ski destinations
 // This maps location names to MountVacation API IDs
@@ -88,13 +89,13 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   // For now, using coordinates for reliable search
   'val d\'isere': { coordinates: { lat: 45.4486, lng: 6.9786, radius: 8000 } },
   'val d\'isère': { coordinates: { lat: 45.4486, lng: 6.9786, radius: 8000 } },
-  'tignes': { coordinates: { lat: 45.4669, lng: 6.9062, radius: 8000 } },
+  'tignes': { resort: 70 },
   'les arcs': { coordinates: { lat: 45.5707, lng: 6.8125, radius: 8000 } },
-  'la plagne': { coordinates: { lat: 45.5133, lng: 6.6778, radius: 8000 } },
+  'la plagne': { resort: 28 },
   'courchevel': { coordinates: { lat: 45.4167, lng: 6.6333, radius: 8000 } },
   'meribel': { coordinates: { lat: 45.3833, lng: 6.5667, radius: 8000 } },
   'méribel': { coordinates: { lat: 45.3833, lng: 6.5667, radius: 8000 } },
-  'val thorens': { coordinates: { lat: 45.2983, lng: 6.5797, radius: 8000 } },
+  'val thorens': { skiarea: 1 }, // Les 3 Vallées ski area
   'les menuires': { coordinates: { lat: 45.3167, lng: 6.5333, radius: 8000 } },
   'alpe d\'huez': { coordinates: { lat: 45.0906, lng: 6.0678, radius: 8000 } },
   'les deux alpes': { coordinates: { lat: 45.0133, lng: 6.1233, radius: 8000 } },
@@ -113,14 +114,14 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'bad gastein': { coordinates: { lat: 47.1156, lng: 13.1344, radius: 10000 } },
   'schladming': { coordinates: { lat: 47.3928, lng: 13.6872, radius: 10000 } },
 
-  // Swiss Alps - Using coordinates for reliable search
-  'zermatt': { coordinates: { lat: 46.0207, lng: 7.7491, radius: 10000 } },
-  'st moritz': { coordinates: { lat: 46.4908, lng: 9.8355, radius: 10000 } },
-  'davos': { coordinates: { lat: 46.8043, lng: 9.8307, radius: 10000 } },
+  // Swiss Alps - Using ski areas for reliable search
+  'zermatt': { skiarea: 10 }, // Matterhorn ski paradise
+  'st moritz': { resort: 72 },
+  'davos': { resort: 8 },
   'klosters': { coordinates: { lat: 46.8781, lng: 9.8775, radius: 10000 } },
   'verbier': { coordinates: { lat: 46.0964, lng: 7.2281, radius: 10000 } },
   'crans montana': { coordinates: { lat: 46.3111, lng: 7.4850, radius: 10000 } },
-  'saas fee': { coordinates: { lat: 46.1097, lng: 7.9286, radius: 10000 } },
+  'saas fee': { resort: 5 },
   'grindelwald': { coordinates: { lat: 46.6244, lng: 8.0411, radius: 10000 } },
   'wengen': { coordinates: { lat: 46.6081, lng: 7.9219, radius: 10000 } },
   'murren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 10000 } },
@@ -161,14 +162,9 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'ski in italy': { region: 911 },
   'skiing in italy': { region: 911 },
 
-  // French ski destinations - Use major resort IDs instead of broken regions
-  'france ski': { resort: 9233 }, // Chamonix
-  'french ski': { resort: 9233 },
-  'france skiing': { resort: 9233 },
-  'french skiing': { resort: 9233 },
-  'ski france': { resort: 9233 },
-  'skiing france': { resort: 9233 },
-  'ski in france': { resort: 9233 },
+  // French ski destinations - Use ski areas for better coverage
+  'france': { skiarea: 1 }, // Les 3 Vallées (includes Val Thorens, Les Menuires, Courchevel)
+  'ski in france': { skiarea: 1 }, // Les 3 Vallées for specific ski searches
 
   // Austrian ski destinations - Use coordinates instead of broken regions
   'austria ski': { latitude: 47.2692, longitude: 11.4041, radius: 50000 }, // Innsbruck area
@@ -179,14 +175,9 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'skiing austria': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
   'ski in austria': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
 
-  // Swiss ski destinations - Use coordinates instead of broken regions
-  'switzerland ski': { latitude: 46.8182, longitude: 8.2275, radius: 50000 }, // Central Switzerland
-  'swiss ski': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
-  'switzerland skiing': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
-  'swiss skiing': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
-  'ski switzerland': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
-  'skiing switzerland': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
-  'ski in switzerland': { latitude: 46.8182, longitude: 8.2275, radius: 50000 },
+  // Swiss ski destinations - Use ski areas for better coverage
+  'switzerland': { skiarea: 10 }, // Matterhorn ski paradise (Zermatt)
+  'ski in switzerland': { skiarea: 10 },
 
   // Fallback coordinates for major areas (if IDs don't work)
   'italy skiing fallback': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 50000 } },
@@ -197,6 +188,70 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'les trois vallees': { coordinates: { lat: 45.3333, lng: 6.6000, radius: 12000 } },
   'paradiski': { coordinates: { lat: 45.5420, lng: 6.7450, radius: 12000 } },
   'espace killy': { coordinates: { lat: 45.4577, lng: 6.9423, radius: 12000 } },
+
+  // Slovenia ski destinations - VERIFIED RESORT IDs from API
+  'kranjska gora': { resort: 87 },
+  'bohinj': { resort: 76 },
+  'vogel': { resort: 76 },
+  'pokljuka': { resort: 76 },
+  'cerkno': { resort: 75 },
+  'slovenia ski': { resort: 87 }, // Default to Kranjska Gora
+  'slovenian ski': { resort: 87 },
+  'slovenia skiing': { resort: 87 },
+  'slovenian skiing': { resort: 87 },
+  'ski slovenia': { resort: 87 },
+  'skiing slovenia': { resort: 87 },
+  'ski in slovenia': { resort: 87 },
+  'skiing in slovenia': { resort: 87 },
+
+  // Austria - Use Tirol region for broad country search
+  'austria': { region: 607 }, // Tirol region
+
+  // Additional France ski destinations - Use ski areas for better coverage
+  'chamrousse': { resort: 45 },
+  'la bresse': { resort: 43 },
+  'besse super besse': { resort: 85 },
+  'france ski': { skiarea: 1 }, // Les 3 Vallées
+  'french ski': { skiarea: 1 },
+  'france skiing': { skiarea: 1 },
+  'french skiing': { skiarea: 1 },
+  'ski france': { skiarea: 1 },
+  'skiing france': { skiarea: 1 },
+
+  // Additional Switzerland ski destinations - Use ski areas for better coverage
+  'gstaad': { resort: 9 },
+  'saint moritz': { resort: 72 },
+  'lenzerheide': { resort: 6 },
+  'flims laax': { skiarea: 9 }, // Laax ski area
+
+  'switzerland ski': { skiarea: 10 }, // Default to Matterhorn
+  'swiss ski': { skiarea: 10 },
+  'switzerland skiing': { skiarea: 10 },
+  'swiss skiing': { skiarea: 10 },
+  'ski switzerland': { skiarea: 10 },
+  'skiing switzerland': { skiarea: 10 },
+
+  // Germany ski destinations - VERIFIED RESORT IDs from API
+  'garmisch partenkirchen': { resort: 35 },
+  'oberstdorf': { resort: 55 },
+  'germany ski': { resort: 35 }, // Default to Garmisch
+  'german ski': { resort: 35 },
+  'germany skiing': { resort: 35 },
+  'german skiing': { resort: 35 },
+  'ski germany': { resort: 35 },
+  'skiing germany': { resort: 35 },
+
+  // Bosnia ski destinations - VERIFIED RESORT IDs from API
+  'jahorina': { resort: 9609 },
+  'vlasic': { resort: 9608 },
+  'bjelasnica': { resort: 9610 },
+  'igman': { resort: 9613 },
+  'bosnia ski': { resort: 9609 }, // Default to Jahorina
+  'bosnian ski': { resort: 9609 },
+  'bosnia skiing': { resort: 9609 },
+  'bosnian skiing': { resort: 9609 },
+  'ski bosnia': { resort: 9609 },
+  'skiing bosnia': { resort: 9609 },
 };
 
 export class MountVacationClient {
@@ -205,11 +260,13 @@ export class MountVacationClient {
   private timeout: number;
   private logger: Logger;
   private apiKey: string;
+  private idMappingManager: IdMappingManager;
 
   constructor(env: Env, logger: Logger, userApiKey: string) {
     this.timeout = parseInt(env.API_TIMEOUT_SECONDS) * 1000;
     this.logger = logger;
     this.apiKey = userApiKey; // Use user-provided API key, not environment variable
+    this.idMappingManager = new IdMappingManager(userApiKey);
   }
 
   /**
@@ -312,7 +369,62 @@ export class MountVacationClient {
 
     // Handle location-based search
     if (location) {
-      // Try to find location mapping
+      this.logger.info(`[MountVacationClient] Starting location-based search for: "${location}"`);
+
+      // Try dynamic ID mapping first
+      try {
+        this.logger.info(`[MountVacationClient] Attempting dynamic ID mapping for: "${location}"`);
+        const locationMatches = await this.idMappingManager.resolveLocation(location, env);
+        this.logger.info(`[MountVacationClient] Dynamic ID mapping returned ${locationMatches.length} matches`);
+
+        if (locationMatches.length > 0) {
+          this.logger.info(`[MountVacationClient] Processing ${Math.min(locationMatches.length, 3)} location matches`);
+          // Try each location match in order of confidence
+          for (const match of locationMatches.slice(0, 3)) { // Try top 3 matches
+            this.logger.info(`[MountVacationClient] Trying match: ${match.name} (${match.type}, confidence: ${match.confidence})`);
+            const searchStrategies = this.buildDynamicSearchStrategies(baseParams, match, location);
+
+            for (const strategy of searchStrategies) {
+              try {
+                this.logger.debug('Trying dynamic ID mapping strategy', {
+                  strategy: strategy.name,
+                  location: location,
+                  match: match,
+                  params: strategy.params
+                });
+
+                const result = await this.makeApiRequest(strategy.params, env);
+
+                if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
+                  const formatted = this.formatResults(result, max_results);
+                  this.logger.info('Search successful with dynamic ID mapping', {
+                    strategy: strategy.name,
+                    location: location,
+                    match: match,
+                    results_count: formatted.accommodations?.length || 0,
+                  });
+                  return formatted;
+                }
+              } catch (error) {
+                this.logger.warn('Dynamic ID mapping strategy failed', {
+                  strategy: strategy.name,
+                  location: location,
+                  match: match,
+                  error: error instanceof Error ? error.message : String(error),
+                });
+                continue;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        this.logger.warn('Dynamic ID mapping failed, falling back to static mapping', {
+          location: location,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      // Fallback to static location mapping if dynamic mapping fails
       const locationMapping = this.findLocationMapping(location);
 
       if (locationMapping) {
@@ -321,7 +433,7 @@ export class MountVacationClient {
 
         for (const strategy of searchStrategies) {
           try {
-            this.logger.debug('Trying mapped search strategy', {
+            this.logger.debug('Trying static mapped search strategy', {
               strategy: strategy.name,
               location: location,
               params: strategy.params
@@ -331,7 +443,7 @@ export class MountVacationClient {
 
             if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
               const formatted = this.formatResults(result, max_results);
-              this.logger.info('Search successful with mapping', {
+              this.logger.info('Search successful with static mapping', {
                 strategy: strategy.name,
                 location: location,
                 mapping: locationMapping,
@@ -340,7 +452,7 @@ export class MountVacationClient {
               return formatted;
             }
           } catch (error) {
-            this.logger.warn('Mapped search strategy failed', {
+            this.logger.warn('Static mapped search strategy failed', {
               strategy: strategy.name,
               location: location,
               error: error instanceof Error ? error.message : String(error),
@@ -468,12 +580,20 @@ export class MountVacationClient {
   }
 
   /**
-   * Build search strategies based on location mapping
+   * Build search strategies based on location mapping (prioritized for best accommodation coverage)
    */
   private buildSearchStrategies(baseParams: Record<string, string>, mapping: LocationMapping, location: string) {
     const strategies = [];
 
-    // Resort search (highest priority)
+    // Skiarea search (HIGHEST PRIORITY - best accommodation coverage)
+    if (mapping.skiarea) {
+      strategies.push({
+        name: 'skiarea_mapped',
+        params: { ...baseParams, skiArea: mapping.skiarea.toString() }
+      });
+    }
+
+    // Resort search (second priority)
     if (mapping.resort) {
       strategies.push({
         name: 'resort_mapped',
@@ -481,15 +601,7 @@ export class MountVacationClient {
       });
     }
 
-    // Skiarea search
-    if (mapping.skiarea) {
-      strategies.push({
-        name: 'skiarea_mapped',
-        params: { ...baseParams, skiarea: mapping.skiarea.toString() }
-      });
-    }
-
-    // City search
+    // City search (third priority)
     if (mapping.city) {
       strategies.push({
         name: 'city_mapped',
@@ -497,7 +609,7 @@ export class MountVacationClient {
       });
     }
 
-    // Region search
+    // Region search (fourth priority)
     if (mapping.region) {
       strategies.push({
         name: 'region_mapped',
@@ -514,6 +626,67 @@ export class MountVacationClient {
           latitude: mapping.coordinates.lat.toString(),
           longitude: mapping.coordinates.lng.toString(),
           radius: (mapping.coordinates.radius || 50000).toString()
+        }
+      });
+    }
+
+    return strategies;
+  }
+
+  /**
+   * Build search strategies based on dynamic ID mapping
+   */
+  private buildDynamicSearchStrategies(baseParams: Record<string, string>, match: LocationMatch, location: string) {
+    const strategies = [];
+
+    // Use the appropriate search parameter based on match type
+    switch (match.type) {
+      case 'resort':
+        strategies.push({
+          name: 'resort_dynamic',
+          params: { ...baseParams, resort: match.id.toString() }
+        });
+        break;
+
+      case 'city':
+        strategies.push({
+          name: 'city_dynamic',
+          params: { ...baseParams, city: match.id.toString() }
+        });
+        break;
+
+      case 'region':
+        strategies.push({
+          name: 'region_dynamic',
+          params: { ...baseParams, region: match.id.toString() }
+        });
+        break;
+
+      case 'skiarea':
+        strategies.push({
+          name: 'skiarea_dynamic',
+          params: { ...baseParams, skiArea: match.id.toString() }
+        });
+        break;
+
+      case 'country':
+        // For country matches, search by country code
+        strategies.push({
+          name: 'country_dynamic',
+          params: { ...baseParams, country: match.countryCode || match.id.toString() }
+        });
+        break;
+    }
+
+    // If coordinates are available, add geolocation search as fallback
+    if (match.coordinates) {
+      strategies.push({
+        name: 'geolocation_dynamic',
+        params: {
+          ...baseParams,
+          latitude: match.coordinates.lat.toString(),
+          longitude: match.coordinates.lng.toString(),
+          radius: '10000' // 10km radius
         }
       });
     }
@@ -1178,6 +1351,7 @@ export class MountVacationClient {
         this.logger.debug('MountVacation API Response', {
           accommodations_count: data.accommodations?.length || 0,
           has_accommodations: !!data.accommodations,
+          has_extended_search: !!data.links?.extendedAreaSearch,
           response_keys: Object.keys(data),
           first_accommodation: data.accommodations?.[0] ? {
             id: data.accommodations[0].id,
@@ -1187,6 +1361,40 @@ export class MountVacationClient {
             resort: data.accommodations[0].resort
           } : null
         });
+
+        // If no accommodations found but extended area search is available, try it automatically
+        if ((!data.accommodations || data.accommodations.length === 0) && data.links?.extendedAreaSearch) {
+          this.logger.info('No accommodations found, trying extended area search', {
+            extended_search_url: data.links.extendedAreaSearch
+          });
+
+          try {
+            const extendedUrl = data.links.extendedAreaSearch + `&apiKey=${this.apiKey}`;
+            const extendedResponse = await fetch(extendedUrl, {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'MountVacation-MCP-Worker/1.0'
+              },
+              signal: AbortSignal.timeout(this.timeout)
+            });
+
+            if (extendedResponse.ok) {
+              const extendedData = await extendedResponse.json() as APIResponse;
+              if (extendedData.accommodations && extendedData.accommodations.length > 0) {
+                this.logger.info('Extended area search successful', {
+                  accommodations_count: extendedData.accommodations.length,
+                  extended_search_used: true
+                });
+                return extendedData;
+              }
+            }
+          } catch (extendedError) {
+            this.logger.warn('Extended area search failed', {
+              error: extendedError instanceof Error ? extendedError.message : String(extendedError)
+            });
+          }
+        }
 
         return data;
       } else {
