@@ -546,13 +546,13 @@ class MountVacationMCPServer {
             jsonrpc: '2.0',
             id: request.id,
             result: {
-              protocolVersion: '2024-11-05',
+              protocolVersion: '2025-06-18',
               capabilities: {
                 tools: {}
               },
               serverInfo: {
                 name: 'mountvacation-mcp-server',
-                version: '2.3.0'
+                version: '3.0.0'
               }
             }
           };

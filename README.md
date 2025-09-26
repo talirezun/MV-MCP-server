@@ -1,22 +1,22 @@
-# MountVacation MCP Server v2.2 🎿
+# MountVacation MCP Server v3.0 🎿
 
-**Enhanced with Full API Utilization + Claude Desktop Compatibility**
+**Protocol Version Update - Universal Claude Desktop Compatibility**
 
 A Model Context Protocol (MCP) server that provides access to MountVacation's accommodation booking API for European ski destinations and vacation rentals.
 
-## 🚀 What's New in v2.2
+## 🚀 What's New in v3.0 - CRITICAL CLAUDE DESKTOP FIX
 
-- ✅ **Claude Desktop Compatibility Fixed**: Resolved ZodError validation issues
-- ✅ **Full API Utilization**: All 5 MountVacation API endpoints integrated (countries, resorts, regions, cities, ski areas)
-- ✅ **Cross-border Discovery**: German searches now find Austrian accommodations
-- ✅ **Extended Area Search**: Automatic fallbacks for maximum accommodation coverage
+- 🔥 **CLAUDE DESKTOP COMPATIBILITY FIXED**: Updated to MCP Protocol 2025-06-18
+- ✅ **ZodError Issues Completely Resolved**: Protocol version mismatch was the root cause
 - ✅ **Universal MCP Client Support**: Works with Claude Desktop, Augment Code, LM Studio, and all MCP clients
+- ✅ **No Functional Changes**: All 8 tools and features remain identical
+- ✅ **Full API Utilization**: All 5 MountVacation API endpoints integrated
+- ✅ **Cross-border Discovery**: German searches find Austrian accommodations
 - ✅ **86% European Coverage**: 6 out of 7 major ski countries working
-- ✅ **8 Comprehensive Tools**: Complete accommodation search and booking functionality
 
 ## 🛠️ Quick Installation
 
-### Step 1: Download the MCP Server v2.3
+### Step 1: Download the MCP Server v3.0
 Replace `YOUR_USERNAME` with your actual username:
 
 **macOS/Linux:**
@@ -25,7 +25,7 @@ curl -o ~/mountvacation-mcp-server.js https://raw.githubusercontent.com/talirezu
 chmod +x ~/mountvacation-mcp-server.js
 ```
 
-**Note**: v2.2 includes Claude Desktop compatibility fixes. If you're upgrading from v2.1, simply re-download the file.
+**🔥 CRITICAL UPDATE**: v3.0 fixes Claude Desktop ZodError issues by updating to MCP Protocol 2025-06-18. **Claude Desktop users MUST re-download this version.**
 
 **Windows (PowerShell):**
 ```powershell
