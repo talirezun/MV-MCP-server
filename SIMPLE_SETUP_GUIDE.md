@@ -13,16 +13,16 @@
 
 ## 🚀 Super Simple Setup (2 Steps!)
 
-### Step 1: Download the MCP Bridge (30 seconds)
+### Step 1: Download the MCP Server v2.2 (30 seconds)
 
 Open your terminal and run these two commands:
 
 ```bash
-curl -L -o mountvacation-mcp.js "https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/scripts/standalone-mcp-bridge.js"
-chmod +x mountvacation-mcp.js
+curl -L -o mountvacation-mcp-server.js "https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/mountvacation-mcp-server.js"
+chmod +x mountvacation-mcp-server.js
 ```
 
-**That's it!** You now have the MountVacation MCP bridge on your computer.
+**That's it!** You now have the MountVacation MCP server v2.2 with Claude Desktop compatibility fixes.
 
 ### Step 2: Add to Claude Desktop (1 minute)
 
@@ -37,7 +37,7 @@ chmod +x mountvacation-mcp.js
   "mcpServers": {
     "mountvacation": {
       "command": "node",
-      "args": ["/full/path/to/mountvacation-mcp.js"],
+      "args": ["/full/path/to/mountvacation-mcp-server.js"],
       "env": {
         "MOUNTVACATION_API_KEY": "YOUR_API_KEY_HERE"
       }
