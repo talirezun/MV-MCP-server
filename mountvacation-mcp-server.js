@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * MountVacation MCP Server v3.1
- * FIXED: Claude Desktop Zod validation compatibility
+ * MountVacation MCP Server v3.2
+ * FIXED: Claude Desktop MCP Protocol Compliance
  *
  * Resolves ZodError validation issues by:
- * - Removing problematic schema patterns (regex, enum+default, min/max constraints)
- * - Simplifying complex nested object schemas
- * - Maintaining full functionality with cleaner schema definitions
+ * - Removing server-side notifications/initialized (protocol violation)
+ * - Following proper MCP initialization sequence per specification
+ * - Server now purely reactive, only responds to client requests
  * - Universal MCP client compatibility achieved
  */
 
@@ -443,7 +443,7 @@ class MountVacationMCPServer {
               },
               serverInfo: {
                 name: 'mountvacation-mcp-server',
-                version: '3.1.0'
+                version: '3.2.0'
               }
             }
           };
@@ -502,12 +502,6 @@ class MountVacationMCPServer {
 // Main execution
 async function main() {
   const server = new MountVacationMCPServer();
-
-  // Send initialization notification (some MCP clients expect this)
-  console.log(JSON.stringify({
-    jsonrpc: '2.0',
-    method: 'notifications/initialized'
-  }));
 
   // Handle stdin input line by line (proper MCP protocol)
   const readline = require('readline');
