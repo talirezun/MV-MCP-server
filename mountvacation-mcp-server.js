@@ -349,6 +349,7 @@ class MountVacationMCPServer {
         description: 'Advanced research tool that searches multiple regions and compares options',
         inputSchema: {
           type: 'object',
+          additionalProperties: false,
           properties: {
             regions: {
               type: 'string',
@@ -443,7 +444,7 @@ class MountVacationMCPServer {
               },
               serverInfo: {
                 name: 'mountvacation-mcp-server',
-                version: '3.2.0'
+                version: '3.2.1'
               }
             }
           };
