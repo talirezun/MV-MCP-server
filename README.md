@@ -16,7 +16,7 @@ A Model Context Protocol (MCP) server that provides access to MountVacation's ac
 
 ## 🛠️ Quick Installation
 
-### Step 1: Download the MCP Server v2.2
+### Step 1: Download the MCP Server v2.3
 Replace `YOUR_USERNAME` with your actual username:
 
 **macOS/Linux:**
