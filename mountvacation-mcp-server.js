@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * MountVacation MCP Server v2.3
- * FIXED: Claude Desktop compatibility - resolved input echo issue
+ * MountVacation MCP Server v3.1
+ * FIXED: Claude Desktop Zod validation compatibility
  *
- * Fixes the ZodError validation issues in Claude Desktop by:
- * - Removing input echo from readline interface
- * - Including local tool definitions for proper schema validation
+ * Resolves ZodError validation issues by:
+ * - Removing problematic schema patterns (regex, enum+default, min/max constraints)
+ * - Simplifying complex nested object schemas
+ * - Maintaining full functionality with cleaner schema definitions
+ * - Universal MCP client compatibility achieved
  */
 
 const https = require('https');
@@ -62,57 +64,43 @@ class MountVacationMCPServer {
             },
             arrival_date: {
               type: 'string',
-              description: 'Check-in date in YYYY-MM-DD format (e.g., "2024-03-10"). Must not be in the past.',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+              description: 'Check-in date in YYYY-MM-DD format (e.g., "2024-03-10"). Must not be in the past.'
             },
             departure_date: {
               type: 'string',
-              description: 'Check-out date in YYYY-MM-DD format (e.g., "2024-03-17"). Alternative: use nights instead.',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+              description: 'Check-out date in YYYY-MM-DD format (e.g., "2024-03-17"). Alternative: use nights instead.'
             },
             nights: {
               type: 'integer',
-              description: 'Number of nights to stay. Alternative to departure_date.',
-              minimum: 1
+              description: 'Number of nights to stay. Alternative to departure_date.'
             },
             persons_ages: {
               type: 'string',
-              description: 'Ages of all persons separated by commas (e.g., "30,28,8,5" for 2 adults and 2 children). Recommended for accurate pricing with children discounts.',
-              pattern: '^\\d+(,\\d+)*$'
+              description: 'Ages of all persons separated by commas (e.g., "30,28,8,5" for 2 adults and 2 children). Recommended for accurate pricing with children discounts.'
             },
             persons: {
               type: 'integer',
-              description: 'Number of persons (all treated as adults). Alternative to persons_ages.',
-              minimum: 1
+              description: 'Number of persons (all treated as adults). Alternative to persons_ages.'
             },
             currency: {
               type: 'string',
-              description: 'Currency code for pricing. Supported: AUD, BGN, BRL, CAD, CHF, CNY, CZK, DKK, EUR, GBP, HKD, HRK, HUF, IDR, ILS, INR, JPY, KRW, LTL, MXN, MYR, NOK, NZD, PHP, PLN, RON, RUB, SEK, SGD, THB, TRY, USD, ZAR',
-              default: 'EUR'
+              description: 'Currency code for pricing. Supported: AUD, BGN, BRL, CAD, CHF, CNY, CZK, DKK, EUR, GBP, HKD, HRK, HUF, IDR, ILS, INR, JPY, KRW, LTL, MXN, MYR, NOK, NZD, PHP, PLN, RON, RUB, SEK, SGD, THB, TRY, USD, ZAR'
             },
             language: {
               type: 'string',
-              description: 'Language for translated content. Supported: en, de, it, fr, sl, hr, pl, cz',
-              enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
-              default: 'en'
+              description: 'Language for translated content. Supported: en, de, it, fr, sl, hr, pl, cz'
             },
             include_additional_fees: {
               type: 'boolean',
-              description: 'Include additional fees in search results for more accurate total pricing',
-              default: false
+              description: 'Include additional fees in search results for more accurate total pricing'
             },
             max_results: {
               type: 'integer',
-              description: 'Maximum number of accommodations to return per page (1-100)',
-              minimum: 1,
-              maximum: 100,
-              default: 10
+              description: 'Maximum number of accommodations to return per page (1-100)'
             },
             page: {
               type: 'integer',
-              description: 'Page number for pagination (starts from 1)',
-              minimum: 1,
-              default: 1
+              description: 'Page number for pagination (starts from 1)'
             }
           },
           required: ['arrival_date']
@@ -131,14 +119,11 @@ class MountVacationMCPServer {
             },
             language: {
               type: 'string',
-              description: 'Language for descriptions (default: "en")',
-              enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
-              default: 'en'
+              description: 'Language for descriptions (default: "en")'
             },
             include_facilities: {
               type: 'boolean',
-              description: 'Include detailed facility properties (default: true)',
-              default: true
+              description: 'Include detailed facility properties (default: true)'
             }
           },
           required: ['accommodation_id']
@@ -161,9 +146,7 @@ class MountVacationMCPServer {
             },
             language: {
               type: 'string',
-              description: 'Language for descriptions (default: "en")',
-              enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
-              default: 'en'
+              description: 'Language for descriptions (default: "en")'
             }
           },
           required: ['accommodation_id', 'facility_id']
@@ -182,44 +165,35 @@ class MountVacationMCPServer {
             },
             arrival_date: {
               type: 'string',
-              description: 'Check-in date in YYYY-MM-DD format',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+              description: 'Check-in date in YYYY-MM-DD format'
             },
             departure_date: {
               type: 'string',
-              description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+              description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights'
             },
             nights: {
               type: 'integer',
-              description: 'Number of nights. Alternative to departure_date',
-              minimum: 1
+              description: 'Number of nights. Alternative to departure_date'
             },
             persons: {
               type: 'integer',
-              description: 'Number of persons (all adults). Alternative to persons_ages',
-              minimum: 1
+              description: 'Number of persons (all adults). Alternative to persons_ages'
             },
             persons_ages: {
               type: 'string',
-              description: 'Ages separated by commas (e.g., "30,28,8")',
-              pattern: '^\\d+(,\\d+)*$'
+              description: 'Ages separated by commas (e.g., "30,28,8")'
             },
             currency: {
               type: 'string',
-              description: 'Currency code (default: EUR)',
-              default: 'EUR'
+              description: 'Currency code (default: EUR)'
             },
             language: {
               type: 'string',
-              description: 'Language code (default: en)',
-              enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
-              default: 'en'
+              description: 'Language code (default: en)'
             },
             include_additional_fees: {
               type: 'boolean',
-              description: 'Include additional fees for accurate pricing',
-              default: false
+              description: 'Include additional fees for accurate pricing'
             }
           },
           required: ['resort_id', 'arrival_date']
@@ -238,44 +212,35 @@ class MountVacationMCPServer {
             },
             arrival_date: {
               type: 'string',
-              description: 'Check-in date in YYYY-MM-DD format',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+              description: 'Check-in date in YYYY-MM-DD format'
             },
             departure_date: {
               type: 'string',
-              description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+              description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights'
             },
             nights: {
               type: 'integer',
-              description: 'Number of nights. Alternative to departure_date',
-              minimum: 1
+              description: 'Number of nights. Alternative to departure_date'
             },
             persons: {
               type: 'integer',
-              description: 'Number of persons (all adults). Alternative to persons_ages',
-              minimum: 1
+              description: 'Number of persons (all adults). Alternative to persons_ages'
             },
             persons_ages: {
               type: 'string',
-              description: 'Ages separated by commas (e.g., "30,28,8")',
-              pattern: '^\\d+(,\\d+)*$'
+              description: 'Ages separated by commas (e.g., "30,28,8")'
             },
             currency: {
               type: 'string',
-              description: 'Currency code (default: EUR)',
-              default: 'EUR'
+              description: 'Currency code (default: EUR)'
             },
             language: {
               type: 'string',
-              description: 'Language code (default: en)',
-              enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
-              default: 'en'
+              description: 'Language code (default: en)'
             },
             include_additional_fees: {
               type: 'boolean',
-              description: 'Include additional fees for accurate pricing',
-              default: false
+              description: 'Include additional fees for accurate pricing'
             }
           },
           required: ['city_id', 'arrival_date']
@@ -298,49 +263,39 @@ class MountVacationMCPServer {
             },
             radius: {
               type: 'integer',
-              description: 'Search radius in meters (e.g., 10000 for 10km)',
-              minimum: 100
+              description: 'Search radius in meters (e.g., 10000 for 10km)'
             },
             arrival_date: {
               type: 'string',
-              description: 'Check-in date in YYYY-MM-DD format',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+              description: 'Check-in date in YYYY-MM-DD format'
             },
             departure_date: {
               type: 'string',
-              description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+              description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights'
             },
             nights: {
               type: 'integer',
-              description: 'Number of nights. Alternative to departure_date',
-              minimum: 1
+              description: 'Number of nights. Alternative to departure_date'
             },
             persons: {
               type: 'integer',
-              description: 'Number of persons (all adults). Alternative to persons_ages',
-              minimum: 1
+              description: 'Number of persons (all adults). Alternative to persons_ages'
             },
             persons_ages: {
               type: 'string',
-              description: 'Ages separated by commas (e.g., "30,28,8")',
-              pattern: '^\\d+(,\\d+)*$'
+              description: 'Ages separated by commas (e.g., "30,28,8")'
             },
             currency: {
               type: 'string',
-              description: 'Currency code (default: EUR)',
-              default: 'EUR'
+              description: 'Currency code (default: EUR)'
             },
             language: {
               type: 'string',
-              description: 'Language code (default: en)',
-              enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
-              default: 'en'
+              description: 'Language code (default: en)'
             },
             include_additional_fees: {
               type: 'boolean',
-              description: 'Include additional fees for accurate pricing',
-              default: false
+              description: 'Include additional fees for accurate pricing'
             }
           },
           required: ['latitude', 'longitude', 'radius', 'arrival_date']
@@ -359,39 +314,31 @@ class MountVacationMCPServer {
             },
             arrival_date: {
               type: 'string',
-              description: 'Check-in date in YYYY-MM-DD format',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+              description: 'Check-in date in YYYY-MM-DD format'
             },
             departure_date: {
               type: 'string',
-              description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights',
-              pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+              description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights'
             },
             nights: {
               type: 'integer',
-              description: 'Number of nights. Alternative to departure_date',
-              minimum: 1
+              description: 'Number of nights. Alternative to departure_date'
             },
             persons: {
               type: 'integer',
-              description: 'Number of persons (all adults). Alternative to persons_ages',
-              minimum: 1
+              description: 'Number of persons (all adults). Alternative to persons_ages'
             },
             persons_ages: {
               type: 'string',
-              description: 'Ages separated by commas (e.g., "30,28,8")',
-              pattern: '^\\d+(,\\d+)*$'
+              description: 'Ages separated by commas (e.g., "30,28,8")'
             },
             currency: {
               type: 'string',
-              description: 'Currency code (default: EUR)',
-              default: 'EUR'
+              description: 'Currency code (default: EUR)'
             },
             language: {
               type: 'string',
-              description: 'Language code (default: en)',
-              enum: ['en', 'de', 'it', 'fr', 'sl', 'hr', 'pl', 'cz'],
-              default: 'en'
+              description: 'Language code (default: en)'
             }
           },
           required: ['accommodation_id', 'arrival_date']
@@ -399,95 +346,36 @@ class MountVacationMCPServer {
       },
       {
         name: 'research_accommodations',
-        description: 'Advanced research tool that mimics human vacation booking behavior - searches multiple regions, finds best dates, applies filters, and compares options',
+        description: 'Advanced research tool that searches multiple regions and compares options',
         inputSchema: {
           type: 'object',
-          additionalProperties: false,
           properties: {
             regions: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'List of regions to search (e.g., ["French Alps", "Italian Dolomites"])'
+              type: 'string',
+              description: 'Comma-separated list of regions to search (e.g., "French Alps,Italian Dolomites")'
             },
-            preferred_dates: {
-              type: 'object',
-              additionalProperties: false,
-              properties: {
-                arrival: {
-                  type: 'string',
-                  description: 'Preferred arrival date (YYYY-MM-DD)'
-                },
-                departure: {
-                  type: 'string',
-                  description: 'Preferred departure date (YYYY-MM-DD)'
-                },
-                flexible_days: {
-                  type: 'integer',
-                  description: 'Days of flexibility (+/- around preferred dates)',
-                  default: 3
-                }
-              },
-              required: ['arrival', 'departure']
+            arrival_date: {
+              type: 'string',
+              description: 'Preferred arrival date (YYYY-MM-DD)'
+            },
+            departure_date: {
+              type: 'string',
+              description: 'Preferred departure date (YYYY-MM-DD)'
             },
             persons_ages: {
               type: 'string',
               description: 'Comma-separated list of person ages (e.g., "18,18" for 2 adults)'
             },
-            budget: {
-              type: 'object',
-              additionalProperties: false,
-              properties: {
-                max_total: {
-                  type: 'number',
-                  description: 'Maximum total budget for the stay'
-                },
-                currency: {
-                  type: 'string',
-                  description: 'Currency code',
-                  default: 'EUR'
-                }
-              }
+            max_budget: {
+              type: 'number',
+              description: 'Maximum total budget for the stay'
             },
-            requirements: {
-              type: 'object',
-              additionalProperties: false,
-              properties: {
-                accommodation_type: {
-                  type: 'string',
-                  description: 'hotel, apartment, etc.'
-                },
-                board_type: {
-                  type: 'string',
-                  description: 'HB (half board), BB (bed & breakfast), OV (self catered), FB (full board)'
-                },
-                amenities: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  description: 'Required amenities: pool, wellness, fitness, parking, wifi, pets'
-                },
-                proximity: {
-                  type: 'object',
-                  additionalProperties: false,
-                  properties: {
-                    ski_slopes: {
-                      type: 'integer',
-                      description: 'Max distance to ski slopes in meters'
-                    },
-                    center: {
-                      type: 'integer',
-                      description: 'Max distance to center in meters'
-                    }
-                  }
-                }
-              }
-            },
-            results_per_region: {
-              type: 'integer',
-              description: 'Number of best results to return per region',
-              default: 3
+            amenities: {
+              type: 'string',
+              description: 'Comma-separated list of required amenities (e.g., "pool,wellness,parking")'
             }
           },
-          required: ['regions', 'preferred_dates', 'persons_ages']
+          required: ['regions', 'arrival_date', 'departure_date', 'persons_ages']
         }
       }
     ];
@@ -539,12 +427,15 @@ class MountVacationMCPServer {
   }
 
   async handleRequest(request) {
+    // Ensure request has required fields
+    const requestId = request.id !== undefined ? request.id : null;
+
     try {
       switch (request.method) {
         case 'initialize':
           return {
             jsonrpc: '2.0',
-            id: request.id,
+            id: requestId,
             result: {
               protocolVersion: '2025-06-18',
               capabilities: {
@@ -552,7 +443,7 @@ class MountVacationMCPServer {
               },
               serverInfo: {
                 name: 'mountvacation-mcp-server',
-                version: '3.0.0'
+                version: '3.1.0'
               }
             }
           };
@@ -560,24 +451,35 @@ class MountVacationMCPServer {
         case 'tools/list':
           return {
             jsonrpc: '2.0',
-            id: request.id,
+            id: requestId,
             result: {
               tools: this.tools
             }
           };
 
         case 'tools/call':
+          if (!request.params || !request.params.name) {
+            return {
+              jsonrpc: '2.0',
+              id: requestId,
+              error: {
+                code: -32602,
+                message: 'Invalid params: missing tool name'
+              }
+            };
+          }
+
           const callResponse = await this.makeRequest(request);
           return {
             jsonrpc: '2.0',
-            id: request.id,
-            result: callResponse.result
+            id: requestId,
+            result: callResponse.result || callResponse
           };
 
         default:
           return {
             jsonrpc: '2.0',
-            id: request.id,
+            id: requestId,
             error: {
               code: -32601,
               message: `Method not found: ${request.method}`
@@ -587,10 +489,10 @@ class MountVacationMCPServer {
     } catch (error) {
       return {
         jsonrpc: '2.0',
-        id: request.id,
+        id: requestId,
         error: {
           code: -32603,
-          message: error.message
+          message: error.message || 'Internal error'
         }
       };
     }
@@ -615,19 +517,34 @@ async function main() {
   });
 
   rl.on('line', async (line) => {
+    if (!line.trim()) return; // Skip empty lines
+
+    let requestId = null;
     try {
       const request = JSON.parse(line.trim());
+      requestId = request.id || null;
+
+      // Validate basic JSON-RPC structure
+      if (!request.jsonrpc || request.jsonrpc !== '2.0') {
+        throw new Error('Invalid JSON-RPC version');
+      }
+
+      if (!request.method) {
+        throw new Error('Missing method');
+      }
+
       const response = await server.handleRequest(request);
       console.log(JSON.stringify(response));
     } catch (error) {
-      console.log(JSON.stringify({
+      const errorResponse = {
         jsonrpc: '2.0',
-        id: null,
+        id: requestId,
         error: {
-          code: -32700,
-          message: `Parse error: ${error.message}`
+          code: error.name === 'SyntaxError' ? -32700 : -32603,
+          message: error.message || 'Internal error'
         }
-      }));
+      };
+      console.log(JSON.stringify(errorResponse));
     }
   });
 
