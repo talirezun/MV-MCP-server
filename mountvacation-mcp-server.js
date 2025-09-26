@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * MountVacation MCP Server v2.2
- * Fixed Claude Desktop compatibility with proper tool schema validation
+ * MountVacation MCP Server v2.3
+ * FIXED: Claude Desktop compatibility - resolved input echo issue
  *
- * Fixes the ZodError validation issues in Claude Desktop
- * Now includes local tool definitions for proper schema validation
+ * Fixes the ZodError validation issues in Claude Desktop by:
+ * - Removing input echo from readline interface
+ * - Including local tool definitions for proper schema validation
  */
 
 const https = require('https');
@@ -551,7 +552,7 @@ class MountVacationMCPServer {
               },
               serverInfo: {
                 name: 'mountvacation-mcp-server',
-                version: '2.2.0'
+                version: '2.3.0'
               }
             }
           };
@@ -610,7 +611,7 @@ async function main() {
   const readline = require('readline');
   const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    terminal: false
   });
 
   rl.on('line', async (line) => {
