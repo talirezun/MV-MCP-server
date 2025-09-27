@@ -44,10 +44,13 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'alpe di siusi': { region: 911 },
   'kronplatz': { region: 911 },
   'plan de corones': { region: 911 },
-  'alta badia': { region: 911 },
-  'corvara': { region: 911 },
-  'la villa': { region: 911 },
-  'san cassiano': { region: 911 },
+  'alta badia': { resort: 69 },
+  'corvara': { resort: 69 },
+  'corvara in badia': { resort: 69 },
+  'la villa': { resort: 69 },
+  'san cassiano': { resort: 69 },
+  'colfosco': { resort: 69 },
+  'badia': { resort: 69 },
   'arabba': { region: 914 }, // Veneto
   'marmolada': { region: 914 },
   'canazei': { region: 911 },
@@ -1326,7 +1329,7 @@ export class MountVacationClient {
 
     try {
       // DEBUG: Log detailed request info
-      this.logger.debug('Making API request', {
+      this.logger.info('Making API request', {
         url: url.toString(),
         timeout_ms: this.timeout,
         params: Object.fromEntries(url.searchParams),
@@ -1348,7 +1351,7 @@ export class MountVacationClient {
         const data = await response.json() as APIResponse;
 
         // DEBUG: Log the actual API response
-        this.logger.debug('MountVacation API Response', {
+        this.logger.info('MountVacation API Response', {
           accommodations_count: data.accommodations?.length || 0,
           has_accommodations: !!data.accommodations,
           has_extended_search: !!data.links?.extendedAreaSearch,

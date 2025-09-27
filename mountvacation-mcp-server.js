@@ -16,7 +16,7 @@ const https = require('https');
 class MountVacationMCPServer {
   constructor() {
     this.apiKey = process.env.MOUNTVACATION_API_KEY || '0e9147e2a4316bfd6c69a8d1ae6044e4879764a7783f8898a87ec976b420800e2570d234863e2a2ac62dfe0d595014e145ea3a89d69dc6213ef99d94cb3a71e2';
-    this.workerUrl = 'blocklabs-mountvacation-mcp.4thtech.workers.dev';
+    this.workerUrl = 'mountvacation-mcp-final.4thtech.workers.dev';
     this.tools = this.getToolDefinitions();
   }
 

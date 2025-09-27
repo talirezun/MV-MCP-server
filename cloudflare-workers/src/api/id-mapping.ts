@@ -8,24 +8,24 @@
 export interface Country {
   id: number;
   code: string;
-  name: Record<string, string>; // Multi-language names
+  title: Record<string, string>; // Multi-language names (API uses 'title', not 'name')
 }
 
 export interface Region {
   id: number;
-  name: Record<string, string>;
-  countryId: number;
+  title: Record<string, string>; // API uses 'title', not 'name'
+  countryID: number; // API uses 'countryID', not 'countryId'
   countryCode: string;
 }
 
 export interface City {
   id: number;
   title: string;
-  resortId?: number;
+  resortID?: number; // API uses 'resortID', not 'resortId'
   resort?: string;
-  regionId?: number;
+  regionID?: number; // API uses 'regionID', not 'regionId'
   region?: Record<string, string>;
-  countryId: number;
+  countryID: number; // API uses 'countryID', not 'countryId'
   countryCode: string;
   latitude?: number;
   longitude?: number;
@@ -34,11 +34,11 @@ export interface City {
 export interface Resort {
   id: number;
   title: string;
-  skiareaId?: number;
+  skiareaID?: number; // API uses 'skiareaID', not 'skiareaId'
   skiarea?: string;
-  regionId?: number;
+  regionID?: number; // API uses 'regionID', not 'regionId'
   region?: Record<string, string>;
-  countryId: number;
+  countryID: number; // API uses 'countryID', not 'countryId'
   countryCode: string;
   isSkiResort: boolean;
   isLakeResort: boolean;
@@ -48,7 +48,7 @@ export interface Resort {
 
 export interface SkiArea {
   id: number;
-  name: string;
+  title: string; // API uses 'title', not 'name'
   resorts?: Resort[];
 }
 
@@ -184,12 +184,12 @@ export class IdMappingManager {
 
     // Search countries
     for (const country of this.mappings.countries) {
-      const confidence = this.calculateMatchConfidence(normalizedLocation, country.name, country.code);
+      const confidence = this.calculateMatchConfidence(normalizedLocation, country.title, country.code);
       if (confidence > 0.3) {
         matches.push({
           type: 'country',
           id: country.id,
-          name: country.name.en || Object.values(country.name)[0] || 'Unknown',
+          name: country.title.en || Object.values(country.title)[0] || 'Unknown',
           confidence,
           countryCode: country.code
         });
@@ -198,12 +198,12 @@ export class IdMappingManager {
 
     // Search regions
     for (const region of this.mappings.regions) {
-      const confidence = this.calculateMatchConfidence(normalizedLocation, region.name);
+      const confidence = this.calculateMatchConfidence(normalizedLocation, region.title);
       if (confidence > 0.3) {
         matches.push({
           type: 'region',
           id: region.id,
-          name: region.name.en || Object.values(region.name)[0] || 'Unknown',
+          name: region.title.en || Object.values(region.title)[0] || 'Unknown',
           confidence,
           countryCode: region.countryCode
         });
@@ -246,12 +246,12 @@ export class IdMappingManager {
 
     // Search ski areas (CRITICAL - was missing!)
     for (const skiarea of this.mappings.skiareas) {
-      const confidence = this.calculateStringMatch(normalizedLocation, skiarea.name.toLowerCase());
+      const confidence = this.calculateStringMatch(normalizedLocation, skiarea.title.toLowerCase());
       if (confidence > 0.3) {
         matches.push({
           type: 'skiarea',
           id: skiarea.id,
-          name: skiarea.name,
+          name: skiarea.title,
           confidence
         });
       }

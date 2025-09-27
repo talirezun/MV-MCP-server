@@ -181,6 +181,14 @@ MIT License - See LICENSE file for details.
 
 ---
 
+## 🔗 **Production Deployment**
+
+**Current Production URL**: `https://mountvacation-mcp-final.4thtech.workers.dev`
+
+This is the latest stable deployment of the MountVacation MCP server on Cloudflare Workers.
+
+---
+
 **🎿 Ready to plan your next ski vacation with AI assistance! ⛷️**
 
 *Built with ❤️ for the skiing community*

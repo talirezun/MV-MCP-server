@@ -1,4 +1,4 @@
-name = "blocklabs-mountvacation-mcp"
+name = "mountvacation-mcp-final"
 main = "src/index.ts"
 compatibility_date = "2023-12-01"
 compatibility_flags = ["nodejs_compat"]
