@@ -31,104 +31,83 @@ interface LocationMapping {
 }
 
 const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
-  // Italian Dolomites - Use correct region IDs
-  'madonna di campiglio': { region: 911 }, // Trentino-Alto Adige
-  'campiglio': { region: 911 },
-  'val di sole': { region: 911 },
-  'cortina d\'ampezzo': { region: 914 }, // Veneto
-  'cortina': { region: 914 },
-  'val gardena': { region: 911 }, // Trentino-Alto Adige
-  'selva di val gardena': { region: 911 },
-  'ortisei': { region: 911 },
-  'santa cristina': { region: 911 },
-  'alpe di siusi': { region: 911 },
-  'kronplatz': { region: 911 },
-  'plan de corones': { region: 911 },
-  'alta badia': { resort: 69 },
+  // ===== VERIFIED WORKING MAPPINGS =====
+  // These mappings have been tested and confirmed to return correct results
+
+  // Italian Dolomites - VERIFIED RESORT IDs
+  'alta badia': { resort: 69 }, // ✅ VERIFIED: Returns Hotel Lagació in San Cassiano
   'corvara': { resort: 69 },
   'corvara in badia': { resort: 69 },
   'la villa': { resort: 69 },
   'san cassiano': { resort: 69 },
   'colfosco': { resort: 69 },
   'badia': { resort: 69 },
-  'arabba': { region: 914 }, // Veneto
-  'marmolada': { region: 914 },
-  'canazei': { region: 911 },
-  'campitello': { region: 911 },
-  'moena': { region: 911 },
-  'predazzo': { region: 911 },
-  'cavalese': { region: 911 },
 
-  // Other Italian ski areas
-  'livigno': { region: 904 }, // Lombardy
-  'bormio': { region: 904 }, // Lombardy
-  'ponte di legno': { region: 904 }, // Lombardy
-  'tonale': { region: 911 }, // Trentino-Alto Adige
-  'passo tonale': { region: 911 },
-  'cervinia': { region: 913 }, // Valle d'Aosta
-  'breuil-cervinia': { region: 913 },
-  'courmayeur': { region: 913 }, // Valle d'Aosta
-  'la thuile': { region: 913 },
-  'san martino di castrozza': { region: 911 }, // Trentino-Alto Adige
-  'folgaria': { region: 911 },
-  'andalo': { region: 911 },
-  'molveno': { region: 911 },
-  'pinzolo': { region: 911 },
-  'folgarida': { region: 911 },
-  'marilleva': { region: 911 },
-  'sestriere': { region: 906 }, // Piedmont
-  'bardonecchia': { region: 906 },
-  'sauze d\'oulx': { region: 906 },
-  'claviere': { region: 906 },
-  'limone piemonte': { region: 906 },
-  'pila': { region: 913 }, // Valle d'Aosta
-  'via lattea': { region: 906 }, // Piedmont
-
-  // French Alps - CORRECTED RESORT IDs (verified with API)
-  'chamonix': { resort: 9233 },
+  // French Alps - VERIFIED RESORT IDs
+  'chamonix': { resort: 9233 }, // ✅ VERIFIED: Returns Grand Hôtel des Alpes in Chamonix
   'chamonix mont blanc': { resort: 9233 },
-  'avoriaz': { resort: 9236 },
-  // Note: Other French resort IDs need to be discovered from API
-  // For now, using coordinates for reliable search
-  'val d\'isere': { coordinates: { lat: 45.4486, lng: 6.9786, radius: 8000 } },
-  'val d\'isère': { coordinates: { lat: 45.4486, lng: 6.9786, radius: 8000 } },
-  'tignes': { resort: 70 },
-  'les arcs': { coordinates: { lat: 45.5707, lng: 6.8125, radius: 8000 } },
-  'la plagne': { resort: 28 },
-  'courchevel': { coordinates: { lat: 45.4167, lng: 6.6333, radius: 8000 } },
-  'meribel': { coordinates: { lat: 45.3833, lng: 6.5667, radius: 8000 } },
-  'méribel': { coordinates: { lat: 45.3833, lng: 6.5667, radius: 8000 } },
-  'val thorens': { skiarea: 1 }, // Les 3 Vallées ski area
-  'les menuires': { coordinates: { lat: 45.3167, lng: 6.5333, radius: 8000 } },
-  'alpe d\'huez': { coordinates: { lat: 45.0906, lng: 6.0678, radius: 8000 } },
-  'les deux alpes': { coordinates: { lat: 45.0133, lng: 6.1233, radius: 8000 } },
-  'serre chevalier': { coordinates: { lat: 44.9417, lng: 6.5500, radius: 8000 } },
 
-  // Austrian Alps - Using coordinates for reliable search
-  'innsbruck': { coordinates: { lat: 47.2692, lng: 11.4041, radius: 15000 } },
-  'kitzbuhel': { coordinates: { lat: 47.4467, lng: 12.3914, radius: 10000 } },
-  'kitzbühel': { coordinates: { lat: 47.4467, lng: 12.3914, radius: 10000 } },
-  'st anton': { coordinates: { lat: 47.1275, lng: 10.2606, radius: 10000 } },
-  'st. anton am arlberg': { coordinates: { lat: 47.1275, lng: 10.2606, radius: 10000 } },
-  'zell am see': { coordinates: { lat: 47.3254, lng: 12.7941, radius: 10000 } },
-  'kaprun': { coordinates: { lat: 47.2697, lng: 12.7558, radius: 10000 } },
-  'saalbach': { coordinates: { lat: 47.3889, lng: 12.6347, radius: 10000 } },
-  'hinterglemm': { coordinates: { lat: 47.3889, lng: 12.6347, radius: 10000 } },
-  'bad gastein': { coordinates: { lat: 47.1156, lng: 13.1344, radius: 10000 } },
-  'schladming': { coordinates: { lat: 47.3928, lng: 13.6872, radius: 10000 } },
+  // ===== COORDINATE-BASED MAPPINGS =====
+  // Using precise coordinates for locations where resort IDs are unknown
 
-  // Swiss Alps - Using ski areas for reliable search
-  'zermatt': { skiarea: 10 }, // Matterhorn ski paradise
-  'st moritz': { resort: 72 },
-  'davos': { resort: 8 },
-  'klosters': { coordinates: { lat: 46.8781, lng: 9.8775, radius: 10000 } },
-  'verbier': { coordinates: { lat: 46.0964, lng: 7.2281, radius: 10000 } },
-  'crans montana': { coordinates: { lat: 46.3111, lng: 7.4850, radius: 10000 } },
-  'saas fee': { resort: 5 },
-  'grindelwald': { coordinates: { lat: 46.6244, lng: 8.0411, radius: 10000 } },
-  'wengen': { coordinates: { lat: 46.6081, lng: 7.9219, radius: 10000 } },
-  'murren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 10000 } },
-  'mürren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 10000 } },
+  // Austrian Alps - CORRECTED coordinates
+  'innsbruck': { coordinates: { lat: 47.2692, lng: 11.4041, radius: 25000 } }, // Increased radius for better coverage
+  'kitzbuhel': { coordinates: { lat: 47.4467, lng: 12.3914, radius: 15000 } },
+  'kitzbühel': { coordinates: { lat: 47.4467, lng: 12.3914, radius: 15000 } },
+  'st anton': { coordinates: { lat: 47.1275, lng: 10.2606, radius: 15000 } },
+  'st. anton': { coordinates: { lat: 47.1275, lng: 10.2606, radius: 15000 } },
+  'st. anton am arlberg': { coordinates: { lat: 47.1275, lng: 10.2606, radius: 15000 } },
+  'zell am see': { coordinates: { lat: 47.3254, lng: 12.7941, radius: 15000 } },
+  'kaprun': { coordinates: { lat: 47.2697, lng: 12.7558, radius: 15000 } },
+  'saalbach': { coordinates: { lat: 47.3889, lng: 12.6347, radius: 15000 } },
+  'hinterglemm': { coordinates: { lat: 47.3889, lng: 12.6347, radius: 15000 } },
+  'bad gastein': { coordinates: { lat: 47.1156, lng: 13.1344, radius: 15000 } },
+  'schladming': { coordinates: { lat: 47.3928, lng: 13.6872, radius: 15000 } },
+
+  // Swiss Alps - CORRECTED coordinates
+  'zermatt': { coordinates: { lat: 46.0207, lng: 7.7491, radius: 15000 } }, // ✅ CORRECTED: Actual Zermatt coordinates
+  'verbier': { coordinates: { lat: 46.0964, lng: 7.2281, radius: 15000 } }, // ✅ CORRECTED: Actual Verbier coordinates
+  'st moritz': { coordinates: { lat: 46.4908, lng: 9.8355, radius: 15000 } },
+  'davos': { coordinates: { lat: 46.8043, lng: 9.8307, radius: 15000 } },
+  'klosters': { coordinates: { lat: 46.8781, lng: 9.8775, radius: 15000 } },
+  'crans montana': { coordinates: { lat: 46.3111, lng: 7.4850, radius: 15000 } },
+  'saas fee': { coordinates: { lat: 46.1079, lng: 7.9286, radius: 15000 } },
+  'grindelwald': { coordinates: { lat: 46.6244, lng: 8.0411, radius: 15000 } },
+  'wengen': { coordinates: { lat: 46.6081, lng: 7.9219, radius: 15000 } },
+  'murren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 15000 } },
+  'mürren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 15000 } },
+
+  // French Alps - CORRECTED coordinates
+  'val d\'isere': { coordinates: { lat: 45.4486, lng: 6.9786, radius: 15000 } },
+  'val d\'isère': { coordinates: { lat: 45.4486, lng: 6.9786, radius: 15000 } },
+  'tignes': { coordinates: { lat: 45.4667, lng: 6.9067, radius: 15000 } },
+  'les arcs': { coordinates: { lat: 45.5707, lng: 6.8125, radius: 15000 } },
+  'la plagne': { coordinates: { lat: 45.5133, lng: 6.6833, radius: 15000 } },
+  'courchevel': { coordinates: { lat: 45.4167, lng: 6.6333, radius: 15000 } },
+  'meribel': { coordinates: { lat: 45.3833, lng: 6.5667, radius: 15000 } },
+  'méribel': { coordinates: { lat: 45.3833, lng: 6.5667, radius: 15000 } },
+  'val thorens': { coordinates: { lat: 45.2983, lng: 6.5800, radius: 15000 } },
+  'les menuires': { coordinates: { lat: 45.3167, lng: 6.5333, radius: 15000 } },
+  'alpe d\'huez': { coordinates: { lat: 45.0906, lng: 6.0678, radius: 15000 } },
+  'les deux alpes': { coordinates: { lat: 45.0133, lng: 6.1233, radius: 15000 } },
+  'serre chevalier': { coordinates: { lat: 44.9417, lng: 6.5500, radius: 15000 } },
+
+  // Italian Alps - CORRECTED coordinates
+  'livigno': { coordinates: { lat: 46.5369, lng: 10.1347, radius: 15000 } }, // ✅ CORRECTED: Actual Livigno, Italy coordinates
+  'bormio': { coordinates: { lat: 46.4686, lng: 10.3697, radius: 15000 } },
+  'cortina d\'ampezzo': { coordinates: { lat: 46.5369, lng: 12.1357, radius: 15000 } }, // ✅ CORRECTED: Actual Cortina coordinates
+  'cortina': { coordinates: { lat: 46.5369, lng: 12.1357, radius: 15000 } },
+  'madonna di campiglio': { coordinates: { lat: 46.2267, lng: 10.8267, radius: 15000 } },
+  'campiglio': { coordinates: { lat: 46.2267, lng: 10.8267, radius: 15000 } },
+  'val gardena': { coordinates: { lat: 46.5569, lng: 11.6769, radius: 15000 } },
+  'selva di val gardena': { coordinates: { lat: 46.5569, lng: 11.6769, radius: 15000 } },
+  'ortisei': { coordinates: { lat: 46.5769, lng: 11.6769, radius: 15000 } },
+  'santa cristina': { coordinates: { lat: 46.5569, lng: 11.6969, radius: 15000 } },
+  'san martino di castrozza': { coordinates: { lat: 46.2614, lng: 11.8043, radius: 15000 } },
+  'cervinia': { coordinates: { lat: 45.9331, lng: 7.6308, radius: 15000 } },
+  'breuil-cervinia': { coordinates: { lat: 45.9331, lng: 7.6308, radius: 15000 } },
+  'courmayeur': { coordinates: { lat: 45.7969, lng: 6.9669, radius: 15000 } },
+  'sestriere': { coordinates: { lat: 44.9569, lng: 6.8769, radius: 15000 } },
 
   // Generic regions for broader searches - Use coordinates for reliability
   'dolomites': { latitude: 46.4102, longitude: 11.8440, radius: 50000 }, // Dolomites center
@@ -400,13 +379,25 @@ export class MountVacationClient {
 
                 if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
                   const formatted = this.formatResults(result, max_results);
-                  this.logger.info('Search successful with dynamic ID mapping', {
-                    strategy: strategy.name,
-                    location: location,
-                    match: match,
-                    results_count: formatted.accommodations?.length || 0,
-                  });
-                  return formatted;
+
+                  // Validate that results match the requested location
+                  if (this.validateLocationMatch(formatted, location)) {
+                    this.logger.info('Search successful with dynamic ID mapping', {
+                      strategy: strategy.name,
+                      location: location,
+                      match: match,
+                      results_count: formatted.accommodations?.length || 0,
+                    });
+                    return formatted;
+                  } else {
+                    this.logger.warn('Dynamic mapping results failed location validation', {
+                      strategy: strategy.name,
+                      location: location,
+                      match: match,
+                      results_count: formatted.accommodations?.length || 0,
+                    });
+                    // Continue to next strategy instead of returning invalid results
+                  }
                 }
               } catch (error) {
                 this.logger.warn('Dynamic ID mapping strategy failed', {
@@ -446,13 +437,24 @@ export class MountVacationClient {
 
             if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
               const formatted = this.formatResults(result, max_results);
-              this.logger.info('Search successful with static mapping', {
-                strategy: strategy.name,
-                location: location,
-                mapping: locationMapping,
-                results_count: formatted.accommodations?.length || 0,
-              });
-              return formatted;
+
+              // Validate that results match the requested location
+              if (this.validateLocationMatch(formatted, location)) {
+                this.logger.info('Search successful with static mapping', {
+                  strategy: strategy.name,
+                  location: location,
+                  mapping: locationMapping,
+                  results_count: formatted.accommodations?.length || 0,
+                });
+                return formatted;
+              } else {
+                this.logger.warn('Static mapping results failed location validation', {
+                  strategy: strategy.name,
+                  location: location,
+                  results_count: formatted.accommodations?.length || 0,
+                });
+                // Continue to next strategy instead of returning invalid results
+              }
             }
           } catch (error) {
             this.logger.warn('Static mapped search strategy failed', {
@@ -483,12 +485,23 @@ export class MountVacationClient {
 
           if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
             const formatted = this.formatResults(result, max_results);
-            this.logger.info('Search successful with fallback', {
-              strategy: strategy.name,
-              location: location,
-              results_count: formatted.accommodations?.length || 0,
-            });
-            return formatted;
+
+            // Validate that fallback results match the requested location
+            if (this.validateLocationMatch(formatted, location)) {
+              this.logger.info('Search successful with fallback', {
+                strategy: strategy.name,
+                location: location,
+                results_count: formatted.accommodations?.length || 0,
+              });
+              return formatted;
+            } else {
+              this.logger.warn('Fallback results failed location validation', {
+                strategy: strategy.name,
+                location: location,
+                results_count: formatted.accommodations?.length || 0,
+              });
+              // Continue to next strategy instead of returning invalid results
+            }
           }
         } catch (error) {
           this.logger.warn('Fallback search strategy failed', {
@@ -583,6 +596,73 @@ export class MountVacationClient {
   }
 
   /**
+   * Validate that search results match the requested location
+   * This prevents returning results from completely different locations
+   */
+  private validateLocationMatch(results: any, requestedLocation: string): boolean {
+    if (!results?.accommodations || results.accommodations.length === 0) {
+      return false;
+    }
+
+    const normalizedRequested = requestedLocation.toLowerCase().trim();
+
+    // Define location validation rules
+    const locationValidation: Record<string, string[]> = {
+      'zermatt': ['zermatt', 'switzerland', 'swiss', 'valais'],
+      'verbier': ['verbier', 'switzerland', 'swiss', 'valais'],
+      'chamonix': ['chamonix', 'france', 'french', 'mont blanc'],
+      'innsbruck': ['innsbruck', 'austria', 'austrian', 'tirol', 'tyrol'],
+      'st anton': ['st anton', 'st. anton', 'austria', 'austrian', 'arlberg'],
+      'kitzbühel': ['kitzbühel', 'kitzbuhel', 'austria', 'austrian'],
+      'kitzbuhel': ['kitzbühel', 'kitzbuhel', 'austria', 'austrian'],
+      'livigno': ['livigno', 'italy', 'italian', 'lombardy'],
+      'cortina': ['cortina', 'italy', 'italian', 'dolomites', 'ampezzo'],
+      'cortina d\'ampezzo': ['cortina', 'italy', 'italian', 'dolomites', 'ampezzo'],
+      'val d\'isère': ['val d\'isère', 'val d\'isere', 'france', 'french', 'savoie'],
+      'val d\'isere': ['val d\'isère', 'val d\'isere', 'france', 'french', 'savoie'],
+      'alta badia': ['alta badia', 'badia', 'italy', 'italian', 'dolomites', 'san cassiano', 'corvara']
+    };
+
+    // Get validation keywords for the requested location
+    const validationKeywords = locationValidation[normalizedRequested];
+    if (!validationKeywords) {
+      // If no specific validation rules, allow the result
+      // This prevents blocking valid results for unmapped locations
+      return true;
+    }
+
+    // Check if any accommodation matches the validation criteria
+    for (const accommodation of results.accommodations) {
+      const locationText = [
+        accommodation.location?.city,
+        accommodation.location?.country,
+        accommodation.location?.resort,
+        accommodation.location?.region,
+        accommodation.location?.full_address,
+        accommodation.name
+      ].filter(Boolean).join(' ').toLowerCase();
+
+      // Check if any validation keyword is found in the accommodation location
+      const hasMatch = validationKeywords.some(keyword =>
+        locationText.includes(keyword.toLowerCase())
+      );
+
+      if (hasMatch) {
+        return true; // At least one accommodation matches
+      }
+    }
+
+    // No accommodations match the requested location
+    this.logger.warn(`Location validation failed for '${requestedLocation}' - results do not match requested location`, {
+      location: requestedLocation,
+      results_count: results.accommodations.length,
+      error: 'Location validation failed'
+    });
+
+    return false;
+  }
+
+  /**
    * Build search strategies based on location mapping (prioritized for best accommodation coverage)
    */
   private buildSearchStrategies(baseParams: Record<string, string>, mapping: LocationMapping, location: string) {
@@ -600,7 +680,7 @@ export class MountVacationClient {
     if (mapping.resort) {
       strategies.push({
         name: 'resort_mapped',
-        params: { ...baseParams, resort: mapping.resort.toString() }
+        params: { ...baseParams, resortId: mapping.resort.toString() }
       });
     }
 
@@ -608,7 +688,7 @@ export class MountVacationClient {
     if (mapping.city) {
       strategies.push({
         name: 'city_mapped',
-        params: { ...baseParams, city: mapping.city.toString() }
+        params: { ...baseParams, cityId: mapping.city.toString() }
       });
     }
 
@@ -616,7 +696,7 @@ export class MountVacationClient {
     if (mapping.region) {
       strategies.push({
         name: 'region_mapped',
-        params: { ...baseParams, region: mapping.region.toString() }
+        params: { ...baseParams, regionId: mapping.region.toString() }
       });
     }
 
