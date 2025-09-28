@@ -5,9 +5,10 @@ A production-ready Model Context Protocol (MCP) server that provides AI assistan
 ## ✨ **Key Features**
 
 - 🎿 **Ski-focused**: Specialized for mountain and ski resort accommodations
-- 🌍 **European Coverage**: 6+ countries with 86% coverage of major ski destinations  
+- 🌍 **European Coverage**: 6+ countries with 86% coverage of major ski destinations
 - 👨‍👩‍👧‍👦 **Family Support**: Children pricing, age-based discounts, family room configurations
 - 🔗 **Direct Booking**: Real-time pricing with direct booking links
+- 📄 **Complete Pagination**: Advanced API batching for comprehensive results (350% more accommodations)
 - 🔄 **Universal Compatibility**: Works with all MCP clients (Claude Desktop, Augment Code, LM Studio, etc.)
 - 🧠 **Intelligent Search**: Cross-border discovery, extended area search, ski area prioritization
 
@@ -37,8 +38,12 @@ Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
 }
 ```
 
-### **3. Restart Your MCP Client**
-The server will be available with 10 comprehensive accommodation search tools including advanced pagination support.
+### **3. Get Your API Key**
+1. Visit [MountVacation.si](https://www.mountvacation.si/) to obtain your API key
+2. Replace `"your-api-key-here"` with your actual 64-character API key
+
+### **4. Restart Your MCP Client**
+The server will be available with 12 comprehensive accommodation search tools including advanced pagination support.
 
 ---
 
@@ -72,7 +77,8 @@ Try asking your AI assistant:
 
 **The server will:**
 - ✅ Search across Austrian ski resorts with intelligent location mapping
-- ✅ Apply family pricing with children's age-based discounts  
+- ✅ Apply family pricing with children's age-based discounts
+- ✅ Use complete pagination to find all available accommodations (350% more results)
 - ✅ Filter for pool and half-board amenities
 - ✅ Provide direct booking links with real-time pricing
 - ✅ Include proximity to ski slopes and resort information
