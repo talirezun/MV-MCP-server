@@ -50,7 +50,7 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   // ===== COORDINATE-BASED MAPPINGS =====
   // Using precise coordinates for locations where resort IDs are unknown
 
-  // Austrian Alps - CORRECTED coordinates
+  // Austrian Alps - CORRECTED coordinates and resort IDs
   'innsbruck': { coordinates: { lat: 47.2692, lng: 11.4041, radius: 25000 } }, // Increased radius for better coverage
   'kitzbuhel': { coordinates: { lat: 47.4467, lng: 12.3914, radius: 15000 } },
   'kitzbühel': { coordinates: { lat: 47.4467, lng: 12.3914, radius: 15000 } },
@@ -63,6 +63,13 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'hinterglemm': { coordinates: { lat: 47.3889, lng: 12.6347, radius: 15000 } },
   'bad gastein': { coordinates: { lat: 47.1156, lng: 13.1344, radius: 15000 } },
   'schladming': { coordinates: { lat: 47.3928, lng: 13.6872, radius: 15000 } },
+
+  // Alpbachtal region - VERIFIED RESORT ID from website analysis
+  'alpbachtal': { resort: 9340, skiarea: 52 }, // ✅ VERIFIED: Resort ID 9340, Ski Area 52 from website URL
+  'alpbach': { resort: 9340, skiarea: 52 },
+  'bruck am ziller': { resort: 9340, skiarea: 52 },
+  'reith im alpbachtal': { resort: 9340, skiarea: 52 },
+  'schlitters': { resort: 9340, skiarea: 52 },
 
   // Swiss Alps - CORRECTED coordinates
   'zermatt': { coordinates: { lat: 46.0207, lng: 7.7491, radius: 15000 } }, // ✅ CORRECTED: Actual Zermatt coordinates
@@ -427,47 +434,117 @@ export class MountVacationClient {
       const locationMapping = this.findLocationMapping(location);
 
       if (locationMapping) {
-        // Use mapped location data
+        // Use mapped location data with enhanced strategy handling
         const searchStrategies = this.buildSearchStrategies(baseParams, locationMapping, location);
+        const normalizedLocation = location.toLowerCase();
 
-        for (const strategy of searchStrategies) {
-          try {
-            this.logger.debug('Trying static mapped search strategy', {
-              strategy: strategy.name,
-              location: location,
-              params: strategy.params
-            });
+        // For Alpbachtal, try to combine results from multiple strategies
+        if (normalizedLocation.includes('alpbach')) {
+          const allResults: FormattedAccommodation[] = [];
+          const seenAccommodationIds = new Set<number>();
 
-            const result = await this.makeApiRequest(strategy.params, env);
+          for (const strategy of searchStrategies) {
+            try {
+              this.logger.debug('Trying Alpbachtal search strategy', {
+                strategy: strategy.name,
+                location: location,
+                params: strategy.params
+              });
 
-            if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
-              const formatted = this.formatResults(result, max_results);
+              const result = await this.makeApiRequest(strategy.params, env);
 
-              // Validate that results match the requested location
-              if (this.validateLocationMatch(formatted, location)) {
-                this.logger.info('Search successful with static mapping', {
-                  strategy: strategy.name,
-                  location: location,
-                  mapping: locationMapping,
-                  results_count: formatted.accommodations?.length || 0,
-                });
-                return formatted;
-              } else {
-                this.logger.warn('Static mapping results failed location validation', {
-                  strategy: strategy.name,
-                  location: location,
-                  results_count: formatted.accommodations?.length || 0,
-                });
-                // Continue to next strategy instead of returning invalid results
+              if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
+                const formatted = this.formatResults(result, 50); // Increased limit for combining
+
+                if (formatted.accommodations) {
+                  // Add unique accommodations to combined results
+                  for (const accommodation of formatted.accommodations) {
+                    if (!seenAccommodationIds.has(accommodation.property_details.accommodation_id)) {
+                      allResults.push(accommodation);
+                      seenAccommodationIds.add(accommodation.property_details.accommodation_id);
+                    }
+                  }
+
+                  this.logger.info('Alpbachtal search strategy contributed results', {
+                    strategy: strategy.name,
+                    location: location,
+                    new_results: formatted.accommodations.length,
+                    total_unique: allResults.length
+                  });
+                }
               }
+            } catch (error) {
+              this.logger.warn('Alpbachtal search strategy failed', {
+                strategy: strategy.name,
+                location: location,
+                error: error instanceof Error ? error.message : String(error),
+              });
+              continue;
             }
-          } catch (error) {
-            this.logger.warn('Static mapped search strategy failed', {
-              strategy: strategy.name,
+          }
+
+          // Return combined results if we found any
+          if (allResults.length > 0) {
+            this.logger.info('Combined Alpbachtal search successful', {
               location: location,
-              error: error instanceof Error ? error.message : String(error),
+              total_results: allResults.length,
+              strategies_used: searchStrategies.length
             });
-            continue;
+
+            return {
+              search_summary: {
+                arrival_date: baseParams.arrival,
+                departure_date: baseParams.departure,
+                nights: 0,
+                persons_count: 0,
+                total_found: allResults.length,
+                currency: baseParams.currency
+              },
+              accommodations: allResults.slice(0, max_results), // Respect max_results limit
+              timestamp: new Date().toISOString()
+            };
+          }
+        } else {
+          // Standard single-strategy approach for other locations
+          for (const strategy of searchStrategies) {
+            try {
+              this.logger.debug('Trying static mapped search strategy', {
+                strategy: strategy.name,
+                location: location,
+                params: strategy.params
+              });
+
+              const result = await this.makeApiRequest(strategy.params, env);
+
+              if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
+                const formatted = this.formatResults(result, max_results);
+
+                // Validate that results match the requested location
+                if (this.validateLocationMatch(formatted, location)) {
+                  this.logger.info('Search successful with static mapping', {
+                    strategy: strategy.name,
+                    location: location,
+                    mapping: locationMapping,
+                    results_count: formatted.accommodations?.length || 0,
+                  });
+                  return formatted;
+                } else {
+                  this.logger.warn('Static mapping results failed location validation', {
+                    strategy: strategy.name,
+                    location: location,
+                    results_count: formatted.accommodations?.length || 0,
+                  });
+                  // Continue to next strategy instead of returning invalid results
+                }
+              }
+            } catch (error) {
+              this.logger.warn('Static mapped search strategy failed', {
+                strategy: strategy.name,
+                location: location,
+                error: error instanceof Error ? error.message : String(error),
+              });
+              continue;
+            }
           }
         }
       }
@@ -793,6 +870,41 @@ export class MountVacationClient {
    */
   private buildSearchStrategies(baseParams: Record<string, string>, mapping: LocationMapping, location: string) {
     const strategies = [];
+    const normalizedLocation = location.toLowerCase();
+
+    // Special handling for Alpbachtal - use multiple strategies for comprehensive coverage
+    if (normalizedLocation.includes('alpbach')) {
+      // Primary strategy: Use ski area for broadest coverage
+      if (mapping.skiarea) {
+        strategies.push({
+          name: 'alpbachtal_skiarea_primary',
+          params: { ...baseParams, skiArea: mapping.skiarea.toString() }
+        });
+      }
+
+      // Secondary strategy: Use resort ID for additional results
+      if (mapping.resort) {
+        strategies.push({
+          name: 'alpbachtal_resort_secondary',
+          params: { ...baseParams, resort: mapping.resort.toString() }
+        });
+      }
+
+      // Tertiary strategy: Geographic search around Alpbachtal center
+      strategies.push({
+        name: 'alpbachtal_geographic_tertiary',
+        params: {
+          ...baseParams,
+          latitude: '47.4000',  // Alpbachtal center coordinates
+          longitude: '11.9000',
+          radius: '15000'       // 15km radius to cover all villages
+        }
+      });
+
+      return strategies;
+    }
+
+    // Standard search strategies for other locations
 
     // Skiarea search (HIGHEST PRIORITY - best accommodation coverage)
     if (mapping.skiarea) {
@@ -1065,6 +1177,27 @@ export class MountVacationClient {
           latitude: '47.1275',
           longitude: '10.2606',
           radius: '10000'
+        }
+      });
+    }
+
+    // Alpbachtal-specific fallback searches
+    if (normalizedLocation.includes('alpbach')) {
+      strategies.push({
+        name: 'alpbachtal_skiarea_fallback',
+        params: { ...baseParams, skiArea: '52' } // Alpbachtal ski area
+      });
+      strategies.push({
+        name: 'alpbachtal_resort_fallback',
+        params: { ...baseParams, resort: '9340' } // Alpbachtal resort
+      });
+      strategies.push({
+        name: 'alpbachtal_geographic_fallback',
+        params: {
+          ...baseParams,
+          latitude: '47.4000',
+          longitude: '11.9000',
+          radius: '15000'
         }
       });
     }
