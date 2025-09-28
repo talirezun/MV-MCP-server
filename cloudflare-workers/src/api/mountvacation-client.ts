@@ -73,8 +73,7 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'bad gastein': { coordinates: { lat: 47.1156, lng: 13.1344, radius: 15000 } },
   'schladming': { coordinates: { lat: 47.3928, lng: 13.6872, radius: 15000 } },
 
-  // Alpbachtal region - VERIFIED RESORT ID from website analysis
-  'alpbachtal': { resort: 9340, skiarea: 52 }, // ✅ VERIFIED: Resort ID 9340, Ski Area 52 from website URL
+  // Alpbachtal region cities - VERIFIED RESORT ID from website analysis
   'alpbach': { resort: 9340, skiarea: 52 },
   'bruck am ziller': { resort: 9340, skiarea: 52 },
   'reith im alpbachtal': { resort: 9340, skiarea: 52 },
@@ -715,7 +714,16 @@ export class MountVacationClient {
     try {
       this.logger.debug('Fetching next page', { url: nextPageUrl });
 
-      const response = await fetch(nextPageUrl, {
+      // Parse the URL to add authentication if needed
+      const url = new URL(nextPageUrl);
+
+      // Add authentication parameters if not already present
+      if (!url.searchParams.has('username') && !url.searchParams.has('password')) {
+        url.searchParams.set('username', env.MOUNTVACATION_API_KEY);
+        url.searchParams.set('password', env.MOUNTVACATION_API_KEY);
+      }
+
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'User-Agent': 'MountVacation-MCP-Worker/2.0',
@@ -729,6 +737,13 @@ export class MountVacationClient {
       }
 
       const data = await response.json();
+
+      this.logger.info('Next page fetched successfully', {
+        url: nextPageUrl,
+        results_count: data.accommodations?.length || 0,
+        has_more: !!data.links?.next
+      });
+
       return this.formatResults(data, 100); // Allow more results per page for pagination
 
     } catch (error) {

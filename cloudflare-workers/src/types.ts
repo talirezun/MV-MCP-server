@@ -248,10 +248,12 @@ export interface LogContext {
   error_name?: string;
   cache_key?: string;
   client_id?: string;
+  has_more?: boolean;
+  page?: number;
+  pages_fetched?: number;
   // Pagination fields
   max_total_results?: number;
   max_pages?: number;
-  page?: number;
   current_results?: number;
   removed_entries?: number;
   match?: any; // For dynamic ID mapping matches
