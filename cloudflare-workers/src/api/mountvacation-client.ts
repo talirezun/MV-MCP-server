@@ -459,17 +459,17 @@ export class MountVacationClient {
                 if (formatted.accommodations) {
                   // Add unique accommodations to combined results
                   for (const accommodation of formatted.accommodations) {
-                    if (!seenAccommodationIds.has(accommodation.property_details.accommodation_id)) {
+                    const accommodationId = Number(accommodation.property_details.accommodation_id);
+                    if (!seenAccommodationIds.has(accommodationId)) {
                       allResults.push(accommodation);
-                      seenAccommodationIds.add(accommodation.property_details.accommodation_id);
+                      seenAccommodationIds.add(accommodationId);
                     }
                   }
 
                   this.logger.info('Alpbachtal search strategy contributed results', {
                     strategy: strategy.name,
                     location: location,
-                    new_results: formatted.accommodations.length,
-                    total_unique: allResults.length
+                    results_count: formatted.accommodations.length
                   });
                 }
               }
@@ -487,18 +487,17 @@ export class MountVacationClient {
           if (allResults.length > 0) {
             this.logger.info('Combined Alpbachtal search successful', {
               location: location,
-              total_results: allResults.length,
-              strategies_used: searchStrategies.length
+              results_count: allResults.length
             });
 
             return {
               search_summary: {
-                arrival_date: baseParams.arrival,
-                departure_date: baseParams.departure,
+                arrival_date: baseParams.arrival || '',
+                departure_date: baseParams.departure || '',
                 nights: 0,
                 persons_count: 0,
                 total_found: allResults.length,
-                currency: baseParams.currency
+                currency: baseParams.currency || 'EUR'
               },
               accommodations: allResults.slice(0, max_results), // Respect max_results limit
               timestamp: new Date().toISOString()
