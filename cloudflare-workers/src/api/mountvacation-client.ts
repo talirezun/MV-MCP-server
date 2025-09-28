@@ -47,6 +47,15 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'chamonix': { resort: 9233 }, // ✅ VERIFIED: Returns Grand Hôtel des Alpes in Chamonix
   'chamonix mont blanc': { resort: 9233 },
 
+  // Austrian Alps - ENHANCED MULTI-STRATEGY MAPPINGS
+  // Note: Alpbachtal requires multi-strategy search due to API limitations
+  'alpbachtal': {
+    resort: 9340,
+    skiarea: 52,
+    // Multi-strategy search coordinates for comprehensive coverage
+    coordinates: { lat: 47.4, lng: 11.9, radius: 15000 }
+  }, // ⚠️ API LIMITATION: Only returns 2/8+ accommodations, requires enhanced search
+
   // ===== COORDINATE-BASED MAPPINGS =====
   // Using precise coordinates for locations where resort IDs are unknown
 
