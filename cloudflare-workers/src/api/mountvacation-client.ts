@@ -717,10 +717,9 @@ export class MountVacationClient {
       // Parse the URL to add authentication if needed
       const url = new URL(nextPageUrl);
 
-      // Add authentication parameters if not already present
-      if (!url.searchParams.has('username') && !url.searchParams.has('password')) {
-        url.searchParams.set('username', env.MOUNTVACATION_API_KEY);
-        url.searchParams.set('password', env.MOUNTVACATION_API_KEY);
+      // Add authentication parameter if not already present
+      if (!url.searchParams.has('apiKey')) {
+        url.searchParams.set('apiKey', this.apiKey);
       }
 
       const response = await fetch(url.toString(), {
