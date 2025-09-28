@@ -252,9 +252,14 @@ export class MountVacationClient {
   }
 
   /**
-   * Search for accommodations using location mapping and multiple strategies
+   * Search for accommodations using location mapping and multiple strategies with pagination support
    */
-  async searchAccommodations(params: SearchParams, env: Env): Promise<SearchResult> {
+  async searchAccommodations(
+    params: SearchParams,
+    env: Env,
+    enable_pagination: boolean = false,
+    max_pages: number = 3
+  ): Promise<SearchResult> {
     const {
       location,
       accommodation_id,
@@ -532,6 +537,127 @@ export class MountVacationClient {
       error: 'No search parameters provided. Please specify a location, accommodation ID, resort ID, city ID, or coordinates.',
       timestamp: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Search accommodations with complete pagination support
+   * Collects all available results by following pagination links
+   */
+  async searchAccommodationsComplete(
+    params: SearchParams,
+    env: Env,
+    max_total_results: number = 50,
+    max_pages: number = 10
+  ): Promise<SearchResult> {
+    this.logger.info('Starting complete search with pagination', {
+      location: params.location || 'unknown',
+      max_total_results,
+      max_pages
+    });
+
+    // Get first batch using regular search
+    const firstBatch = await this.searchAccommodations(params, env, false, 1);
+
+    if (firstBatch.error || !firstBatch.accommodations || firstBatch.accommodations.length === 0) {
+      return firstBatch;
+    }
+
+    let allAccommodations = [...firstBatch.accommodations];
+    let currentPage = 1;
+    let nextPageUrl = firstBatch.pagination?.next_page_url;
+
+    // Continue fetching additional pages if available
+    while (nextPageUrl && currentPage < max_pages && allAccommodations.length < max_total_results) {
+      try {
+        this.logger.debug('Fetching additional page', {
+          page: currentPage + 1,
+          url: nextPageUrl,
+          current_results: allAccommodations.length
+        });
+
+        const nextBatch = await this.fetchNextPage(nextPageUrl, env);
+
+        if (nextBatch.accommodations && nextBatch.accommodations.length > 0) {
+          allAccommodations.push(...nextBatch.accommodations);
+          nextPageUrl = nextBatch.pagination?.next_page_url;
+          currentPage++;
+
+          // Small delay to be respectful to the API
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          break;
+        }
+      } catch (error) {
+        this.logger.warn('Error fetching additional page, stopping pagination', {
+          page: currentPage + 1,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        break;
+      }
+    }
+
+    // Limit results to max_total_results
+    if (allAccommodations.length > max_total_results) {
+      allAccommodations = allAccommodations.slice(0, max_total_results);
+    }
+
+    return {
+      search_summary: {
+        arrival_date: firstBatch.search_summary?.arrival_date || '',
+        departure_date: firstBatch.search_summary?.departure_date || '',
+        nights: firstBatch.search_summary?.nights || 0,
+        persons_count: firstBatch.search_summary?.persons_count || 0,
+        currency: firstBatch.search_summary?.currency || 'EUR',
+        total_found: allAccommodations.length,
+        pages_fetched: currentPage,
+        collection_method: 'complete_pagination',
+        truncated: allAccommodations.length >= max_total_results
+      },
+      accommodations: allAccommodations,
+      pagination: {
+        total_pages_fetched: currentPage,
+        has_more_pages: !!nextPageUrl && allAccommodations.length < max_total_results,
+        collection_complete: !nextPageUrl || allAccommodations.length >= max_total_results
+      },
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Fetch next page of results using pagination URL
+   */
+  async fetchNextPage(nextPageUrl: string, env: Env): Promise<SearchResult> {
+    try {
+      this.logger.debug('Fetching next page', { url: nextPageUrl });
+
+      const response = await fetch(nextPageUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'MountVacation-MCP-Worker/2.0',
+          'Accept': 'application/json',
+        },
+        signal: AbortSignal.timeout(this.timeout),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return this.formatResults(data, 100); // Allow more results per page for pagination
+
+    } catch (error) {
+      this.logger.error('Failed to fetch next page', {
+        url: nextPageUrl,
+        error: error instanceof Error ? error.message : String(error)
+      });
+
+      return {
+        error: `Failed to fetch next page: ${error instanceof Error ? error.message : String(error)}`,
+        accommodations: [],
+        timestamp: new Date().toISOString()
+      };
+    }
   }
 
   /**
@@ -1732,7 +1858,19 @@ export class MountVacationClient {
       };
     });
 
-    return {
+    // Extract pagination information from API response
+    const links = data.links || {};
+    const paginationInfo = {
+      has_more_pages: Boolean(links.next || links.nextRel || links.nextPage),
+      next_page_url: links.next || null,
+      next_page_relative: links.nextRel || null,
+      next_page_number: links.nextPage || null,
+      extended_area_search_url: links.extendedAreaSearch || null,
+      current_batch_size: formattedAccommodations.length,
+      total_in_current_batch: data.accommodations?.length || 0
+    };
+
+    const result: SearchResult = {
       search_summary: {
         arrival_date: data.arrival || '',
         departure_date: data.departure || '',
@@ -1743,6 +1881,13 @@ export class MountVacationClient {
       },
       accommodations: formattedAccommodations,
     };
+
+    // Add pagination info if available
+    if (paginationInfo.has_more_pages) {
+      result.pagination = paginationInfo;
+    }
+
+    return result;
   }
 
   /**

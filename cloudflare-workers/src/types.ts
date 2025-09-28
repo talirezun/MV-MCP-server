@@ -182,8 +182,22 @@ export interface SearchResult {
     persons_count: number;
     total_found: number;
     currency: string;
+    pages_fetched?: number;
+    collection_method?: string;
+    truncated?: boolean;
   };
   accommodations?: FormattedAccommodation[];
+  pagination?: {
+    has_more_pages?: boolean;
+    next_page_url?: string | null;
+    next_page_relative?: string | null;
+    next_page_number?: number | null;
+    extended_area_search_url?: string | null;
+    current_batch_size?: number;
+    total_in_current_batch?: number;
+    total_pages_fetched?: number;
+    collection_complete?: boolean;
+  };
   error?: string;
   message?: string;
   suggestions?: string[];
@@ -199,6 +213,9 @@ export interface APIResponse {
   personsAges?: number[];
   currency?: string;
   links?: {
+    next?: string;
+    nextRel?: string;
+    nextPage?: number;
     extendedAreaSearch?: string;
     [key: string]: any;
   };
@@ -231,6 +248,11 @@ export interface LogContext {
   error_name?: string;
   cache_key?: string;
   client_id?: string;
+  // Pagination fields
+  max_total_results?: number;
+  max_pages?: number;
+  page?: number;
+  current_results?: number;
   removed_entries?: number;
   match?: any; // For dynamic ID mapping matches
   cleaned_entries?: number;

@@ -38,15 +38,22 @@ Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
 ```
 
 ### **3. Restart Your MCP Client**
-The server will be available with 8 comprehensive accommodation search tools.
+The server will be available with 10 comprehensive accommodation search tools including advanced pagination support.
 
 ---
 
 ## 🛠️ **Available Tools**
 
+### **🔍 Core Search Tools**
 | Tool | Description | Use Case |
 |------|-------------|----------|
-| `search_accommodations` | Main search with intelligent location resolution | General accommodation searches |
+| `search_accommodations` | Main search with intelligent location resolution | General accommodation searches (first batch) |
+| `search_accommodations_complete` | **NEW**: Complete search with automatic pagination | Comprehensive results (all available pages) |
+| `load_more_accommodations` | **NEW**: Load additional results from pagination URLs | Progressive loading of more results |
+
+### **📋 Property Details**
+| Tool | Description | Use Case |
+|------|-------------|----------|
 | `get_accommodation_details` | Detailed property information and amenities | Property deep-dive analysis |
 | `get_facility_details` | Specific room/facility details | Room selection and comparison |
 | `search_by_resort_id` | Resort-specific accommodation searches | Targeted resort searches |
@@ -84,6 +91,56 @@ Try asking your AI assistant:
 
 ### **Partial Coverage**
 - 🇨🇭 **Switzerland**: Limited availability (under investigation)
+
+---
+
+## 📄 **Pagination Support**
+
+### **🚀 NEW: Complete Results Collection**
+The MountVacation API uses pagination to handle large result sets efficiently. Our MCP server now provides three strategies:
+
+#### **Strategy 1: Quick Search** (`search_accommodations`)
+- Returns first batch (20-30 results) for fast response
+- Includes pagination info if more results available
+- Perfect for initial exploration
+
+#### **Strategy 2: Complete Collection** (`search_accommodations_complete`)
+- Automatically follows all pagination links
+- Collects up to 200 total results across multiple pages
+- Equivalent to browsing all pages on mountvacation.com
+- Configurable limits for performance
+
+#### **Strategy 3: Progressive Loading** (`load_more_accommodations`)
+- Load additional batches on demand
+- User-controlled pagination
+- Optimal for interactive applications
+
+### **Example Usage**
+```javascript
+// Quick search (first batch)
+search_accommodations({
+  location: "Chamonix",
+  arrival_date: "2026-02-15",
+  departure_date: "2026-02-22",
+  persons_ages: "30,28"
+})
+
+// Complete search (all results)
+search_accommodations_complete({
+  location: "Chamonix",
+  arrival_date: "2026-02-15",
+  departure_date: "2026-02-22",
+  persons_ages: "30,28",
+  max_total_results: 100,
+  max_pages: 10
+})
+
+// Load more from pagination URL
+load_more_accommodations({
+  next_page_url: "https://api.mountvacation.com/...",
+  max_additional_results: 20
+})
+```
 
 ---
 

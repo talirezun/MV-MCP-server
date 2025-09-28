@@ -378,6 +378,80 @@ class MountVacationMCPServer {
           },
           required: ['regions', 'arrival_date', 'departure_date', 'persons_ages']
         }
+      },
+      {
+        name: 'search_accommodations_complete',
+        description: 'Search for accommodations with complete pagination support. Collects all available results by following pagination links from the MountVacation API. Use this when you need comprehensive results equivalent to browsing all pages on the website.',
+        inputSchema: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            location: {
+              type: 'string',
+              description: 'Location name: city, resort, region, or country (e.g., "Madonna di Campiglio", "Chamonix", "French Alps")'
+            },
+            accommodation_id: {
+              type: 'integer',
+              description: 'Specific accommodation ID for direct search. Use instead of location.'
+            },
+            resort_id: {
+              type: 'integer',
+              description: 'Resort ID to search all accommodations in a specific resort. Use instead of location.'
+            },
+            city_id: {
+              type: 'integer',
+              description: 'City ID to search all accommodations in a specific city. Use instead of location.'
+            },
+            arrival_date: {
+              type: 'string',
+              description: 'Check-in date in YYYY-MM-DD format'
+            },
+            departure_date: {
+              type: 'string',
+              description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights'
+            },
+            nights: {
+              type: 'integer',
+              description: 'Number of nights. Alternative to departure_date'
+            },
+            persons_ages: {
+              type: 'string',
+              description: 'Ages separated by commas (e.g., "30,28,8")'
+            },
+            currency: {
+              type: 'string',
+              description: 'Currency code for pricing (default: EUR)'
+            },
+            max_total_results: {
+              type: 'integer',
+              description: 'Maximum total results to collect across all pages (default: 50)'
+            },
+            max_pages: {
+              type: 'integer',
+              description: 'Maximum number of pages to fetch (default: 10)'
+            }
+          },
+          required: ['arrival_date']
+        }
+      },
+      {
+        name: 'load_more_accommodations',
+        description: 'Load the next batch of accommodations using a pagination URL from a previous search. Use this when a search result indicates more pages are available.',
+        inputSchema: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            next_page_url: {
+              type: 'string',
+              description: 'The next page URL from a previous search result\'s pagination object'
+            },
+            max_additional_results: {
+              type: 'integer',
+              description: 'Maximum number of additional results to return from this page (default: 20)'
+            }
+          },
+          required: ['next_page_url']
+        }
       }
     ];
   }

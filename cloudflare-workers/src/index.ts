@@ -702,6 +702,95 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
         required: ['regions', 'preferred_dates', 'persons_ages']
       }
     },
+    {
+      name: 'search_accommodations_complete',
+      description: 'Search for accommodations with complete pagination support. Collects all available results by following pagination links from the MountVacation API. Use this when you need comprehensive results equivalent to browsing all pages on the website.',
+      inputSchema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          location: {
+            type: 'string',
+            description: 'Location name: city, resort, region, or country (e.g., "Madonna di Campiglio", "Chamonix", "French Alps")',
+          },
+          accommodation_id: {
+            type: 'integer',
+            description: 'Specific accommodation ID for direct search. Use instead of location.',
+          },
+          resort_id: {
+            type: 'integer',
+            description: 'Resort ID to search all accommodations in a specific resort. Use instead of location.',
+          },
+          city_id: {
+            type: 'integer',
+            description: 'City ID to search all accommodations in a specific city. Use instead of location.',
+          },
+          arrival_date: {
+            type: 'string',
+            description: 'Check-in date in YYYY-MM-DD format',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          departure_date: {
+            type: 'string',
+            description: 'Check-out date in YYYY-MM-DD format. Alternative: use nights',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+          },
+          nights: {
+            type: 'integer',
+            description: 'Number of nights. Alternative to departure_date',
+            minimum: 1,
+          },
+          persons_ages: {
+            type: 'string',
+            description: 'Ages separated by commas (e.g., "30,28,8")',
+            pattern: '^\\d+(,\\d+)*$',
+          },
+          currency: {
+            type: 'string',
+            description: 'Currency code for pricing',
+            enum: ['AUD', 'BGN', 'BRL', 'CAD', 'CHF', 'CNY', 'CZK', 'DKK', 'EUR', 'GBP', 'HKD', 'HRK', 'HUF', 'IDR', 'ILS', 'INR', 'JPY', 'KRW', 'LTL', 'MXN', 'MYR', 'NOK', 'NZD', 'PHP', 'PLN', 'RON', 'RUB', 'SEK', 'SGD', 'THB', 'TRY', 'USD', 'ZAR'],
+            default: 'EUR',
+          },
+          max_total_results: {
+            type: 'integer',
+            description: 'Maximum total results to collect across all pages',
+            minimum: 1,
+            maximum: 200,
+            default: 50,
+          },
+          max_pages: {
+            type: 'integer',
+            description: 'Maximum number of pages to fetch (safety limit)',
+            minimum: 1,
+            maximum: 20,
+            default: 10,
+          },
+        },
+        required: ['arrival_date'],
+      },
+    },
+    {
+      name: 'load_more_accommodations',
+      description: 'Load the next batch of accommodations using a pagination URL from a previous search. Use this when a search result indicates more pages are available.',
+      inputSchema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          next_page_url: {
+            type: 'string',
+            description: 'The next page URL from a previous search result\'s pagination object',
+          },
+          max_additional_results: {
+            type: 'integer',
+            description: 'Maximum number of additional results to return from this page',
+            minimum: 1,
+            maximum: 50,
+            default: 20,
+          },
+        },
+        required: ['next_page_url'],
+      },
+    },
   ];
 
   logger.info('Tools list requested', { toolCount: tools.length });
@@ -797,6 +886,26 @@ async function handleToolCall(
         );
         return createSuccessResponse(request.id, researchResult);
 
+      case 'search_accommodations_complete':
+        const completeSearchResult = await handleSearchAccommodationsComplete(
+          args,
+          env,
+          cacheManager,
+          apiClient,
+          logger
+        );
+        return createSuccessResponse(request.id, completeSearchResult);
+
+      case 'load_more_accommodations':
+        const loadMoreResult = await handleLoadMoreAccommodations(
+          args,
+          env,
+          cacheManager,
+          apiClient,
+          logger
+        );
+        return createSuccessResponse(request.id, loadMoreResult);
+
       default:
         return createErrorResponse(request.id, -32601, `Unknown tool: ${name}`);
     }
@@ -824,12 +933,23 @@ async function handleSearchAccommodations(
 ) {
   const {
     location,
+    accommodation_id,
+    accommodation_ids,
+    resort_id,
+    city_id,
+    latitude,
+    longitude,
+    radius,
     arrival_date,
     departure_date,
+    nights,
     persons_ages,
     persons,
     currency = 'EUR',
+    language = 'en',
+    include_additional_fees = false,
     max_results = parseInt(env.MAX_RESULTS_DEFAULT),
+    page = 1,
   } = args;
 
   // Handle persons parameter - convert to persons_ages format
@@ -880,10 +1000,19 @@ async function handleSearchAccommodations(
     const searchParams: SearchParams = {
       arrival_date,
       ...(location && { location }),
+      ...(accommodation_id && { accommodation_id }),
+      ...(accommodation_ids && { accommodation_ids }),
+      ...(resort_id && { resort_id }),
+      ...(city_id && { city_id }),
+      ...(latitude && longitude && radius && { latitude, longitude, radius }),
       ...(departure_date && { departure_date }),
+      ...(nights && { nights }),
       ...(finalPersonsAges && { persons_ages: finalPersonsAges }),
       ...(currency && { currency }),
+      ...(language && { language }),
+      ...(include_additional_fees && { include_additional_fees }),
       max_results: validatedMaxResults,
+      ...(page && { page }),
     };
 
     const result = await apiClient.searchAccommodations(searchParams, env);
@@ -1234,6 +1363,108 @@ async function handleResearchAccommodations(
           text: JSON.stringify({
             error: `Failed to research accommodations: ${error instanceof Error ? error.message : String(error)}`,
             regions: args.regions,
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      ],
+    };
+  }
+}
+
+async function handleSearchAccommodationsComplete(
+  args: any,
+  env: Env,
+  cacheManager: CacheManager,
+  apiClient: MountVacationClient,
+  logger: any
+) {
+  try {
+    logger.info('Starting complete search with pagination', {
+      location: args.location,
+      max_total_results: args.max_total_results,
+      max_pages: args.max_pages
+    });
+
+    const result = await apiClient.searchAccommodationsComplete(
+      args as SearchParams,
+      env,
+      args.max_total_results || 50,
+      args.max_pages || 10
+    );
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+
+  } catch (error) {
+    logger.error('Complete search failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            error: 'Complete search failed',
+            message: error instanceof Error ? error.message : String(error),
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      ],
+    };
+  }
+}
+
+async function handleLoadMoreAccommodations(
+  args: any,
+  env: Env,
+  cacheManager: CacheManager,
+  apiClient: MountVacationClient,
+  logger: any
+) {
+  try {
+    logger.info('Loading more accommodations', {
+      next_page_url: args.next_page_url,
+      max_additional_results: args.max_additional_results
+    });
+
+    const result = await apiClient.fetchNextPage(args.next_page_url, env);
+
+    // Limit results if requested
+    if (args.max_additional_results && result.accommodations) {
+      result.accommodations = result.accommodations.slice(0, args.max_additional_results);
+      if (result.search_summary) {
+        result.search_summary.total_found = result.accommodations.length;
+      }
+    }
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+
+  } catch (error) {
+    logger.error('Load more accommodations failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            error: 'Load more failed',
+            message: error instanceof Error ? error.message : String(error),
             timestamp: new Date().toISOString(),
           }),
         },
