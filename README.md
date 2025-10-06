@@ -18,40 +18,52 @@ A production-ready Model Context Protocol (MCP) server that provides AI assistan
 
 ## 🏗️ **Server Architecture**
 
-This repository contains multiple server versions optimized for different MCP clients:
+### **📥 Simple Installation**
+Users only need to download a single JavaScript file - no repository cloning required!
 
-### **📁 Server Versions**
-- **`/server-versions/mountvacation-mcp-server.js`** - Standard MCP server for most clients
-- **`/server-versions/mountvacation-mcp-server-cline.js`** - Optimized for Cline.bot within VS Code
-- **`/cloudflare-workers/`** - Cloudflare Workers deployment for production use
+### **📁 Available Server Files**
+- **`mountvacation-mcp-server.js`** - Standard MCP server for most clients (Claude Desktop, LM Studio, Augment Code)
+- **`mountvacation-mcp-server-cline.js`** - Optimized version for Cline.bot within VS Code
 
-### **🔧 Configuration Files**
-- **`/mcp-configs/mcp-config.json`** - Generic configuration
-- **`/mcp-configs/mcp-config-macos-linux.json`** - macOS/Linux specific
-- **`/mcp-configs/mcp-config-windows.json`** - Windows specific
-- **`/mcp-configs/mcp-config-for-augment.json`** - Augment Code specific
+### **🔗 Direct Download Links**
+- **Standard**: https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js
+- **Cline Version**: https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server-cline.js
+
+### **⚙️ Configuration**
+All configuration is done through your MCP client's config file - no additional setup files needed!
 
 ---
 
 ## 🚀 **Quick Start**
 
-### **1. Clone the Repository**
+### **1. Download the Server File**
 ```bash
-git clone https://github.com/talirezun/MV-MCP-server.git
-cd MV-MCP-server
+# Download the MCP server file
+curl -o mountvacation-mcp-server.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js
 ```
 
-### **2. Choose Your Server Version**
-Select the appropriate server file based on your MCP client (see Client-Specific Instructions below).
-
-### **3. Get Your MountVacation API Key**
+### **2. Get Your MountVacation API Key**
 [Get your API key here](#-get-your-mountvacation-api-key) (see section below for details)
 
-### **4. Configure Your MCP Client**
-Use the appropriate configuration file from `/mcp-configs/` or follow the client-specific instructions below.
+### **3. Configure Your MCP Client**
+Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
 
-### **5. Restart Your MCP Client**
-The server will be available with 12 comprehensive accommodation search tools including advanced pagination support.
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": ["./mountvacation-mcp-server.js"],
+      "env": {
+        "MOUNTVACATION_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+### **4. Restart Your MCP Client**
+The server will be available with 10 comprehensive accommodation search tools including advanced pagination support.
 
 ---
 
@@ -61,55 +73,43 @@ The server will be available with 12 comprehensive accommodation search tools in
 - Node.js (version 14 or higher)
 - Your MountVacation API key
 
-### **🍎 macOS Installation**
+### **📥 Download Server File (All Platforms)**
+
+**Option 1: Direct Download**
 ```bash
-# Clone the repository
-git clone https://github.com/talirezun/MV-MCP-server.git
-cd MV-MCP-server
+# Using curl (macOS/Linux)
+curl -o mountvacation-mcp-server.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js
 
-# Make server executable
-chmod +x server-versions/mountvacation-mcp-server.js
-
-# Set up environment variable (add to ~/.zshrc or ~/.bash_profile)
-echo 'export MOUNTVACATION_API_KEY="your-api-key-here"' >> ~/.zshrc
-source ~/.zshrc
-
-# Test the server
-echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize"}' | node server-versions/mountvacation-mcp-server.js
+# Using PowerShell (Windows)
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js" -OutFile "mountvacation-mcp-server.js"
 ```
 
-### **🐧 Linux Installation**
-```bash
-# Clone the repository
-git clone https://github.com/talirezun/MV-MCP-server.git
-cd MV-MCP-server
+**Option 2: Browser Download**
+Visit: https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js
+Right-click → Save As → `mountvacation-mcp-server.js`
 
-# Make server executable
-chmod +x server-versions/mountvacation-mcp-server.js
+### **⚙️ Configure Your MCP Client**
 
-# Set up environment variable (add to ~/.bashrc)
-echo 'export MOUNTVACATION_API_KEY="your-api-key-here"' >> ~/.bashrc
-source ~/.bashrc
+Add this configuration to your MCP client's config file:
 
-# Test the server
-echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize"}' | node server-versions/mountvacation-mcp-server.js
+```json
+{
+  "mcpServers": {
+    "mountvacation": {
+      "command": "node",
+      "args": ["./mountvacation-mcp-server.js"],
+      "env": {
+        "MOUNTVACATION_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
 ```
 
-### **🪟 Windows Installation**
-```cmd
-# Clone the repository
-git clone https://github.com/talirezun/MV-MCP-server.git
-cd MV-MCP-server
-
-# Set environment variable (PowerShell)
-$env:MOUNTVACATION_API_KEY="your-api-key-here"
-
-# Or set permanently (Command Prompt as Administrator)
-setx MOUNTVACATION_API_KEY "your-api-key-here"
-
-# Test the server (PowerShell)
-echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize"}' | node server-versions/mountvacation-mcp-server.js
-```
+**Common config file locations:**
+- **Claude Desktop (macOS)**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Claude Desktop (Windows)**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Claude Desktop (Linux)**: `~/.config/Claude/claude_desktop_config.json`
 
 ## 🔄 **MCP Client Compatibility**
 
@@ -126,41 +126,35 @@ Additional MCP client testing is ongoing. The server follows MCP protocol standa
 
 ## 📱 **Client-Specific Instructions**
 
-### **🧠 LM Studio Setup**
-```bash
-# Use standard server version
-cp mcp-configs/mcp-config-macos-linux.json ~/.config/lm-studio/mcp-config.json
+### **🤖 Claude Desktop**
+1. Download `mountvacation-mcp-server.js` to your preferred folder
+2. Edit your Claude Desktop config file:
+   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+   - **Linux**: `~/.config/Claude/claude_desktop_config.json`
+3. Add the MountVacation server configuration (see above)
+4. Restart Claude Desktop
 
-# Edit the config file to set your API key and correct path
-# Path should point to: /path/to/MV-MCP-server/server-versions/mountvacation-mcp-server.js
-```
+### **🧠 LM Studio**
+1. Download `mountvacation-mcp-server.js` to your LM Studio folder
+2. Add to your LM Studio MCP configuration
+3. Set the `MOUNTVACATION_API_KEY` environment variable
+4. Restart LM Studio
 
-### **🤖 Claude Desktop Setup**
-```bash
-# macOS
-cp mcp-configs/mcp-config-macos-linux.json ~/Library/Application\ Support/Claude/claude_desktop_config.json
+### **⚡ Augment Code**
+1. Download `mountvacation-mcp-server.js` to your project folder
+2. Use the "Edit MCP Server" option in Augment
+3. Set command: `node` and args: `./mountvacation-mcp-server.js`
+4. Add `MOUNTVACATION_API_KEY` environment variable
+5. Save and restart
 
-# Windows
-copy mcp-configs\mcp-config-windows.json %APPDATA%\Claude\claude_desktop_config.json
-
-# Edit the config file to set your API key and correct path
-```
-
-### **⚡ Augment Code Setup**
-```bash
-# Use the Augment-specific configuration
-cp mcp-configs/mcp-config-for-augment.json ~/.config/augment/mcp-config.json
-
-# Edit the config file to set your API key and correct path
-```
-
-### **🔧 Cline.bot Setup (VS Code)**
-```bash
-# Use the Cline-specific server version
-# In VS Code with Cline extension, configure MCP server:
-# Server path: /path/to/MV-MCP-server/server-versions/mountvacation-mcp-server-cline.js
-# Environment: MOUNTVACATION_API_KEY=your-api-key-here
-```
+### **🔧 Cline.bot (VS Code)**
+1. Download the Cline-specific version:
+   ```bash
+   curl -o mountvacation-mcp-server-cline.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server-cline.js
+   ```
+2. Configure in VS Code Cline extension settings
+3. Set environment variable: `MOUNTVACATION_API_KEY=your-api-key-here`
 
 ---
 
