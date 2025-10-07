@@ -2,7 +2,7 @@
 
 A production-ready Model Context Protocol (MCP) server that provides AI assistants with intelligent access to MountVacation's accommodation booking API, specializing in year-round mountain vacations across Europe, spa & terme holidays in Slovenia, and extensive Croatia coverage.
 
-https://youtu.be/iX-VV5B8veE?si=6bYJyNywZucN5yGt
+[Watch the video](https://youtu.be/iX-VV5B8veE)
 
 ## ✨ **Key Features**
 
