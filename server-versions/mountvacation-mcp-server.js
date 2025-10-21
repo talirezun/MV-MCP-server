@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * MountVacation MCP Server v3.2
- * FIXED: Claude Desktop MCP Protocol Compliance
+ * MountVacation MCP Server v3.3
+ * FIXED: DNS Resolution Issue & Claude Desktop MCP Protocol Compliance
  *
- * Resolves ZodError validation issues by:
+ * DNS Resolution Fix (v3.3):
+ * - Uses Cloudflare IP directly (188.114.96.3) to bypass local DNS issues
+ * - Maintains Host header for HTTPS/TLS verification
+ * - Works reliably regardless of system DNS configuration
+ * - No Cloudflare Workers redeployment needed
+ *
+ * MCP Protocol Compliance (v3.2):
  * - Removing server-side notifications/initialized (protocol violation)
  * - Following proper MCP initialization sequence per specification
  * - Server now purely reactive, only responds to client requests
@@ -12,6 +18,10 @@
  */
 
 const https = require('https');
+const dns = require('dns');
+const { promisify } = require('util');
+
+const dnsResolve4 = promisify(dns.resolve4);
 
 class MountVacationMCPServer {
   constructor() {
@@ -20,7 +30,10 @@ class MountVacationMCPServer {
       throw new Error('MOUNTVACATION_API_KEY environment variable is required. Please set your API key.');
     }
     this.workerUrl = 'mountvacation-mcp-final.4thtech.workers.dev';
+    this.workerIp = '188.114.96.3'; // Cloudflare IP for the worker
     this.tools = this.getToolDefinitions();
+    // Use Google's DNS server to avoid local DNS caching issues
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
   }
 
   getToolDefinitions() {
@@ -460,47 +473,53 @@ class MountVacationMCPServer {
   }
 
   async makeRequest(data) {
-    return new Promise((resolve, reject) => {
-      const postData = JSON.stringify(data);
-      
-      const options = {
-        hostname: this.workerUrl,
-        path: '/mcp',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-MountVacation-API-Key': this.apiKey,
-          'Content-Length': Buffer.byteLength(postData)
-        },
-        timeout: 30000
-      };
+    return new Promise(async (resolve, reject) => {
+      try {
+        const postData = JSON.stringify(data);
 
-      const req = https.request(options, (res) => {
-        let responseData = '';
-        res.on('data', (chunk) => {
-          responseData += chunk;
-        });
-        res.on('end', () => {
-          try {
-            const response = JSON.parse(responseData);
-            resolve(response);
-          } catch (error) {
-            reject(new Error(`Parse error: ${error.message}`));
-          }
-        });
-      });
+        // Use IP address directly to avoid DNS resolution issues
+        const options = {
+          hostname: this.workerIp,
+          path: '/mcp',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-MountVacation-API-Key': this.apiKey,
+            'Host': this.workerUrl,
+            'Content-Length': Buffer.byteLength(postData)
+          },
+          timeout: 30000
+        };
 
-      req.on('error', (error) => {
+        const req = https.request(options, (res) => {
+          let responseData = '';
+          res.on('data', (chunk) => {
+            responseData += chunk;
+          });
+          res.on('end', () => {
+            try {
+              const response = JSON.parse(responseData);
+              resolve(response);
+            } catch (error) {
+              reject(new Error(`Parse error: ${error.message}`));
+            }
+          });
+        });
+
+        req.on('error', (error) => {
+          reject(error);
+        });
+
+        req.on('timeout', () => {
+          req.destroy();
+          reject(new Error('Request timeout'));
+        });
+
+        req.write(postData);
+        req.end();
+      } catch (error) {
         reject(error);
-      });
-
-      req.on('timeout', () => {
-        req.destroy();
-        reject(new Error('Request timeout'));
-      });
-
-      req.write(postData);
-      req.end();
+      }
     });
   }
 

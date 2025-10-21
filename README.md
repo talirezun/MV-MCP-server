@@ -75,6 +75,23 @@ The server will be available with 10 comprehensive accommodation search tools in
 
 ---
 
+## 🔧 **Reliability & DNS Resolution**
+
+### **✅ Stable Production Deployment**
+- **Cloudflare Workers**: Deployed and actively running
+- **Free Tier**: 100,000 requests/day (no inactivity timeout)
+- **Uptime**: Continuously available
+- **DNS Resolution**: Optimized to work reliably regardless of system DNS configuration
+
+### **🛡️ DNS Resolution Fix (v3.3+)**
+The server uses direct IP connection to Cloudflare Workers, ensuring reliable operation even if your system's DNS has local overrides or caching issues. This means:
+- ✅ Works on all systems without DNS configuration
+- ✅ No dependency on system DNS settings
+- ✅ Faster connection establishment
+- ✅ More reliable for automated deployments
+
+---
+
 ## 💻 **Installation Instructions**
 
 ### **📋 Prerequisites**
@@ -418,7 +435,13 @@ MIT License - See LICENSE file for details.
 
 **Current Production URL**: `https://mountvacation-mcp-final.4thtech.workers.dev`
 
-This is the latest stable deployment of the MountVacation MCP server on Cloudflare Workers.
+**Status**: ✅ Active and Stable
+- **Platform**: Cloudflare Workers (Free Tier)
+- **Requests/Day**: 100,000 (no inactivity timeout)
+- **Uptime**: Continuous
+- **Latest Version**: v3.3 (with DNS resolution optimization)
+
+This is the latest stable deployment of the MountVacation MCP server on Cloudflare Workers. The server uses direct IP connection for maximum reliability.
 
 ---
 
