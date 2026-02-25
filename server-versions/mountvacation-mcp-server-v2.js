@@ -1,16 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * MountVacation MCP Server v3.3
- * FIXED: DNS Resolution Issue & Claude Desktop MCP Protocol Compliance
+ * MountVacation MCP Server v3.2
+ * FIXED: Claude Desktop MCP Protocol Compliance
  *
- * DNS Resolution Fix (v3.3):
- * - Uses Cloudflare IP directly (188.114.96.3) to bypass local DNS issues
- * - Maintains Host header for HTTPS/TLS verification
- * - Works reliably regardless of system DNS configuration
- * - No Cloudflare Workers redeployment needed
- *
- * MCP Protocol Compliance (v3.2):
+ * Resolves ZodError validation issues by:
  * - Removing server-side notifications/initialized (protocol violation)
  * - Following proper MCP initialization sequence per specification
  * - Server now purely reactive, only responds to client requests
@@ -473,49 +467,53 @@ class MountVacationMCPServer {
   }
 
   async makeRequest(data) {
-    return new Promise((resolve, reject) => {
-      const postData = JSON.stringify(data);
+    return new Promise(async (resolve, reject) => {
+      try {
+        const postData = JSON.stringify(data);
 
-      // Use IP address directly to avoid DNS resolution issues
-      const options = {
-        hostname: this.workerIp,
-        path: '/mcp',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-MountVacation-API-Key': this.apiKey,
-          'Host': this.workerUrl,
-          'Content-Length': Buffer.byteLength(postData)
-        },
-        timeout: 30000
-      };
+        // Use IP address directly to avoid DNS resolution issues
+        const options = {
+          hostname: this.workerIp,
+          path: '/mcp',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-MountVacation-API-Key': this.apiKey,
+            'Host': this.workerUrl,
+            'Content-Length': Buffer.byteLength(postData)
+          },
+          timeout: 30000
+        };
 
-      const req = https.request(options, (res) => {
-        let responseData = '';
-        res.on('data', (chunk) => {
-          responseData += chunk;
+        const req = https.request(options, (res) => {
+          let responseData = '';
+          res.on('data', (chunk) => {
+            responseData += chunk;
+          });
+          res.on('end', () => {
+            try {
+              const response = JSON.parse(responseData);
+              resolve(response);
+            } catch (error) {
+              reject(new Error(`Parse error: ${error.message}`));
+            }
+          });
         });
-        res.on('end', () => {
-          try {
-            const response = JSON.parse(responseData);
-            resolve(response);
-          } catch (error) {
-            reject(new Error(`Parse error: ${error.message}`));
-          }
-        });
-      });
 
-      req.on('error', (error) => {
+        req.on('error', (error) => {
+          reject(error);
+        });
+
+        req.on('timeout', () => {
+          req.destroy();
+          reject(new Error('Request timeout'));
+        });
+
+        req.write(postData);
+        req.end();
+      } catch (error) {
         reject(error);
-      });
-
-      req.on('timeout', () => {
-        req.destroy();
-        reject(new Error('Request timeout'));
-      });
-
-      req.write(postData);
-      req.end();
+      }
     });
   }
 

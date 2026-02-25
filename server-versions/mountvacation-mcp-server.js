@@ -529,18 +529,25 @@ class MountVacationMCPServer {
 
     try {
       switch (request.method) {
+        // JSON-RPC 2.0 notifications - MUST NOT respond (no id field)
+        case 'notifications/initialized':
+        case 'notifications/cancelled':
+        case 'notifications/progress':
+        case 'notifications/roots/list_changed':
+          return null; // Signal: do not send any response
+
         case 'initialize':
           return {
             jsonrpc: '2.0',
             id: requestId,
             result: {
-              protocolVersion: '2025-06-18',
+              protocolVersion: '2024-11-05',
               capabilities: {
                 tools: {}
               },
               serverInfo: {
                 name: 'mountvacation-mcp-server',
-                version: '3.2.1'
+                version: '3.3.0'
               }
             }
           };
@@ -624,8 +631,15 @@ async function main() {
         throw new Error('Missing method');
       }
 
+      // JSON-RPC 2.0: Notifications have method but NO id - MUST NOT respond
+      if (request.method && request.id === undefined) {
+        return; // Silently accept notifications per JSON-RPC 2.0 spec
+      }
+
       const response = await server.handleRequest(request);
-      console.log(JSON.stringify(response));
+      if (response !== null) {
+        console.log(JSON.stringify(response));
+      }
     } catch (error) {
       const errorResponse = {
         jsonrpc: '2.0',

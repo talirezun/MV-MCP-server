@@ -34,7 +34,7 @@ The MountVacation MCP Server is a Model Context Protocol (MCP) server that provi
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │           mountvacation-mcp-server.js                       ││
 │  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           ││
-│  │  │   8 Tools   │ │ MCP Handler │ │ HTTP Client │           ││
+│  │  │  10 Tools   │ │ MCP Handler │ │ HTTP Client │           ││
 │  │  └─────────────┘ └─────────────┘ └─────────────┘           ││
 │  └─────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────┘
@@ -65,8 +65,9 @@ MV-MCP-server/
 ├── 📄 README.md                      # Project documentation
 ├── 📁 docs/                          # Documentation folder
 │   ├── 📄 PROJECT-ARCHITECTURE.md    # This file
-│   ├── 📄 CLAUDE-DESKTOP-PROTOCOL-FIX.md  # Claude Desktop fix details
-│   └── 📄 FINAL-SOLUTION-SUMMARY.md  # Complete solution summary
+│   ├── 📄 COMPREHENSIVE_MCP_TESTING_REPORT.md  # MCP testing report
+│   ├── 📄 EXECUTIVE_TESTING_SUMMARY.md  # Executive testing summary
+│   └── 📄 mountvacation_api_batching_guide.md  # API batching guide
 ├── 📁 cloudflare-workers/            # Cloudflare Worker deployment
 │   ├── 📄 package.json               # Dependencies
 │   ├── 📄 wrangler.toml              # Cloudflare configuration
@@ -89,8 +90,8 @@ MV-MCP-server/
 
 ### **1. MCP Server (`mountvacation-mcp-server.js`)**
 - **Protocol**: JSON-RPC 2.0 over stdio
-- **Version**: 3.2.0 (Protocol compliant)
-- **Tools**: 8 comprehensive accommodation search tools
+- **Version**: 3.3.0 (Protocol compliant, Claude Desktop compatible)
+- **Tools**: 10 comprehensive accommodation search tools
 - **Architecture**: Purely reactive, protocol-compliant server
 
 ### **2. Cloudflare Worker (`cloudflare-workers/`)**
@@ -172,7 +173,7 @@ npm run deploy
 
 ### **Version Management**
 - **Server Version**: Embedded in `serverInfo.version`
-- **Protocol Version**: `2025-06-18` (latest MCP spec)
+- **Protocol Version**: `2024-11-05` (Claude Desktop compatible)
 - **API Version**: Cloudflare Worker handles versioning
 
 ---
@@ -180,10 +181,11 @@ npm run deploy
 ## 🎯 **Quality Assurance**
 
 ### **Testing Strategy**
-- **Protocol Compliance**: MCP specification adherence
-- **Cross-client Compatibility**: Claude Desktop, Augment Code, LM Studio
+- **Protocol Compliance**: MCP specification adherence (JSON-RPC 2.0 notification handling)
+- **Cross-client Compatibility**: Claude Desktop, Augment Code, LM Studio, Cline.bot
 - **Functional Testing**: Real accommodation searches
 - **Error Handling**: Graceful failure scenarios
+- **Notification Handling**: Silent acceptance of JSON-RPC 2.0 notifications (no response for `notifications/initialized`, `notifications/cancelled`, etc.)
 
 ### **Performance Metrics**
 - **Response Time**: <30 seconds for complex searches

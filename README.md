@@ -140,7 +140,7 @@ Add this configuration to your MCP client's config file:
 
 ### **✅ Tested and Working**
 - **🧠 LM Studio** - gpt-oss 20B model (excellent performance)
-- **🤖 Claude Desktop App** - Full compatibility with protocol v3.2.0
+- **🤖 Claude Desktop App** - Full compatibility with protocol v3.3.0 (JSON-RPC 2.0 notification handling)
 - **⚡ Augment Code** - Native integration support
 - **🔧 Cline.bot** - VS Code extension (use cline-specific server version)
 
@@ -313,7 +313,7 @@ load_more_accommodations({
 ## 🏗️ **Technical Architecture**
 
 - **Protocol**: JSON-RPC 2.0 over stdio (MCP compliant)
-- **Version**: 3.2.0 (Protocol compliant for Claude Desktop)
+- **Version**: 3.3.0 (Protocol compliant for Claude Desktop, with JSON-RPC 2.0 notification handling)
 - **API Integration**: Cloudflare Worker orchestration layer
 - **Location Intelligence**: 5 MountVacation API endpoints for optimal search
 - **Fallback Strategy**: Extended area search with cross-border discovery
@@ -365,7 +365,7 @@ The video covers:
 ## 🔧 **Troubleshooting**
 
 ### **Claude Desktop Issues**
-✅ **RESOLVED**: Version 3.2.0 includes protocol compliance fixes for Claude Desktop compatibility.
+✅ **RESOLVED**: Version 3.3.0 includes full JSON-RPC 2.0 notification handling and protocol version compatibility for Claude Desktop. The server now silently accepts `notifications/initialized` and other notification messages per the JSON-RPC 2.0 spec (no response for messages without an `id` field).
 
 ### **Common Solutions**
 1. **Restart your MCP client** after configuration changes
@@ -403,15 +403,17 @@ npm run deploy
 | Document | Description |
 |----------|-------------|
 | [📋 Project Architecture](docs/PROJECT-ARCHITECTURE.md) | Comprehensive technical overview and system design |
-| [🔧 Claude Desktop Fix](docs/CLAUDE-DESKTOP-PROTOCOL-FIX.md) | Protocol compliance details and troubleshooting |
-| [📊 Solution Summary](docs/FINAL-SOLUTION-SUMMARY.md) | Complete implementation summary and verification |
+| [🧪 MCP Testing Report](docs/COMPREHENSIVE_MCP_TESTING_REPORT.md) | Comprehensive MCP testing report |
+| [📊 Executive Testing Summary](docs/EXECUTIVE_TESTING_SUMMARY.md) | Executive testing summary |
+| [📄 API Batching Guide](docs/mountvacation_api_batching_guide.md) | API batching and pagination guide |
 
 ---
 
 ## 📈 **Version History**
 
-- **v3.2.0** ✅ Protocol compliance fix for universal MCP client compatibility
-- **v3.1.0** - Schema simplification and enhanced error handling  
+- **v3.3.0** ✅ JSON-RPC 2.0 notification handling fix for Claude Desktop compatibility (silent acceptance of `notifications/initialized`, protocol version set to `2024-11-05`)
+- **v3.2.0** - Protocol compliance fix for universal MCP client compatibility
+- **v3.1.0** - Schema simplification and enhanced error handling
 - **v3.0.0** - Full API utilization with extended area search
 - **v2.x** - Initial MCP implementation
 
