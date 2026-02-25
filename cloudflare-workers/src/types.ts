@@ -281,6 +281,9 @@ export interface LogContext {
   has_extended_search?: boolean;
   extended_search_url?: string;
   extended_search_used?: boolean;
+  // Location validation fields
+  validation_keywords?: string[];
+  first_result_location?: any;
 }
 
 export interface RateLimitInfo {

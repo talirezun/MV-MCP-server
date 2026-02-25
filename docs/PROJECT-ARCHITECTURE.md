@@ -5,8 +5,10 @@
 The MountVacation MCP Server is a Model Context Protocol (MCP) server that provides AI assistants with access to MountVacation's accommodation booking API. It enables natural language queries for ski vacation planning across European destinations.
 
 ### **Key Features**
-- 🎿 **Ski-focused**: Specialized for mountain and ski resort accommodations
-- 🌍 **European Coverage**: 6+ countries with 86% coverage of major ski destinations
+- 🏔️ **Year-Round Vacations**: Mountain, coastal, spa, and lake accommodations across Europe
+- 🌍 **European Coverage**: 8+ countries with 150+ mapped destinations (ski, sea, lake, thermal)
+- 🇭🇷 **Full Croatia Coverage**: Umag, Rovinj, Dubrovnik, Split, Hvar, Zadar, Makarska, Istria
+- 🇸🇮 **Full Slovenia Coverage**: Bled, Bohinj, Portorož, Piran, Maribor, Kranjska Gora
 - 👨‍👩‍👧‍👦 **Family Support**: Children pricing, age-based discounts, family room configurations
 - 🔗 **Direct Booking**: Real-time pricing with direct booking links
 - 📄 **Complete Pagination**: Advanced API batching for comprehensive results (350% more accommodations)
@@ -96,11 +98,13 @@ MV-MCP-server/
 
 ### **2. Cloudflare Worker (`cloudflare-workers/`)**
 - **Purpose**: API orchestration and intelligent routing
-- **Features**: 
-  - ID mapping for location resolution
-  - Extended area search fallbacks
-  - Cross-border accommodation discovery
+- **Features**:
+  - **150+ verified static location mappings** using resort/skiarea/region/city IDs (no unreliable coordinates)
+  - Dynamic ID mapping with fuzzy location matching
+  - Comma-separated location parsing ("Umag, Croatia" → primary="umag", hint="croatia")
+  - Search strategy prioritization: skiarea → resort → city → region
   - Rate limiting and error handling
+  - Trailing-slash-free API endpoint for reliable connectivity
 
 ### **3. Tool Definitions**
 1. `search_accommodations` - Main search with location intelligence
@@ -126,11 +130,13 @@ MV-MCP-server/
 - `https://api.mountvacation.com/skiareas` - Ski area database
 
 ### **Search Strategy Prioritization**
-1. **Ski Areas** (highest accommodation coverage)
-2. **Resorts** (direct resort matches)
-3. **Cities** (urban area searches)
-4. **Regions** (broader area coverage)
-5. **Countries** (fallback searches)
+1. **Ski Areas** (highest accommodation coverage — e.g., Dolomiti Superski, Les 3 Vallées)
+2. **Resorts** (direct resort matches — e.g., resort=7 for Madonna di Campiglio)
+3. **Cities** (urban area searches — e.g., city=13402 for Split)
+4. **Regions** (broader area coverage — e.g., region=911 for Trentino-Alto Adige)
+5. **Dynamic ID Mapping** (fuzzy text match against API metadata)
+
+> **Note**: Coordinate/geolocation-based search has been deprecated as a primary strategy due to unreliable results from the MountVacation API. All 150+ static mappings now use verified resort/skiarea/region/city IDs.
 
 ---
 
@@ -168,8 +174,8 @@ npm run deploy
 
 ### **Production Deployment**
 - **GitHub**: https://github.com/talirezun/MV-MCP-server
-- **Cloudflare Worker**: `blocklabs-mountvacation-mcp.4thtech.workers.dev`
-- **Download URL**: `https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/mountvacation-mcp-server.js`
+- **Cloudflare Worker**: `mountvacation-mcp-final.4thtech.workers.dev`
+- **Download URL**: `https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js`
 
 ### **Version Management**
 - **Server Version**: Embedded in `serverInfo.version`
@@ -199,16 +205,28 @@ npm run deploy
 
 ## 📊 **Supported Destinations**
 
-### **Full Coverage (6 Countries)**
-- 🇦🇹 **Austria**: Tirol, Salzburg regions
-- 🇮🇹 **Italy**: Dolomites, Trentino-Alto Adige
-- 🇸🇮 **Slovenia**: Kranjska Gora, Bovec
-- 🇫🇷 **France**: French Alps, Pyrenees
-- 🇧🇦 **Bosnia**: Jahorina, Bjelašnica
-- 🇩🇪 **Germany**: Cross-border results
+### **Full Coverage (8+ Countries, 150+ Mapped Destinations)**
 
-### **Partial Coverage**
-- 🇨🇭 **Switzerland**: Limited availability
+**🇦🇹 Austria** (Tirol region=607):
+- Innsbruck (resort 39), Kitzbühel (resort 9222), St. Anton (resort 9224), Saalbach (resort 3), Zell am See (resort 148), Kaprun (resort 9216), Bad Gastein (resort 95), Schladming (resort 9195), Lech (resort 159)
+
+**🇮🇹 Italy** (Trentino region=911, Dolomiti Superski skiarea=5):
+- Madonna di Campiglio (resort 7), Cortina d'Ampezzo (resort 9209), Val Gardena (resort 9218), Livigno (resort 127), Bormio (resort 9220), Kronplatz (resort 11), Val di Fassa (resort 53), San Martino (resort 140), Cervinia (resort 54), Courmayeur (resort 113), Sestriere (resort 9221), Lake Garda Nord (resort 4)
+
+**🇫🇷 France** (Rhône-Alpes region=807):
+- Chamonix (resort 9233), Val d'Isère (resort 9227), Tignes (resort 70), Les Arcs (resort 9278), La Plagne (resort 9270), Courchevel (resort 9229), Méribel (resort 9485), Val Thorens (resort 10), Alpe d'Huez (resort 9325), Les Deux Alpes (resort 110), Serre Chevalier (resort 155), Morzine (resort 9244), Avoriaz (resort 9236)
+
+**🇨🇭 Switzerland** (Valais region=671):
+- Zermatt (resort 22), Verbier (resort 9240), St. Moritz (resort 72), Davos (resort 8), Crans Montana (resort 9239), Saas-Fee (resort 5), Grindelwald (resort 9484), Engelberg (resort 89), Arosa (resort 9238)
+
+**🇭🇷 Croatia** (Istra region=5207):
+- Umag (resort 9487), Rovinj (resort 9489), Pula (resort 9491), Opatija (resort 9492), Dubrovnik (resort 9538), Hvar (resort 9520), Makarska (resort 9528), Zadar (resort 9504), Split (city 13402), Poreč/Istria (region 5207)
+
+**🇸🇮 Slovenia** (Gorenjska region=4252):
+- Bled (resort 9436), Bohinj (resort 76), Portorož (resort 9469), Piran (resort 9467), Maribor (resort 9215), Kranjska Gora (resort 87)
+
+**🇧🇦 Bosnia**: Jahorina, Bjelašnica
+**🇩🇪 Germany**: Cross-border results
 
 ---
 

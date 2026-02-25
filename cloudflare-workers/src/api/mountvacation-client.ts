@@ -56,22 +56,24 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
     coordinates: { lat: 47.4, lng: 11.9, radius: 15000 }
   }, // ⚠️ API LIMITATION: Only returns 2/8+ accommodations, requires enhanced search
 
-  // ===== COORDINATE-BASED MAPPINGS =====
-  // Using precise coordinates for locations where resort IDs are unknown
+  // ===== RESORT ID-BASED MAPPINGS =====
+  // All mappings updated with verified API resort IDs (coordinate fallbacks removed)
 
-  // Austrian Alps - CORRECTED coordinates and resort IDs
-  'innsbruck': { coordinates: { lat: 47.2692, lng: 11.4041, radius: 25000 } }, // Increased radius for better coverage
-  'kitzbuhel': { coordinates: { lat: 47.4467, lng: 12.3914, radius: 15000 } },
-  'kitzbühel': { coordinates: { lat: 47.4467, lng: 12.3914, radius: 15000 } },
-  'st anton': { coordinates: { lat: 47.1275, lng: 10.2606, radius: 15000 } },
-  'st. anton': { coordinates: { lat: 47.1275, lng: 10.2606, radius: 15000 } },
-  'st. anton am arlberg': { coordinates: { lat: 47.1275, lng: 10.2606, radius: 15000 } },
-  'zell am see': { coordinates: { lat: 47.3254, lng: 12.7941, radius: 15000 } },
-  'kaprun': { coordinates: { lat: 47.2697, lng: 12.7558, radius: 15000 } },
-  'saalbach': { coordinates: { lat: 47.3889, lng: 12.6347, radius: 15000 } },
-  'hinterglemm': { coordinates: { lat: 47.3889, lng: 12.6347, radius: 15000 } },
-  'bad gastein': { coordinates: { lat: 47.1156, lng: 13.1344, radius: 15000 } },
-  'schladming': { coordinates: { lat: 47.3928, lng: 13.6872, radius: 15000 } },
+  // Austrian Alps - VERIFIED RESORT IDs from API
+  'innsbruck': { resort: 39, region: 607 }, // ✅ Innsbruck, Tirol
+  'kitzbuhel': { resort: 9222, skiarea: 41 }, // ✅ Kitzbühel
+  'kitzbühel': { resort: 9222, skiarea: 41 },
+  'st anton': { resort: 9224, skiarea: 36 }, // ✅ St. Anton am Arlberg
+  'st. anton': { resort: 9224, skiarea: 36 },
+  'st. anton am arlberg': { resort: 9224, skiarea: 36 },
+  'zell am see': { resort: 148, skiarea: 33 }, // ✅ Zell am See
+  'kaprun': { resort: 9216, skiarea: 39 }, // ✅ Kaprun
+  'saalbach': { resort: 3, skiarea: 2 }, // ✅ Saalbach Hinterglemm
+  'hinterglemm': { resort: 3, skiarea: 2 },
+  'bad gastein': { resort: 95, skiarea: 2 }, // ✅ Bad Gastein Sportgastein
+  'schladming': { resort: 9195, skiarea: 2 }, // ✅ Schladming-Dachstein
+  'lech': { resort: 159, skiarea: 36 }, // ✅ Lech Zürs am Arlberg
+  'lech am arlberg': { resort: 159, skiarea: 36 },
 
   // Alpbachtal region cities - VERIFIED RESORT ID from website analysis
   'alpbach': { resort: 9340, skiarea: 52 },
@@ -79,69 +81,80 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'reith im alpbachtal': { resort: 9340, skiarea: 52 },
   'schlitters': { resort: 9340, skiarea: 52 },
 
-  // Swiss Alps - CORRECTED coordinates
-  'zermatt': { coordinates: { lat: 46.0207, lng: 7.7491, radius: 15000 } }, // ✅ CORRECTED: Actual Zermatt coordinates
-  'verbier': { coordinates: { lat: 46.0964, lng: 7.2281, radius: 15000 } }, // ✅ CORRECTED: Actual Verbier coordinates
-  'st moritz': { coordinates: { lat: 46.4908, lng: 9.8355, radius: 15000 } },
-  'davos': { coordinates: { lat: 46.8043, lng: 9.8307, radius: 15000 } },
-  'klosters': { coordinates: { lat: 46.8781, lng: 9.8775, radius: 15000 } },
-  'crans montana': { coordinates: { lat: 46.3111, lng: 7.4850, radius: 15000 } },
-  'saas fee': { coordinates: { lat: 46.1079, lng: 7.9286, radius: 15000 } },
-  'grindelwald': { coordinates: { lat: 46.6244, lng: 8.0411, radius: 15000 } },
-  'wengen': { coordinates: { lat: 46.6081, lng: 7.9219, radius: 15000 } },
-  'murren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 15000 } },
-  'mürren': { coordinates: { lat: 46.5581, lng: 7.8919, radius: 15000 } },
+  // Swiss Alps - VERIFIED RESORT IDs from API
+  'zermatt': { resort: 22, skiarea: 10 }, // ✅ Zermatt, Matterhorn
+  'verbier': { resort: 9240, skiarea: 8 }, // ✅ Verbier
+  'st moritz': { resort: 72 }, // ✅ Saint Moritz
+  'saint moritz': { resort: 72 },
+  'davos': { resort: 8 }, // ✅ Davos Klosters
+  'klosters': { resort: 8 },
+  'crans montana': { resort: 9239 }, // ✅ Crans Montana
+  'saas fee': { resort: 5, skiarea: 3 }, // ✅ Saas-Fee - Saastal
+  'saas-fee': { resort: 5, skiarea: 3 },
+  'grindelwald': { resort: 9484, skiarea: 25 }, // ✅ Grindelwald, Jungfrau
+  'wengen': { resort: 9482, skiarea: 25 }, // ✅ Wengen, Jungfrau
+  'murren': { skiarea: 25 }, // Jungfrau region (no direct resort ID)
+  'mürren': { skiarea: 25 },
+  'arosa': { resort: 9238 }, // ✅ Arosa
+  'engelberg': { resort: 89 }, // ✅ Engelberg, Titlis
 
-  // French Alps - CORRECTED coordinates
-  'val d\'isere': { coordinates: { lat: 45.4486, lng: 6.9786, radius: 15000 } },
-  'val d\'isère': { coordinates: { lat: 45.4486, lng: 6.9786, radius: 15000 } },
-  'tignes': { coordinates: { lat: 45.4667, lng: 6.9067, radius: 15000 } },
-  'les arcs': { coordinates: { lat: 45.5707, lng: 6.8125, radius: 15000 } },
-  'la plagne': { coordinates: { lat: 45.5133, lng: 6.6833, radius: 15000 } },
-  'courchevel': { coordinates: { lat: 45.4167, lng: 6.6333, radius: 15000 } },
-  'meribel': { coordinates: { lat: 45.3833, lng: 6.5667, radius: 15000 } },
-  'méribel': { coordinates: { lat: 45.3833, lng: 6.5667, radius: 15000 } },
-  'val thorens': { coordinates: { lat: 45.2983, lng: 6.5800, radius: 15000 } },
-  'les menuires': { coordinates: { lat: 45.3167, lng: 6.5333, radius: 15000 } },
-  'alpe d\'huez': { coordinates: { lat: 45.0906, lng: 6.0678, radius: 15000 } },
-  'les deux alpes': { coordinates: { lat: 45.0133, lng: 6.1233, radius: 15000 } },
-  'serre chevalier': { coordinates: { lat: 44.9417, lng: 6.5500, radius: 15000 } },
+  // French Alps - VERIFIED RESORT IDs from API
+  'val d\'isere': { resort: 9227, skiarea: 22 }, // ✅ Val d'Isere, Espace Killy
+  'val d\'isère': { resort: 9227, skiarea: 22 },
+  'tignes': { resort: 70, skiarea: 22 }, // ✅ Tignes, Espace Killy
+  'les arcs': { resort: 9278, skiarea: 12 }, // ✅ Les Arcs, Paradiski
+  'la plagne': { resort: 9270, skiarea: 12 }, // ✅ La Plagne, Paradiski
+  'courchevel': { resort: 9229, skiarea: 1 }, // ✅ Courchevel, Les 3 Vallées
+  'meribel': { resort: 9485, skiarea: 1 }, // ✅ Meribel, Les 3 Vallées
+  'méribel': { resort: 9485, skiarea: 1 },
+  'val thorens': { resort: 10, skiarea: 1 }, // ✅ Val Thorens, Les 3 Vallées
+  'les menuires': { resort: 9283, skiarea: 1 }, // ✅ Les Menuires, Les 3 Vallées
+  'alpe d\'huez': { resort: 9325, skiarea: 27 }, // ✅ Alpe d'Huez
+  'les deux alpes': { resort: 110, skiarea: 27 }, // ✅ Les 2 Alpes
+  'les 2 alpes': { resort: 110, skiarea: 27 },
+  'serre chevalier': { resort: 155, skiarea: 35 }, // ✅ Serre Chevalier
+  'morzine': { resort: 9244, skiarea: 38 }, // ✅ Morzine, Portes du Soleil
+  'les gets': { resort: 9208, skiarea: 38 }, // ✅ Les Gets, Portes du Soleil
+  'avoriaz': { resort: 9236, skiarea: 38 }, // ✅ Avoriaz, Portes du Soleil
 
-  // Italian Alps - CORRECTED coordinates
-  'livigno': { coordinates: { lat: 46.5369, lng: 10.1347, radius: 15000 } }, // ✅ CORRECTED: Actual Livigno, Italy coordinates
-  'bormio': { coordinates: { lat: 46.4686, lng: 10.3697, radius: 15000 } },
-  'cortina d\'ampezzo': { coordinates: { lat: 46.5369, lng: 12.1357, radius: 15000 } }, // ✅ CORRECTED: Actual Cortina coordinates
-  'cortina': { coordinates: { lat: 46.5369, lng: 12.1357, radius: 15000 } },
-  'madonna di campiglio': { coordinates: { lat: 46.2267, lng: 10.8267, radius: 15000 } },
-  'campiglio': { coordinates: { lat: 46.2267, lng: 10.8267, radius: 15000 } },
-  'val gardena': { coordinates: { lat: 46.5569, lng: 11.6769, radius: 15000 } },
-  'selva di val gardena': { coordinates: { lat: 46.5569, lng: 11.6769, radius: 15000 } },
-  'ortisei': { coordinates: { lat: 46.5769, lng: 11.6769, radius: 15000 } },
-  'santa cristina': { coordinates: { lat: 46.5569, lng: 11.6969, radius: 15000 } },
-  'san martino di castrozza': { coordinates: { lat: 46.2614, lng: 11.8043, radius: 15000 } },
-  'cervinia': { coordinates: { lat: 45.9331, lng: 7.6308, radius: 15000 } },
-  'breuil-cervinia': { coordinates: { lat: 45.9331, lng: 7.6308, radius: 15000 } },
-  'courmayeur': { coordinates: { lat: 45.7969, lng: 6.9669, radius: 15000 } },
-  'sestriere': { coordinates: { lat: 44.9569, lng: 6.8769, radius: 15000 } },
+  // Italian Alps - VERIFIED RESORT IDs from API
+  'livigno': { resort: 127, skiarea: 19 }, // ✅ Livigno
+  'bormio': { resort: 9220, skiarea: 19 }, // ✅ Bormio
+  'cortina d\'ampezzo': { resort: 9209, skiarea: 5 }, // ✅ Cortina d'Ampezzo, Dolomiti Superski
+  'cortina': { resort: 9209, skiarea: 5 },
+  'madonna di campiglio': { resort: 7, skiarea: 4 }, // ✅ Madonna di Campiglio, Superskirama
+  'campiglio': { resort: 7, skiarea: 4 },
+  'val gardena': { resort: 9218, skiarea: 5 }, // ✅ Val Gardena, Dolomiti Superski
+  'selva di val gardena': { resort: 9218, skiarea: 5 },
+  'ortisei': { resort: 9218, skiarea: 5 }, // Val Gardena area
+  'santa cristina': { resort: 9218, skiarea: 5 }, // Val Gardena area
+  'san martino di castrozza': { resort: 140, skiarea: 5 }, // ✅ San Martino, Dolomiti Superski
+  'cervinia': { resort: 54, skiarea: 18 }, // ✅ Cervinia
+  'breuil-cervinia': { resort: 54, skiarea: 18 },
+  'courmayeur': { resort: 113, skiarea: 28 }, // ✅ Courmayeur
+  'sestriere': { resort: 9221, skiarea: 40 }, // ✅ Sestriere
+  'kronplatz': { resort: 11, skiarea: 5 }, // ✅ Kronplatz / Plan de Corones
+  'plan de corones': { resort: 11, skiarea: 5 },
+  'val di fassa': { resort: 53, skiarea: 5 }, // ✅ Val di Fassa, Dolomiti Superski
 
-  // Generic regions for broader searches - Use coordinates for reliability
-  'dolomites': { latitude: 46.4102, longitude: 11.8440, radius: 50000 }, // Dolomites center
-  'dolomiti': { latitude: 46.4102, longitude: 11.8440, radius: 50000 },
-  'trentino': { latitude: 46.0664, longitude: 11.1257, radius: 40000 }, // Trento area
-  'alto adige': { latitude: 46.4982, longitude: 11.3548, radius: 40000 }, // Bolzano area
-  'south tyrol': { latitude: 46.4982, longitude: 11.3548, radius: 40000 },
-  'italian alps': { latitude: 46.4102, longitude: 11.8440, radius: 60000 }, // Broader Italian Alps
-  'austrian alps': { latitude: 47.2692, longitude: 11.4041, radius: 60000 }, // Austrian Alps
-  'swiss alps': { latitude: 46.8182, longitude: 8.2275, radius: 60000 }, // Swiss Alps
-  'alps': { latitude: 46.4102, longitude: 11.8440, radius: 50000 }, // Default to Dolomites
+  // Generic regions for broader searches - Use skiarea/region IDs
+  'dolomites': { skiarea: 5 }, // ✅ Dolomiti Superski
+  'dolomiti': { skiarea: 5 },
+  'trentino': { region: 911 }, // ✅ Trentino-Alto Adige region
+  'alto adige': { region: 911 },
+  'south tyrol': { region: 911 },
+  'italian alps': { region: 911 }, // Trentino-Alto Adige
+  'austrian alps': { region: 607 }, // ✅ Tirol region
+  'swiss alps': { region: 671 }, // ✅ Valais region
+  'alps': { skiarea: 5 }, // Default to Dolomiti Superski
 
-  // European mountain destinations - Use Dolomites coordinates for reliability
-  'europe ski': { latitude: 46.4102, longitude: 11.8440, radius: 80000 }, // Broad European Alps
-  'european ski resorts': { latitude: 46.4102, longitude: 11.8440, radius: 80000 },
-  'europe skiing': { latitude: 46.4102, longitude: 11.8440, radius: 80000 },
-  'european alps': { latitude: 46.4102, longitude: 11.8440, radius: 80000 },
-  'mountain vacation europe': { latitude: 46.4102, longitude: 11.8440, radius: 80000 },
-  'ski vacation europe': { latitude: 46.4102, longitude: 11.8440, radius: 80000 },
+  // European mountain destinations - Use region for broader coverage
+  'europe ski': { region: 911 }, // Default to Trentino
+  'european ski resorts': { region: 911 },
+  'europe skiing': { region: 911 },
+  'european alps': { region: 911 },
+  'mountain vacation europe': { region: 911 },
+  'ski vacation europe': { region: 911 },
 
   // Country-specific ski destinations
   'italy ski resort': { region: 911 }, // Trentino-Alto Adige
@@ -163,28 +176,26 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'france': { skiarea: 1 }, // Les 3 Vallées (includes Val Thorens, Les Menuires, Courchevel)
   'ski in france': { skiarea: 1 }, // Les 3 Vallées for specific ski searches
 
-  // Austrian ski destinations - Use coordinates instead of broken regions
-  'austria ski': { latitude: 47.2692, longitude: 11.4041, radius: 50000 }, // Innsbruck area
-  'austrian ski': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
-  'austria skiing': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
-  'austrian skiing': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
-  'ski austria': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
-  'skiing austria': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
-  'ski in austria': { latitude: 47.2692, longitude: 11.4041, radius: 50000 },
+  // Austrian ski destinations - Use Tirol region
+  'austria ski': { region: 607 }, // ✅ Tirol region
+  'austrian ski': { region: 607 },
+  'austria skiing': { region: 607 },
+  'austrian skiing': { region: 607 },
+  'ski austria': { region: 607 },
+  'skiing austria': { region: 607 },
+  'ski in austria': { region: 607 },
 
   // Swiss ski destinations - Use ski areas for better coverage
   'switzerland': { skiarea: 10 }, // Matterhorn ski paradise (Zermatt)
   'ski in switzerland': { skiarea: 10 },
 
-  // Fallback coordinates for major areas (if IDs don't work)
-  'italy skiing fallback': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 50000 } },
-  'italy ski fallback': { coordinates: { lat: 46.4982, lng: 11.3548, radius: 50000 } },
-
-  // Additional French Alps destinations - using multiple search strategies
+  // Additional French Alps destinations - using ski area IDs
   'french alps': { resort: 9233 }, // Default to Chamonix for French Alps searches
-  'les trois vallees': { coordinates: { lat: 45.3333, lng: 6.6000, radius: 12000 } },
-  'paradiski': { coordinates: { lat: 45.5420, lng: 6.7450, radius: 12000 } },
-  'espace killy': { coordinates: { lat: 45.4577, lng: 6.9423, radius: 12000 } },
+  'les trois vallees': { skiarea: 1 }, // ✅ Les 3 Vallées
+  '3 vallees': { skiarea: 1 },
+  'paradiski': { skiarea: 12 }, // ✅ Paradiski (Les Arcs + La Plagne)
+  'espace killy': { skiarea: 22 }, // ✅ Espace Killy (Tignes + Val d'Isère)
+  'portes du soleil': { skiarea: 38 }, // ✅ Portes du Soleil (Morzine + Les Gets + Avoriaz)
 
   // Slovenia ski destinations - VERIFIED RESORT IDs from API
   'kranjska gora': { resort: 87 },
@@ -217,7 +228,6 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
 
   // Additional Switzerland ski destinations - Use ski areas for better coverage
   'gstaad': { resort: 9 },
-  'saint moritz': { resort: 72 },
   'lenzerheide': { resort: 6 },
   'flims laax': { skiarea: 9 }, // Laax ski area
 
@@ -249,11 +259,50 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'bosnian skiing': { resort: 9609 },
   'ski bosnia': { resort: 9609 },
   'skiing bosnia': { resort: 9609 },
+
+  // ===== NON-SKI DESTINATIONS =====
+  // Croatian coastal/sea resorts - VERIFIED RESORT/REGION IDs from API
+  'umag': { resort: 9487 }, // ✅ VERIFIED: Umag resort ID
+  'porec': { region: 5207 }, // Istra region (no direct resort ID for Poreč)
+  'poreč': { region: 5207 },
+  'rovinj': { resort: 9489 }, // ✅ Rovinj
+  'pula': { resort: 9491 }, // ✅ Pula
+  'opatija': { resort: 9492 }, // ✅ Opatija
+  'dubrovnik': { resort: 9538 }, // ✅ Dubrovnik
+  'split': { city: 13402 }, // ✅ Split (city ID)
+  'zadar': { resort: 9504 }, // ✅ Zadar
+  'makarska': { resort: 9528 }, // ✅ Makarska
+  'hvar': { resort: 9520 }, // ✅ Hvar
+  'istria': { region: 5207 }, // ✅ Istra region
+  'istra': { region: 5207 },
+  'croatian coast': { region: 5207 }, // Default to Istra region
+  'croatia coast': { region: 5207 },
+  'croatia sea': { region: 5207 },
+  'croatia beach': { region: 5207 },
+  'croatia': { region: 5207 }, // Default to Istra region
+
+  // Slovenian non-ski destinations - VERIFIED RESORT IDs from API
+  'bled': { resort: 9436 }, // ✅ Bled
+  'lake bled': { resort: 9436 },
+  'bohinj lake': { resort: 76 }, // ✅ Bohinj
+  'portoroz': { resort: 9469 }, // ✅ Portorož
+  'portorož': { resort: 9469 },
+  'piran': { resort: 9467 }, // ✅ Piran (nearby resort)
+  'slovenian coast': { resort: 9469 }, // Default to Portorož
+  'slovenia coast': { resort: 9469 },
+  'slovenia sea': { resort: 9469 },
+  'maribor': { resort: 9215 }, // ✅ Maribor
+  'slovenia': { resort: 87 }, // Default to Kranjska Gora
+
+  // Italian non-ski destinations - VERIFIED RESORT IDs from API
+  'lake garda': { resort: 4 }, // ✅ Lago di Garda Nord
+  'garda': { resort: 4 },
+  'lago di garda': { resort: 4 },
 };
 
 export class MountVacationClient {
   private baseUrl = 'https://api.mountvacation.com';
-  private searchEndpoint = '/accommodations/search/';
+  private searchEndpoint = '/accommodations/search';
   private timeout: number;
   private logger: Logger;
   private apiKey: string;
@@ -606,10 +655,11 @@ export class MountVacationClient {
       return {
         error: `No accommodations found for '${location}'. This location may not be available in our database.`,
         suggestions: [
-          'Try a popular ski resort name (e.g., "Madonna di Campiglio", "Cortina", "Val Gardena")',
-          'Use broader search terms (e.g., "Italian Dolomites", "Alps")',
+          'Try a specific resort or city name (e.g., "Umag", "Madonna di Campiglio", "Bled")',
+          'Use broader search terms (e.g., "Croatian Coast", "Italian Dolomites", "Alps")',
           'Check the spelling of the location name',
           'Try nearby resort or city names',
+          'Add the country for better results (e.g., "Umag, Croatia" or "Chamonix, France")',
         ],
         available_locations: this.getSuggestedLocations(location),
         timestamp: new Date().toISOString(),
@@ -831,8 +881,20 @@ export class MountVacationClient {
 
     const normalizedRequested = requestedLocation.toLowerCase().trim();
 
-    // Define location validation rules
-    const locationValidation: Record<string, string[]> = {
+    // Extract validation keywords dynamically from the requested location
+    // This works for ALL locations, not just hardcoded ski resorts
+    const validationKeywords: string[] = [];
+
+    // Parse comma-separated input: "Umag, Croatia" → ["umag", "croatia"]
+    if (normalizedRequested.includes(',')) {
+      const parts = normalizedRequested.split(',').map(p => p.trim()).filter(p => p.length > 0);
+      validationKeywords.push(...parts);
+    } else {
+      validationKeywords.push(normalizedRequested);
+    }
+
+    // Also add well-known location validation rules for specific destinations
+    const specificValidation: Record<string, string[]> = {
       'zermatt': ['zermatt', 'switzerland', 'swiss', 'valais'],
       'verbier': ['verbier', 'switzerland', 'swiss', 'valais'],
       'chamonix': ['chamonix', 'france', 'french', 'mont blanc'],
@@ -848,15 +910,17 @@ export class MountVacationClient {
       'alta badia': ['alta badia', 'badia', 'italy', 'italian', 'dolomites', 'san cassiano', 'corvara']
     };
 
-    // Get validation keywords for the requested location
-    const validationKeywords = locationValidation[normalizedRequested];
-    if (!validationKeywords) {
-      // If no specific validation rules, allow the result
-      // This prevents blocking valid results for unmapped locations
-      return true;
+    // Merge specific validation keywords if available
+    const specificKeywords = specificValidation[normalizedRequested];
+    if (specificKeywords) {
+      for (const kw of specificKeywords) {
+        if (!validationKeywords.includes(kw)) {
+          validationKeywords.push(kw);
+        }
+      }
     }
 
-    // Check if any accommodation matches the validation criteria
+    // Check if any accommodation matches at least one validation keyword
     for (const accommodation of results.accommodations) {
       const locationText = [
         accommodation.location?.city,
@@ -881,6 +945,8 @@ export class MountVacationClient {
     this.logger.warn(`Location validation failed for '${requestedLocation}' - results do not match requested location`, {
       location: requestedLocation,
       results_count: results.accommodations.length,
+      validation_keywords: validationKeywords,
+      first_result_location: results.accommodations[0]?.location || 'unknown',
       error: 'Location validation failed'
     });
 
@@ -940,7 +1006,7 @@ export class MountVacationClient {
     if (mapping.resort) {
       strategies.push({
         name: 'resort_mapped',
-        params: { ...baseParams, resortId: mapping.resort.toString() }
+        params: { ...baseParams, resort: mapping.resort.toString() }
       });
     }
 
@@ -948,7 +1014,7 @@ export class MountVacationClient {
     if (mapping.city) {
       strategies.push({
         name: 'city_mapped',
-        params: { ...baseParams, cityId: mapping.city.toString() }
+        params: { ...baseParams, city: mapping.city.toString() }
       });
     }
 
@@ -956,7 +1022,7 @@ export class MountVacationClient {
     if (mapping.region) {
       strategies.push({
         name: 'region_mapped',
-        params: { ...baseParams, regionId: mapping.region.toString() }
+        params: { ...baseParams, region: mapping.region.toString() }
       });
     }
 
@@ -1325,6 +1391,101 @@ export class MountVacationClient {
       }
     }
 
+    // Croatia-specific searches (sea/coastal resorts)
+    const containsCroatia = normalizedLocation.includes('croatia') || normalizedLocation.includes('croat') || normalizedLocation.includes('hrvat');
+    if (containsCroatia) {
+      // Istria region (Umag, Poreč, Rovinj area)
+      strategies.push({
+        name: 'croatia_istria_fallback',
+        params: {
+          ...baseParams,
+          latitude: '45.2637',
+          longitude: '13.5183',
+          radius: '50000'
+        }
+      });
+      // Dalmatia region (Split, Dubrovnik area)
+      strategies.push({
+        name: 'croatia_dalmatia_fallback',
+        params: {
+          ...baseParams,
+          latitude: '43.5081',
+          longitude: '16.4402',
+          radius: '50000'
+        }
+      });
+    }
+
+    // Slovenia-specific searches (lake, sea, and ski resorts)
+    const containsSlovenia = normalizedLocation.includes('slovenia') || normalizedLocation.includes('sloven');
+    if (containsSlovenia) {
+      // Bled / Bohinj lake area
+      strategies.push({
+        name: 'slovenia_bled_fallback',
+        params: {
+          ...baseParams,
+          latitude: '46.3683',
+          longitude: '14.1146',
+          radius: '20000'
+        }
+      });
+      // Portorož / Slovenian coast
+      strategies.push({
+        name: 'slovenia_coast_fallback',
+        params: {
+          ...baseParams,
+          latitude: '45.5100',
+          longitude: '13.5912',
+          radius: '15000'
+        }
+      });
+      // Kranjska Gora ski area
+      strategies.push({
+        name: 'slovenia_kranjska_gora_fallback',
+        params: {
+          ...baseParams,
+          latitude: '46.4839',
+          longitude: '13.7858',
+          radius: '15000'
+        }
+      });
+    }
+
+    // Sea/beach/coast-specific searches
+    if (normalizedLocation.includes('sea') || normalizedLocation.includes('beach') || normalizedLocation.includes('coast')) {
+      strategies.push({
+        name: 'coast_istria_fallback',
+        params: {
+          ...baseParams,
+          latitude: '45.2637',
+          longitude: '13.5183',
+          radius: '50000'
+        }
+      });
+      strategies.push({
+        name: 'coast_slovenia_fallback',
+        params: {
+          ...baseParams,
+          latitude: '45.5100',
+          longitude: '13.5912',
+          radius: '15000'
+        }
+      });
+    }
+
+    // Lake-specific searches
+    if (normalizedLocation.includes('lake')) {
+      strategies.push({
+        name: 'lake_bled_fallback',
+        params: {
+          ...baseParams,
+          latitude: '46.3683',
+          longitude: '14.1146',
+          radius: '20000'
+        }
+      });
+    }
+
     return strategies;
   }
 
@@ -1650,14 +1811,73 @@ export class MountVacationClient {
         'Alta Badia',
         'Italian Dolomites'
       );
-    } else {
-      // General popular destinations
+    }
+    // Croatian destinations
+    else if (normalizedLocation.includes('croatia') || normalizedLocation.includes('croat') || normalizedLocation.includes('istri')) {
+      suggestions.push(
+        'Umag, Croatia',
+        'Poreč, Croatia',
+        'Rovinj, Croatia',
+        'Dubrovnik, Croatia',
+        'Split, Croatia'
+      );
+    }
+    // Slovenian destinations
+    else if (normalizedLocation.includes('slovenia') || normalizedLocation.includes('sloven')) {
+      suggestions.push(
+        'Bled, Slovenia',
+        'Portorož, Slovenia',
+        'Kranjska Gora, Slovenia',
+        'Bohinj, Slovenia',
+        'Maribor, Slovenia'
+      );
+    }
+    // Austrian destinations
+    else if (normalizedLocation.includes('austria') || normalizedLocation.includes('austrian')) {
+      suggestions.push(
+        'St. Anton, Austria',
+        'Kitzbühel, Austria',
+        'Innsbruck, Austria',
+        'Alpbachtal, Austria',
+        'Sölden, Austria'
+      );
+    }
+    // French destinations
+    else if (normalizedLocation.includes('france') || normalizedLocation.includes('french')) {
+      suggestions.push(
+        'Chamonix, France',
+        'Val d\'Isère, France',
+        'Courchevel, France',
+        'Avoriaz, France',
+        'Méribel, France'
+      );
+    }
+    // Sea/beach/coast destinations
+    else if (normalizedLocation.includes('sea') || normalizedLocation.includes('beach') || normalizedLocation.includes('coast')) {
+      suggestions.push(
+        'Umag, Croatia',
+        'Poreč, Croatia',
+        'Rovinj, Croatia',
+        'Portorož, Slovenia',
+        'Dubrovnik, Croatia'
+      );
+    }
+    // Lake destinations
+    else if (normalizedLocation.includes('lake')) {
+      suggestions.push(
+        'Bled, Slovenia',
+        'Bohinj, Slovenia',
+        'Lake Garda, Italy'
+      );
+    }
+    else {
+      // General popular destinations - mix of ski and non-ski
       suggestions.push(
         'Madonna di Campiglio',
         'Chamonix',
         'Zermatt',
-        'St. Anton',
-        'Val d\'Isère'
+        'Umag, Croatia',
+        'Bled, Slovenia'
       );
     }
 
@@ -1726,38 +1946,13 @@ export class MountVacationClient {
           } : null
         });
 
-        // If no accommodations found but extended area search is available, try it automatically
+        // Extended area search disabled — it returns results from unrelated locations
+        // (e.g., Montgenèvre, France for an Umag, Croatia query).
+        // The location validation layer handles fallback logic instead.
         if ((!data.accommodations || data.accommodations.length === 0) && data.links?.extendedAreaSearch) {
-          this.logger.info('No accommodations found, trying extended area search', {
+          this.logger.info('No accommodations found. Extended area search available but skipped to prevent wrong-location results', {
             extended_search_url: data.links.extendedAreaSearch
           });
-
-          try {
-            const extendedUrl = data.links.extendedAreaSearch + `&apiKey=${this.apiKey}`;
-            const extendedResponse = await fetch(extendedUrl, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'MountVacation-MCP-Worker/1.0'
-              },
-              signal: AbortSignal.timeout(this.timeout)
-            });
-
-            if (extendedResponse.ok) {
-              const extendedData = await extendedResponse.json() as APIResponse;
-              if (extendedData.accommodations && extendedData.accommodations.length > 0) {
-                this.logger.info('Extended area search successful', {
-                  accommodations_count: extendedData.accommodations.length,
-                  extended_search_used: true
-                });
-                return extendedData;
-              }
-            }
-          } catch (extendedError) {
-            this.logger.warn('Extended area search failed', {
-              error: extendedError instanceof Error ? extendedError.message : String(extendedError)
-            });
-          }
         }
 
         return data;

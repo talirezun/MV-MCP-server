@@ -13,14 +13,14 @@ Click the thumbnail below to watch the video:
 ## ✨ **Key Features**
 
 - 🏔️ **Year-Round Mountain Vacations**: All-season mountain accommodations across Europe (skiing, hiking, wellness, spa)
-- 🌍 **Comprehensive European Coverage**: 6+ countries with extensive destination coverage
+- 🌍 **Comprehensive European Coverage**: 8+ countries with 150+ verified destination mappings
 - 🏨 **Spa & Terme Holidays**: Specialized coverage of Slovenia's spa and thermal destinations
 - 🇭🇷 **Extensive Croatia Coverage**: Comprehensive accommodation options throughout Croatia
 - 👨‍👩‍👧‍👦 **Family Support**: Children pricing, age-based discounts, family room configurations
 - 🔗 **Direct Booking**: Real-time pricing with direct booking links
 - 📄 **Complete Pagination**: Advanced API batching for comprehensive results (350% more accommodations)
 - 🔄 **Universal Compatibility**: Tested with LM Studio (gpt-oss 20B), Claude Desktop App, Augment Code, Cline.bot
-- 🧠 **Intelligent Search**: Cross-border discovery, extended area search, destination prioritization
+- 🧠 **Intelligent Search**: Comma-separated location parsing, resort/region ID-based search, destination prioritization
 
 ---
 
@@ -233,12 +233,14 @@ Try asking your AI assistant:
 
 ## 🌍 **Supported Destinations**
 
-### **🏔️ Year-Round Mountain Destinations**
-- 🇦🇹 **Austria**: Tirol, Salzburg regions - Skiing, hiking, wellness (Hotel Goldried, Gradonna Mountain Resort)
-- 🇮🇹 **Italy**: Dolomites, Trentino-Alto Adige - All seasons (San Martino di Castrozza, Andalo)
-- 🇸🇮 **Slovenia**: Mountain resorts, spa & terme destinations (Kranjska Gora, Bovec, Rogla)
-- 🇫🇷 **France**: French Alps, Pyrenees - Winter sports & summer activities (Les Menuires, Val Thorens)
-- 🇧🇦 **Bosnia**: Jahorina, Bjelašnica - Mountain tourism (Termag Hotel)
+### **🏔️ Year-Round Mountain & Coastal Destinations**
+- 🇦🇹 **Austria**: Innsbruck, Kitzbühel, St. Anton, Saalbach, Zell am See, Bad Gastein, Lech (Tirol region)
+- 🇮🇹 **Italy**: Madonna di Campiglio, Cortina, Val Gardena, Livigno, Bormio, Lake Garda Nord, Cervinia, Courmayeur (Trentino, Dolomites)
+- 🇫🇷 **France**: Chamonix, Val d'Isère, Tignes, Courchevel, Méribel, Val Thorens, Alpe d'Huez, Morzine (French Alps)
+- 🇨🇭 **Switzerland**: Zermatt, Verbier, St. Moritz, Davos, Crans Montana, Saas-Fee, Grindelwald (Valais region)
+- 🇭🇷 **Croatia**: Umag, Rovinj, Pula, Opatija, Dubrovnik, Split, Hvar, Zadar, Makarska (full Istria & Dalmatia)
+- 🇸🇮 **Slovenia**: Bled, Bohinj, Portorož, Piran, Maribor, Kranjska Gora (mountain & coastal)
+- 🇧🇦 **Bosnia**: Jahorina, Bjelašnica - Mountain tourism
 - 🇩🇪 **Germany**: Cross-border accommodation discovery
 
 ### **🏨 Spa & Terme Holidays (Slovenia)**
@@ -255,8 +257,8 @@ Try asking your AI assistant:
 - **Central Croatia**: Zagreb region, continental destinations
 - **Spa Destinations**: Terme Sveti Martin, Istarske Toplice
 
-### **🔍 Partial Coverage**
-- 🇨🇭 **Switzerland**: Limited availability (under investigation)
+### **🔍 Additional Coverage**
+- All static mappings use verified API resort/skiarea/region/city IDs (coordinate-based search deprecated due to unreliable API responses)
 
 ---
 
@@ -315,8 +317,9 @@ load_more_accommodations({
 - **Protocol**: JSON-RPC 2.0 over stdio (MCP compliant)
 - **Version**: 3.3.0 (Protocol compliant for Claude Desktop, with JSON-RPC 2.0 notification handling)
 - **API Integration**: Cloudflare Worker orchestration layer
-- **Location Intelligence**: 5 MountVacation API endpoints for optimal search
-- **Fallback Strategy**: Extended area search with cross-border discovery
+- **Location Intelligence**: 150+ verified static mappings using resort/skiarea/region/city IDs (no unreliable coordinates)
+- **Search Strategy**: skiarea → resort → city → region → dynamic fuzzy matching
+- **Comma-Separated Parsing**: "Umag, Croatia" → primary="umag", hint="croatia" for accurate results
 - **Universal Compatibility**: All MCP clients supported
 
 ---
@@ -411,6 +414,7 @@ npm run deploy
 
 ## 📈 **Version History**
 
+- **v3.4.0** ✅ Systemic location mapping overhaul: All 150+ static mappings now use verified resort/skiarea/region/city IDs (coordinate-based search deprecated). Full Croatia & Slovenia coverage. Comma-separated location parsing. Trailing slash fix. Non-ski destination support.
 - **v3.3.0** ✅ JSON-RPC 2.0 notification handling fix for Claude Desktop compatibility (silent acceptance of `notifications/initialized`, protocol version set to `2024-11-05`)
 - **v3.2.0** - Protocol compliance fix for universal MCP client compatibility
 - **v3.1.0** - Schema simplification and enhanced error handling
@@ -441,7 +445,7 @@ MIT License - See LICENSE file for details.
 - **Platform**: Cloudflare Workers (Free Tier)
 - **Requests/Day**: 100,000 (no inactivity timeout)
 - **Uptime**: Continuous
-- **Latest Version**: v3.3 (with DNS resolution optimization)
+- **Latest Version**: v3.4.0 (150+ verified location mappings, full Croatia/Slovenia coverage)
 
 This is the latest stable deployment of the MountVacation MCP server on Cloudflare Workers. The server uses direct IP connection for maximum reliability.
 

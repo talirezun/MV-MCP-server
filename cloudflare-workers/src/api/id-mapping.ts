@@ -179,12 +179,25 @@ export class IdMappingManager {
       console.log(`[ID Mapping] Mappings available: ${this.mappings.countries.length} countries, ${this.mappings.regions.length} regions, ${this.mappings.cities.length} cities, ${this.mappings.resorts.length} resorts`);
 
       const normalizedLocation = location.toLowerCase().trim();
+
+      // Parse comma-separated input: "Umag, Croatia" → primaryQuery="umag", countryHint="croatia"
+      let primaryQuery = normalizedLocation;
+      let countryHint: string | null = null;
+      if (normalizedLocation.includes(',')) {
+        const parts = normalizedLocation.split(',').map(p => p.trim()).filter(p => p.length > 0);
+        if (parts.length >= 2) {
+          primaryQuery = parts[0]!;
+          countryHint = parts[1]!;
+          console.log(`[ID Mapping] Parsed compound query: primary="${primaryQuery}", countryHint="${countryHint}"`);
+        }
+      }
+
       const matches: LocationMatch[] = [];
-      console.log(`[ID Mapping] Searching for: "${normalizedLocation}"`);
+      console.log(`[ID Mapping] Searching for: "${primaryQuery}" (full: "${normalizedLocation}")`);
 
     // Search countries
     for (const country of this.mappings.countries) {
-      const confidence = this.calculateMatchConfidence(normalizedLocation, country.title, country.code);
+      const confidence = this.calculateMatchConfidence(primaryQuery, country.title, country.code);
       if (confidence > 0.3) {
         matches.push({
           type: 'country',
@@ -198,7 +211,7 @@ export class IdMappingManager {
 
     // Search regions
     for (const region of this.mappings.regions) {
-      const confidence = this.calculateMatchConfidence(normalizedLocation, region.title);
+      const confidence = this.calculateMatchConfidence(primaryQuery, region.title);
       if (confidence > 0.3) {
         matches.push({
           type: 'region',
@@ -212,7 +225,7 @@ export class IdMappingManager {
 
     // Search cities
     for (const city of this.mappings.cities) {
-      const confidence = this.calculateStringMatch(normalizedLocation, city.title.toLowerCase());
+      const confidence = this.calculateStringMatch(primaryQuery, city.title.toLowerCase());
       if (confidence > 0.3) {
         const cityMatch: LocationMatch = {
           type: 'city',
@@ -232,7 +245,7 @@ export class IdMappingManager {
 
     // Search resorts
     for (const resort of this.mappings.resorts) {
-      const confidence = this.calculateStringMatch(normalizedLocation, resort.title.toLowerCase());
+      const confidence = this.calculateStringMatch(primaryQuery, resort.title.toLowerCase());
       if (confidence > 0.3) {
         matches.push({
           type: 'resort',
@@ -244,9 +257,9 @@ export class IdMappingManager {
       }
     }
 
-    // Search ski areas (CRITICAL - was missing!)
+    // Search ski areas
     for (const skiarea of this.mappings.skiareas) {
-      const confidence = this.calculateStringMatch(normalizedLocation, skiarea.title.toLowerCase());
+      const confidence = this.calculateStringMatch(primaryQuery, skiarea.title.toLowerCase());
       if (confidence > 0.3) {
         matches.push({
           type: 'skiarea',
@@ -254,6 +267,30 @@ export class IdMappingManager {
           name: skiarea.title,
           confidence
         });
+      }
+    }
+
+    // If we have a country hint (e.g., "Croatia" from "Umag, Croatia"),
+    // boost matches that belong to that country and demote those that don't
+    if (countryHint && matches.length > 0) {
+      const resolvedCountryCode = this.resolveCountryHint(countryHint);
+      if (resolvedCountryCode) {
+        console.log(`[ID Mapping] Country hint resolved to code: "${resolvedCountryCode}"`);
+        for (const match of matches) {
+          if (match.countryCode) {
+            if (match.countryCode.toLowerCase() === resolvedCountryCode.toLowerCase()) {
+              // Boost confidence for matches in the hinted country
+              match.confidence = Math.min(1.0, match.confidence + 0.3);
+            } else if (match.type !== 'country') {
+              // Demote non-country matches from wrong countries
+              match.confidence = Math.max(0, match.confidence - 0.3);
+            }
+          }
+        }
+        // Filter out matches that dropped below threshold after demotion
+        const filteredMatches = matches.filter(m => m.confidence > 0.3);
+        matches.length = 0;
+        matches.push(...filteredMatches);
       }
     }
 
@@ -281,6 +318,29 @@ export class IdMappingManager {
       console.error(`[ID Mapping] Error resolving location "${location}":`, error);
       throw error;
     }
+  }
+
+  /**
+   * Resolve a country hint string to a country code
+   * Handles both country names ("Croatia", "France") and country codes ("HR", "FR")
+   */
+  private resolveCountryHint(hint: string): string | null {
+    if (!this.mappings) return null;
+    const normalizedHint = hint.toLowerCase().trim();
+
+    for (const country of this.mappings.countries) {
+      // Check country code
+      if (country.code.toLowerCase() === normalizedHint) {
+        return country.code;
+      }
+      // Check all language variants of the country name
+      for (const name of Object.values(country.title)) {
+        if (name.toLowerCase() === normalizedHint) {
+          return country.code;
+        }
+      }
+    }
+    return null;
   }
 
   /**
