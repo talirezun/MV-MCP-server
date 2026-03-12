@@ -1,18 +1,22 @@
 # 🏗️ MountVacation MCP Server - Project Architecture
 
+**Version**: 2.1.0 (Cloudflare Worker) / 3.3.0 (MCP Server)
+**Last Updated**: 2026-03-12
+
 ## 📋 **Project Overview**
 
-The MountVacation MCP Server is a Model Context Protocol (MCP) server that provides AI assistants with access to MountVacation's accommodation booking API. It enables natural language queries for ski vacation planning across European destinations.
+The MountVacation MCP Server is a Model Context Protocol (MCP) server that provides AI assistants with access to MountVacation's accommodation booking API. It enables natural language queries for vacation planning across European destinations — ski resorts, coastal towns, thermal spas, and lake regions.
 
 ### **Key Features**
 - 🏔️ **Year-Round Vacations**: Mountain, coastal, spa, and lake accommodations across Europe
 - 🌍 **European Coverage**: 8+ countries with 150+ mapped destinations (ski, sea, lake, thermal)
 - 🇭🇷 **Full Croatia Coverage**: Umag, Rovinj, Dubrovnik, Split, Hvar, Zadar, Makarska, Istria
-- 🇸🇮 **Full Slovenia Coverage**: Bled, Bohinj, Portorož, Piran, Maribor, Kranjska Gora
+- 🇸🇮 **Full Slovenia Coverage**: Bled, Bohinj, Portorož, Piran, Maribor, Kranjska Gora, Terme Čatež
 - 👨‍👩‍👧‍👦 **Family Support**: Children pricing, age-based discounts, family room configurations
 - 🔗 **Direct Booking**: Real-time pricing with direct booking links
 - 📄 **Complete Pagination**: Advanced API batching for comprehensive results (350% more accommodations)
 - 🔄 **Universal Compatibility**: Works with all MCP clients (Claude Desktop, Augment Code, LM Studio, etc.)
+- 🛡️ **Cross-Border Validation**: Prevents incorrect results from multi-country ski areas (e.g., Via Lattea)
 
 ---
 
@@ -66,10 +70,10 @@ MV-MCP-server/
 ├── 📄 mountvacation-mcp-server.js    # Main MCP server (production)
 ├── 📄 README.md                      # Project documentation
 ├── 📁 docs/                          # Documentation folder
-│   ├── 📄 PROJECT-ARCHITECTURE.md    # This file
-│   ├── 📄 COMPREHENSIVE_MCP_TESTING_REPORT.md  # MCP testing report
-│   ├── 📄 EXECUTIVE_TESTING_SUMMARY.md  # Executive testing summary
-│   └── 📄 mountvacation_api_batching_guide.md  # API batching guide
+│   ├── 📄 PROJECT-ARCHITECTURE.md    # This file — system architecture & reference
+│   ├── 📄 CHANGELOG.md              # Version history & release notes
+│   ├── 📄 MV-MCP-Location-Resolution-Bug-Report.md  # Bug diagnosis (resolved)
+│   └── 📄 mountvacation_api_batching_guide.md  # API batching/pagination guide
 ├── 📁 cloudflare-workers/            # Cloudflare Worker deployment
 │   ├── 📄 package.json               # Dependencies
 │   ├── 📄 wrangler.toml              # Cloudflare configuration
@@ -98,11 +102,14 @@ MV-MCP-server/
 
 ### **2. Cloudflare Worker (`cloudflare-workers/`)**
 - **Purpose**: API orchestration and intelligent routing
+- **Version**: 2.1.0
 - **Features**:
   - **150+ verified static location mappings** using resort/skiarea/region/city IDs (no unreliable coordinates)
   - Dynamic ID mapping with fuzzy location matching
   - Comma-separated location parsing ("Umag, Croatia" → primary="umag", hint="croatia")
-  - Search strategy prioritization: skiarea → resort → city → region
+  - **Search strategy prioritization: resort → city → skiarea → region** (most specific first)
+  - **Cross-border validation**: SkiArea/region results are validated against the search query to prevent mismatches (e.g., French results for Italian searches within multi-country ski areas)
+  - **Early exit for high-confidence mappings**: Static mappings with high confidence return "no results" instead of falling back to incorrect broader searches
   - Rate limiting and error handling
   - Trailing-slash-free API endpoint for reliable connectivity
 
@@ -129,12 +136,14 @@ MV-MCP-server/
 - `https://api.mountvacation.com/cities` - City listings
 - `https://api.mountvacation.com/skiareas` - Ski area database
 
-### **Search Strategy Prioritization**
-1. **Ski Areas** (highest accommodation coverage — e.g., Dolomiti Superski, Les 3 Vallées)
-2. **Resorts** (direct resort matches — e.g., resort=7 for Madonna di Campiglio)
-3. **Cities** (urban area searches — e.g., city=13402 for Split)
-4. **Regions** (broader area coverage — e.g., region=911 for Trentino-Alto Adige)
+### **Search Strategy Prioritization (v2.1.0)**
+1. **Resorts** (most specific match — e.g., resort=9146 for Katschberg) — *trusted without validation*
+2. **Cities** (specific area searches — e.g., city=13402 for Split) — *trusted without validation*
+3. **Ski Areas** (broader coverage — e.g., Dolomiti Superski, Les 3 Vallées) — *validated against search query*
+4. **Regions** (broadest area — e.g., region=911 for Trentino-Alto Adige) — *validated against search query*
 5. **Dynamic ID Mapping** (fuzzy text match against API metadata)
+
+> **Validation Trust Model (v2.1.0)**: Resort and City IDs are specific to a single location and are trusted without further validation. SkiArea and Region IDs can span multiple countries (e.g., Via Lattea covers Italy and France), so results from these strategies are validated against the user's search query using keyword matching to prevent cross-border mismatches.
 
 > **Note**: Coordinate/geolocation-based search has been deprecated as a primary strategy due to unreliable results from the MountVacation API. All 150+ static mappings now use verified resort/skiarea/region/city IDs.
 
@@ -153,9 +162,10 @@ MV-MCP-server/
 8. **Response** → Structured accommodation data with booking links
 
 ### **Error Handling & Fallbacks**
-- **Extended Area Search**: Automatic fallback to broader regions
-- **Cross-border Discovery**: German searches find Austrian accommodations
-- **Multiple Strategies**: Ski area → Resort → City → Region fallbacks
+- **Strategy Cascade**: Resort → City → SkiArea → Region (most specific first)
+- **Cross-border Validation**: SkiArea/Region results validated against search query
+- **Early Exit**: High-confidence static mappings return "no results" instead of incorrect fallbacks
+- **Extended Area Search**: Automatic fallback to broader regions when specific matches are empty
 - **Graceful Degradation**: Partial results when some endpoints fail
 
 ---
@@ -324,4 +334,4 @@ User API Key → MCP Client → Local Server → Cloudflare Workers → MountVac
 
 ---
 
-**Built with ❤️ for the skiing community** 🎿⛷️
+**Built with ❤️ for the mountain vacation community** 🏔️⛷️🏖️

@@ -318,7 +318,7 @@ load_more_accommodations({
 - **Version**: 3.3.0 (Protocol compliant for Claude Desktop, with JSON-RPC 2.0 notification handling)
 - **API Integration**: Cloudflare Worker orchestration layer
 - **Location Intelligence**: 150+ verified static mappings using resort/skiarea/region/city IDs (no unreliable coordinates)
-- **Search Strategy**: skiarea → resort → city → region → dynamic fuzzy matching
+- **Search Strategy**: resort → city → skiarea → region → dynamic fuzzy matching (most specific first, with cross-border validation)
 - **Comma-Separated Parsing**: "Umag, Croatia" → primary="umag", hint="croatia" for accurate results
 - **Universal Compatibility**: All MCP clients supported
 
@@ -406,14 +406,15 @@ npm run deploy
 | Document | Description |
 |----------|-------------|
 | [📋 Project Architecture](docs/PROJECT-ARCHITECTURE.md) | Comprehensive technical overview and system design |
-| [🧪 MCP Testing Report](docs/COMPREHENSIVE_MCP_TESTING_REPORT.md) | Comprehensive MCP testing report |
-| [📊 Executive Testing Summary](docs/EXECUTIVE_TESTING_SUMMARY.md) | Executive testing summary |
+| [📋 Changelog](docs/CHANGELOG.md) | Version history and release notes |
+| [🐛 Location Resolution Bug Report](docs/MV-MCP-Location-Resolution-Bug-Report.md) | Diagnosis & resolution of cross-border location bug (resolved in v2.1.0) |
 | [📄 API Batching Guide](docs/mountvacation_api_batching_guide.md) | API batching and pagination guide |
 
 ---
 
 ## 📈 **Version History**
 
+- **CF Worker v2.1.0** ✅ **Location resolution fix**: Strategy reordering (resort→city→skiarea→region) + cross-border validation. Prevents incorrect results from multi-country ski areas (e.g., Via Lattea). Fixes Sestriere, Katschberg, Terme Čatež, Obergurgl, Sölden.
 - **v3.4.0** ✅ Systemic location mapping overhaul: All 150+ static mappings now use verified resort/skiarea/region/city IDs (coordinate-based search deprecated). Full Croatia & Slovenia coverage. Comma-separated location parsing. Trailing slash fix. Non-ski destination support.
 - **v3.3.0** ✅ JSON-RPC 2.0 notification handling fix for Claude Desktop compatibility (silent acceptance of `notifications/initialized`, protocol version set to `2024-11-05`)
 - **v3.2.0** - Protocol compliance fix for universal MCP client compatibility
@@ -439,13 +440,14 @@ MIT License - See LICENSE file for details.
 
 ## 🔗 **Production Deployment**
 
-**Current Production URL**: `https://mountvacation-mcp-final.4thtech.workers.dev`
+**Current Production URL**: `https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev`
 
 **Status**: ✅ Active and Stable
 - **Platform**: Cloudflare Workers (Free Tier)
 - **Requests/Day**: 100,000 (no inactivity timeout)
 - **Uptime**: Continuous
-- **Latest Version**: v3.4.0 (150+ verified location mappings, full Croatia/Slovenia coverage)
+- **Cloudflare Worker Version**: v2.1.0 (cross-border validation, 150+ verified location mappings)
+- **MCP Server Version**: v3.3.0 (Claude Desktop compatible)
 
 This is the latest stable deployment of the MountVacation MCP server on Cloudflare Workers. The server uses direct IP connection for maximum reliability.
 

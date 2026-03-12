@@ -74,6 +74,17 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'schladming': { resort: 9195, skiarea: 2 }, // ✅ Schladming-Dachstein
   'lech': { resort: 159, skiarea: 36 }, // ✅ Lech Zürs am Arlberg
   'lech am arlberg': { resort: 159, skiarea: 36 },
+  'katschberg': { resort: 9146, region: 1191 }, // ✅ Katschberg (resort spanning St. Michael im Lungau, Rennweg, etc.)
+  'ischgl': { resort: 102, skiarea: 13, region: 607 }, // ✅ Paznaun - Ischgl
+  'paznaun': { resort: 102, skiarea: 13, region: 607 },
+  'mayrhofen': { resort: 41, skiarea: 16, region: 607 }, // ✅ Mayrhofen-Hippach
+  'obergurgl': { resort: 9194, skiarea: 23, region: 1194 }, // ✅ Obergurgl Hochgurgl
+  'hochgurgl': { resort: 9194, skiarea: 23, region: 1194 },
+  'serfaus': { resort: 105, region: 607 }, // ✅ Serfaus Fiss Ladis
+  'fiss': { resort: 105, region: 607 },
+  'ladis': { resort: 105, region: 607 },
+  'sölden': { resort: 9182, skiarea: 23, region: 607 }, // ✅ Sölden
+  'solden': { resort: 9182, skiarea: 23, region: 607 },
 
   // Alpbachtal region cities - VERIFIED RESORT ID from website analysis
   'alpbach': { resort: 9340, skiarea: 52 },
@@ -292,6 +303,10 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'slovenia coast': { resort: 9469 },
   'slovenia sea': { resort: 9469 },
   'maribor': { resort: 9215 }, // ✅ Maribor
+  'terme čatež': { resort: 9456, city: 11027 }, // ✅ Čatež ob Savi
+  'terme catez': { resort: 9456, city: 11027 }, // ✅ Without diacritics
+  'čatež': { resort: 9456, city: 11027 },
+  'catez': { resort: 9456, city: 11027 },
   'slovenia': { resort: 87 }, // Default to Kranjska Gora
 
   // Italian non-ski destinations - VERIFIED RESORT IDs from API
@@ -422,72 +437,7 @@ export class MountVacationClient {
     if (location) {
       this.logger.info(`[MountVacationClient] Starting location-based search for: "${location}"`);
 
-      // Try dynamic ID mapping first
-      try {
-        this.logger.info(`[MountVacationClient] Attempting dynamic ID mapping for: "${location}"`);
-        const locationMatches = await this.idMappingManager.resolveLocation(location, env);
-        this.logger.info(`[MountVacationClient] Dynamic ID mapping returned ${locationMatches.length} matches`);
-
-        if (locationMatches.length > 0) {
-          this.logger.info(`[MountVacationClient] Processing ${Math.min(locationMatches.length, 3)} location matches`);
-          // Try each location match in order of confidence
-          for (const match of locationMatches.slice(0, 3)) { // Try top 3 matches
-            this.logger.info(`[MountVacationClient] Trying match: ${match.name} (${match.type}, confidence: ${match.confidence})`);
-            const searchStrategies = this.buildDynamicSearchStrategies(baseParams, match, location);
-
-            for (const strategy of searchStrategies) {
-              try {
-                this.logger.debug('Trying dynamic ID mapping strategy', {
-                  strategy: strategy.name,
-                  location: location,
-                  match: match,
-                  params: strategy.params
-                });
-
-                const result = await this.makeApiRequest(strategy.params, env);
-
-                if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
-                  const formatted = this.formatResults(result, max_results);
-
-                  // Validate that results match the requested location
-                  if (this.validateLocationMatch(formatted, location)) {
-                    this.logger.info('Search successful with dynamic ID mapping', {
-                      strategy: strategy.name,
-                      location: location,
-                      match: match,
-                      results_count: formatted.accommodations?.length || 0,
-                    });
-                    return formatted;
-                  } else {
-                    this.logger.warn('Dynamic mapping results failed location validation', {
-                      strategy: strategy.name,
-                      location: location,
-                      match: match,
-                      results_count: formatted.accommodations?.length || 0,
-                    });
-                    // Continue to next strategy instead of returning invalid results
-                  }
-                }
-              } catch (error) {
-                this.logger.warn('Dynamic ID mapping strategy failed', {
-                  strategy: strategy.name,
-                  location: location,
-                  match: match,
-                  error: error instanceof Error ? error.message : String(error),
-                });
-                continue;
-              }
-            }
-          }
-        }
-      } catch (error) {
-        this.logger.warn('Dynamic ID mapping failed, falling back to static mapping', {
-          location: location,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-
-      // Fallback to static location mapping if dynamic mapping fails
+      // Try static location mapping FIRST (verified IDs, highest trust)
       const locationMapping = this.findLocationMapping(location);
 
       if (locationMapping) {
@@ -575,13 +525,18 @@ export class MountVacationClient {
               if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
                 const formatted = this.formatResults(result, max_results);
 
-                // Validate that results match the requested location
-                if (this.validateLocationMatch(formatted, location)) {
+                // Only trust resort/city IDs without validation (they are specific to one location).
+                // Skiarea and region can span multiple countries/resorts, so they still need validation.
+                const isTrustedIdStrategy = strategy.name.includes('resort') ||
+                  strategy.name.includes('city');
+
+                if (isTrustedIdStrategy || this.validateLocationMatch(formatted, location)) {
                   this.logger.info('Search successful with static mapping', {
                     strategy: strategy.name,
                     location: location,
                     mapping: locationMapping,
                     results_count: formatted.accommodations?.length || 0,
+                    validation_skipped: isTrustedIdStrategy,
                   });
                   return formatted;
                 } else {
@@ -603,9 +558,122 @@ export class MountVacationClient {
             }
           }
         }
+
+        // Static mapping exists but all strategies returned 0 results.
+        // This means the location is correctly identified but has no availability for these dates.
+        // Return a clear message instead of falling through to fuzzy dynamic matching.
+        this.logger.info('Static mapping found but no availability for requested dates', {
+          location: location,
+          mapping: locationMapping,
+        });
+        return {
+          message: `No accommodations found in "${location}" for the requested dates. This destination may have limited seasonal availability. Try different dates or a nearby area.`,
+          search_summary: {
+            arrival_date: baseParams.arrival || '',
+            departure_date: baseParams.departure || '',
+            nights: 0,
+            persons_count: 0,
+            total_found: 0,
+            currency: baseParams.currency || 'EUR',
+          },
+          accommodations: [],
+          timestamp: new Date().toISOString(),
+        };
       }
 
-      // If mapping failed or no mapping found, try fallback strategies
+      // Try dynamic ID mapping if no static mapping exists
+      try {
+        this.logger.info(`[MountVacationClient] Attempting dynamic ID mapping for: "${location}"`);
+        const locationMatches = await this.idMappingManager.resolveLocation(location, env);
+        this.logger.info(`[MountVacationClient] Dynamic ID mapping returned ${locationMatches.length} matches`);
+
+        if (locationMatches.length > 0) {
+          // Try each location match in order of confidence
+          for (const match of locationMatches.slice(0, 3)) {
+            this.logger.info(`[MountVacationClient] Trying match: ${match.name} (${match.type}, confidence: ${match.confidence})`);
+            const searchStrategies = this.buildDynamicSearchStrategies(baseParams, match, location);
+
+            for (const strategy of searchStrategies) {
+              try {
+                this.logger.debug('Trying dynamic ID mapping strategy', {
+                  strategy: strategy.name,
+                  location: location,
+                  match: match,
+                  params: strategy.params
+                });
+
+                const result = await this.makeApiRequest(strategy.params, env);
+
+                if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
+                  const formatted = this.formatResults(result, max_results);
+
+                  // Only trust resort/city IDs without validation (specific to one location).
+                  // Skiarea and region can span multiple countries, so they still need validation.
+                  const isTrustedIdStrategy = strategy.name.includes('resort') ||
+                    strategy.name.includes('city');
+
+                  if (isTrustedIdStrategy || this.validateLocationMatch(formatted, location)) {
+                    this.logger.info('Search successful with dynamic ID mapping', {
+                      strategy: strategy.name,
+                      location: location,
+                      match: match,
+                      results_count: formatted.accommodations?.length || 0,
+                      validation_skipped: isTrustedIdStrategy,
+                    });
+                    return formatted;
+                  } else {
+                    this.logger.warn('Dynamic mapping results failed location validation', {
+                      strategy: strategy.name,
+                      location: location,
+                      match: match,
+                      results_count: formatted.accommodations?.length || 0,
+                    });
+                  }
+                }
+              } catch (error) {
+                this.logger.warn('Dynamic ID mapping strategy failed', {
+                  strategy: strategy.name,
+                  location: location,
+                  match: match,
+                  error: error instanceof Error ? error.message : String(error),
+                });
+                continue;
+              }
+            }
+
+            // If a high-confidence exact match (>=0.9) exhausted all its strategies with 0 results,
+            // the location genuinely has no availability for these dates — stop searching
+            if (match.confidence >= 0.9) {
+              this.logger.info('High-confidence match found but no availability — stopping search', {
+                location: location,
+                match_name: match.name,
+                match_type: match.type,
+                confidence: match.confidence,
+              });
+              return {
+                message: `No accommodations found in ${match.name} for the requested dates. This destination may have limited seasonal availability. Try different dates or a nearby area.`,
+                search_summary: {
+                  arrival_date: baseParams.arrival || '',
+                  departure_date: baseParams.departure || '',
+                  nights: 0,
+                  persons_count: 0,
+                  total_found: 0,
+                  currency: baseParams.currency || 'EUR',
+                },
+                accommodations: [],
+                timestamp: new Date().toISOString(),
+              };
+            }
+          }
+        }
+      } catch (error) {
+        this.logger.warn('Dynamic ID mapping failed, falling back', {
+          location: location,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      // If all mapping failed, try fallback strategies
       this.logger.info('No results with location mapping, trying fallback strategies', { location: location });
 
       // Fallback: try generic region searches for common terms
@@ -624,12 +692,16 @@ export class MountVacationClient {
           if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
             const formatted = this.formatResults(result, max_results);
 
-            // Validate that fallback results match the requested location
-            if (this.validateLocationMatch(formatted, location)) {
+            // Only trust resort/city IDs without validation (specific to one location).
+            const isTrustedIdStrategy = strategy.name.includes('resort') ||
+              strategy.name.includes('city');
+
+            if (isTrustedIdStrategy || this.validateLocationMatch(formatted, location)) {
               this.logger.info('Search successful with fallback', {
                 strategy: strategy.name,
                 location: location,
                 results_count: formatted.accommodations?.length || 0,
+                validation_skipped: isTrustedIdStrategy,
               });
               return formatted;
             } else {
@@ -993,16 +1065,11 @@ export class MountVacationClient {
     }
 
     // Standard search strategies for other locations
+    // Order: resort (most specific) → city → skiarea → region (broadest)
+    // Resort and city are precise enough to trust without validation.
+    // Skiarea/region can span countries (e.g., Via Lattea: Italy+France), so they need validation.
 
-    // Skiarea search (HIGHEST PRIORITY - best accommodation coverage)
-    if (mapping.skiarea) {
-      strategies.push({
-        name: 'skiarea_mapped',
-        params: { ...baseParams, skiArea: mapping.skiarea.toString() }
-      });
-    }
-
-    // Resort search (second priority)
+    // Resort search (HIGHEST PRIORITY - most specific match)
     if (mapping.resort) {
       strategies.push({
         name: 'resort_mapped',
@@ -1010,7 +1077,7 @@ export class MountVacationClient {
       });
     }
 
-    // City search (third priority)
+    // City search (second priority - very specific)
     if (mapping.city) {
       strategies.push({
         name: 'city_mapped',
@@ -1018,7 +1085,15 @@ export class MountVacationClient {
       });
     }
 
-    // Region search (fourth priority)
+    // Skiarea search (third priority - can span multiple resorts/countries)
+    if (mapping.skiarea) {
+      strategies.push({
+        name: 'skiarea_mapped',
+        params: { ...baseParams, skiArea: mapping.skiarea.toString() }
+      });
+    }
+
+    // Region search (fourth priority - broadest area)
     if (mapping.region) {
       strategies.push({
         name: 'region_mapped',
@@ -1055,6 +1130,20 @@ export class MountVacationClient {
           name: 'resort_dynamic',
           params: { ...baseParams, resort: match.id.toString() }
         });
+        // Cascading fallback: try parent ski area if resort returns empty
+        if (match.parentSkiAreaId) {
+          strategies.push({
+            name: 'skiarea_fallback_from_resort',
+            params: { ...baseParams, skiArea: match.parentSkiAreaId.toString() }
+          });
+        }
+        // Cascading fallback: try parent region if ski area also empty
+        if (match.parentRegionId) {
+          strategies.push({
+            name: 'region_fallback_from_resort',
+            params: { ...baseParams, region: match.parentRegionId.toString() }
+          });
+        }
         break;
 
       case 'city':
@@ -1062,6 +1151,20 @@ export class MountVacationClient {
           name: 'city_dynamic',
           params: { ...baseParams, city: match.id.toString() }
         });
+        // Cascading fallback: try parent resort if city returns empty
+        if (match.parentResortId) {
+          strategies.push({
+            name: 'resort_fallback_from_city',
+            params: { ...baseParams, resort: match.parentResortId.toString() }
+          });
+        }
+        // Cascading fallback: try parent region
+        if (match.parentRegionId) {
+          strategies.push({
+            name: 'region_fallback_from_city',
+            params: { ...baseParams, region: match.parentRegionId.toString() }
+          });
+        }
         break;
 
       case 'region':

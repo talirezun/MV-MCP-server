@@ -284,6 +284,11 @@ export interface LogContext {
   // Location validation fields
   validation_keywords?: string[];
   first_result_location?: any;
+  validation_skipped?: boolean;
+  // Dynamic match fields
+  match_name?: string;
+  match_type?: string;
+  confidence?: number;
 }
 
 export interface RateLimitInfo {

@@ -68,6 +68,10 @@ export interface LocationMatch {
   confidence: number;
   countryCode?: string;
   coordinates?: { lat: number; lng: number };
+  // Parent hierarchy IDs for cascading fallback searches
+  parentSkiAreaId?: number | undefined;
+  parentRegionId?: number | undefined;
+  parentResortId?: number | undefined;
 }
 
 /**
@@ -232,7 +236,9 @@ export class IdMappingManager {
           id: city.id,
           name: city.title,
           confidence,
-          countryCode: city.countryCode
+          countryCode: city.countryCode,
+          parentResortId: city.resortID,
+          parentRegionId: city.regionID
         };
 
         if (city.latitude && city.longitude) {
@@ -243,7 +249,7 @@ export class IdMappingManager {
       }
     }
 
-    // Search resorts
+    // Search resorts — include parent hierarchy IDs for cascading fallback
     for (const resort of this.mappings.resorts) {
       const confidence = this.calculateStringMatch(primaryQuery, resort.title.toLowerCase());
       if (confidence > 0.3) {
@@ -252,7 +258,9 @@ export class IdMappingManager {
           id: resort.id,
           name: resort.title,
           confidence,
-          countryCode: resort.countryCode
+          countryCode: resort.countryCode,
+          parentSkiAreaId: resort.skiareaID,
+          parentRegionId: resort.regionID
         });
       }
     }
@@ -294,18 +302,17 @@ export class IdMappingManager {
       }
     }
 
-    // Sort by confidence and type priority (ski areas and resorts first)
+    // Sort by weighted score: confidence is primary, type priority is a small tiebreaker
+    // This ensures a resort at confidence 1.0 beats a skiarea at confidence 0.45
     matches.sort((a, b) => {
-      // Prioritize ski areas and resorts as they typically have better accommodation coverage
-      const typePriority = { 'skiarea': 5, 'resort': 4, 'city': 3, 'region': 2, 'country': 1 };
+      const typePriority: Record<string, number> = { 'skiarea': 5, 'resort': 4, 'city': 3, 'region': 2, 'country': 1 };
       const aPriority = typePriority[a.type] || 0;
       const bPriority = typePriority[b.type] || 0;
 
-      if (aPriority !== bPriority) {
-        return bPriority - aPriority;
-      }
-
-      return b.confidence - a.confidence;
+      // Weighted score: confidence dominates, type adds max 0.25 bonus
+      const aScore = a.confidence + (aPriority * 0.05);
+      const bScore = b.confidence + (bPriority * 0.05);
+      return bScore - aScore;
     });
 
     console.log(`[ID Mapping] Found ${matches.length} matches for "${location}"`);
