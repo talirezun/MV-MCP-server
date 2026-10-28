@@ -1,10 +1,10 @@
-# MountVacation API Batching: Complete Implementation Guide
+# MV Travel API Batching: Complete Implementation Guide
 
 ## Overview
 
-The MountVacation API implements **pagination/batching** to handle large search results efficiently. Instead of returning all accommodations in a single response (which could be hundreds of properties), the API returns results in **batches** (pages) of typically 20-30 accommodations per request.
+The MV Travel API implements **pagination/batching** to handle large search results efficiently. Instead of returning all accommodations in a single response (which could be hundreds of properties), the API returns results in **batches** (pages) of typically 20-30 accommodations per request.
 
-This document provides comprehensive guidance on implementing proper batching support in the MountVacation MCP to ensure users get complete search results equivalent to the mountvacation.com website experience.
+This document provides comprehensive guidance on implementing proper batching support in the MV Travel MCP to ensure users get complete search results equivalent to the mountvacation.com website experience.
 
 ## Understanding API Batching Mechanics
 
@@ -16,14 +16,14 @@ This document provides comprehensive guidance on implementing proper batching su
 3. Additional API calls are needed to retrieve remaining results
 4. Each "batch" contains a subset of the total results
 
-### Why Does MountVacation Use Batching?
+### Why Does MV Travel Use Batching?
 
 - **Performance**: Faster response times for initial results
 - **Memory efficiency**: Smaller payloads reduce bandwidth usage
 - **User experience**: Users can start viewing results immediately
 - **Server load**: Distributed processing reduces server strain
 
-## MountVacation Batching Response Structure
+## MV Travel Batching Response Structure
 
 ### Standard Search Response Format
 
@@ -479,7 +479,7 @@ def handle_api_error(response, context: str = "API request"):
 
 ## Recommended Implementation Approach
 
-### For MountVacation MCP Development
+### For MV Travel MCP Development
 
 **Phase 1: MVP (Use Strategy 1)**
 - Implement single batch retrieval for fast initial results
@@ -679,4 +679,4 @@ def search_accommodations(
         return {"error": f"Unknown strategy '{strategy}'. Use 'single', 'progressive', or 'complete'."}
 ```
 
-This comprehensive guide ensures your MountVacation MCP implementation properly handles the API's batching system, providing users with complete search results equivalent to the mountvacation.com website experience while maintaining good performance and user experience.
+This comprehensive guide ensures your MV Travel MCP implementation properly handles the API's batching system, providing users with complete search results equivalent to the mountvacation.com website experience while maintaining good performance and user experience.

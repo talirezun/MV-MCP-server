@@ -1,6 +1,6 @@
 # 🏔️ MV Travel MCP Server
 
-A production-ready Model Context Protocol (MCP) server that provides AI assistants with intelligent access to [MV Travel](https://mv-travel.com/)'s (formerly MountVacation) accommodation booking API, specializing in year-round mountain vacations across Europe, spa & terme holidays in Slovenia, and extensive Croatia coverage.
+A Model Context Protocol (MCP) server that provides AI assistants with intelligent access to [MV Travel](https://mv-travel.com/)'s (formerly MountVacation) accommodation booking API, specializing in year-round mountain vacations across Europe, spa & terme holidays in Slovenia, and extensive Croatia coverage.
 
 ## Watch the Demo Video
 
@@ -18,7 +18,7 @@ Click the thumbnail below to watch the video:
 - 🇭🇷 **Extensive Croatia Coverage**: Comprehensive accommodation options throughout Croatia
 - 👨‍👩‍👧‍👦 **Family Support**: Children pricing, age-based discounts, family room configurations
 - 🔗 **Direct Booking**: Real-time pricing with direct booking links
-- 📄 **Complete Pagination**: Advanced API batching for comprehensive results (350% more accommodations)
+- 📄 **Complete Pagination**: Advanced API batching for comprehensive results
 - 🔄 **Universal Compatibility**: Tested with LM Studio (gpt-oss 20B), Claude Desktop App, Augment Code, Cline.bot
 - 🧠 **Intelligent Search**: Comma-separated location parsing, resort/region ID-based search, destination prioritization
 
@@ -61,7 +61,7 @@ Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
   "mcpServers": {
     "mv-travel": {
       "command": "node",
-      "args": ["./mountvacation-mcp-server.js"],
+      "args": ["/absolute/path/to/mountvacation-mcp-server.js"],
       "env": {
         "MOUNTVACATION_API_KEY": "your-api-key-here"
       }
@@ -69,6 +69,8 @@ Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
   }
 }
 ```
+
+Use the full path to where you saved the file. A relative path is resolved from the client's working directory, not the download folder.
 
 > **Already installed under the old name `mountvacation`?** Nothing to change. The entry name is just a label, and existing setups keep working. Rename it to `mv-travel` only if you want the new name to show in your client.
 
@@ -79,25 +81,14 @@ The server will be available with 10 comprehensive accommodation search tools in
 
 ## 🔧 **Reliability & DNS Resolution**
 
-### **✅ Stable Production Deployment**
-- **Cloudflare Workers**: Deployed and actively running
-- **Free Tier**: 100,000 requests/day (no inactivity timeout)
-- **Uptime**: Continuously available
-- **DNS Resolution**: Optimized to work reliably regardless of system DNS configuration
-
-### **🛡️ DNS Resolution Fix (v3.3+)**
-The server uses direct IP connection to Cloudflare Workers, ensuring reliable operation even if your system's DNS has local overrides or caching issues. This means:
-- ✅ Works on all systems without DNS configuration
-- ✅ No dependency on system DNS settings
-- ✅ Faster connection establishment
-- ✅ More reliable for automated deployments
+The server runs on Cloudflare Workers. The client connects to Cloudflare by IP address with the correct Host header, so local DNS overrides do not interfere.
 
 ---
 
 ## 💻 **Installation Instructions**
 
 ### **📋 Prerequisites**
-- Node.js (version 14 or higher)
+- Node.js (version 18 or higher)
 - Your MV Travel API key
 
 ### **📥 Download Server File (All Platforms)**
@@ -124,7 +115,7 @@ Add this configuration to your MCP client's config file:
   "mcpServers": {
     "mv-travel": {
       "command": "node",
-      "args": ["./mountvacation-mcp-server.js"],
+      "args": ["/absolute/path/to/mountvacation-mcp-server.js"],
       "env": {
         "MOUNTVACATION_API_KEY": "your-api-key-here"
       }
@@ -141,8 +132,8 @@ Add this configuration to your MCP client's config file:
 ## 🔄 **MCP Client Compatibility**
 
 ### **✅ Tested and Working**
-- **🧠 LM Studio** - gpt-oss 20B model (excellent performance)
-- **🤖 Claude Desktop App** - Full compatibility with protocol v3.3.0 (JSON-RPC 2.0 notification handling)
+- **🧠 LM Studio** - tested with gpt-oss 20B
+- **🤖 Claude Desktop App** - Full compatibility
 - **⚡ Augment Code** - Native integration support
 - **🔧 Cline.bot** - VS Code extension (use cline-specific server version)
 
@@ -171,7 +162,7 @@ Additional MCP client testing is ongoing. The server follows MCP protocol standa
 ### **⚡ Augment Code**
 1. Download `mountvacation-mcp-server.js` to your project folder
 2. Use the "Edit MCP Server" option in Augment
-3. Set command: `node` and args: `./mountvacation-mcp-server.js`
+3. Set command: `node` and args: the full path to the file
 4. Add `MOUNTVACATION_API_KEY` environment variable
 5. Save and restart
 
@@ -191,8 +182,8 @@ Additional MCP client testing is ongoing. The server follows MCP protocol standa
 | Tool | Description | Use Case |
 |------|-------------|----------|
 | `search_accommodations` | Main search with intelligent location resolution | General accommodation searches (first batch) |
-| `search_accommodations_complete` | **NEW**: Complete search with automatic pagination | Comprehensive results (all available pages) |
-| `load_more_accommodations` | **NEW**: Load additional results from pagination URLs | Progressive loading of more results |
+| `search_accommodations_complete` | Complete search with automatic pagination | Comprehensive results (all available pages) |
+| `load_more_accommodations` | Load additional results from pagination URLs | Progressive loading of more results |
 
 ### **📋 Property Details**
 | Tool | Description | Use Case |
@@ -226,7 +217,7 @@ Try asking your AI assistant:
 **The server will:**
 - ✅ Search across European destinations with intelligent location mapping
 - ✅ Apply family pricing with children's age-based discounts
-- ✅ Use complete pagination to find all available accommodations (350% more results)
+- ✅ Use complete pagination to collect all available results
 - ✅ Filter for specific amenities (pools, spa, wellness, etc.)
 - ✅ Provide direct booking links with real-time pricing
 - ✅ Include proximity to attractions and activity information
@@ -239,11 +230,10 @@ Try asking your AI assistant:
 - 🇦🇹 **Austria**: Innsbruck, Kitzbühel, St. Anton, Saalbach, Zell am See, Bad Gastein, Lech (Tirol region)
 - 🇮🇹 **Italy**: Madonna di Campiglio, Cortina, Val Gardena, Livigno, Bormio, Lake Garda Nord, Cervinia, Courmayeur (Trentino, Dolomites)
 - 🇫🇷 **France**: Chamonix, Val d'Isère, Tignes, Courchevel, Méribel, Val Thorens, Alpe d'Huez, Morzine (French Alps)
-- 🇨🇭 **Switzerland**: Zermatt, Verbier, St. Moritz, Davos, Crans Montana, Saas-Fee, Grindelwald (Valais region)
+- 🇨🇭 **Switzerland**: Zermatt, Verbier, St. Moritz, Davos, Crans Montana, Saas-Fee, Grindelwald
 - 🇭🇷 **Croatia**: Umag, Rovinj, Pula, Opatija, Dubrovnik, Split, Hvar, Zadar, Makarska (full Istria & Dalmatia)
 - 🇸🇮 **Slovenia**: Bled, Bohinj, Portorož, Piran, Maribor, Kranjska Gora (mountain & coastal)
 - 🇧🇦 **Bosnia**: Jahorina, Bjelašnica - Mountain tourism
-- 🇩🇪 **Germany**: Cross-border accommodation discovery
 
 ### **🏨 Spa & Terme Holidays (Slovenia)**
 - **Terme Čatež** - Largest spa complex in Slovenia
@@ -259,14 +249,11 @@ Try asking your AI assistant:
 - **Central Croatia**: Zagreb region, continental destinations
 - **Spa Destinations**: Terme Sveti Martin, Istarske Toplice
 
-### **🔍 Additional Coverage**
-- All static mappings use verified API resort/skiarea/region/city IDs (coordinate-based search deprecated due to unreliable API responses)
-
 ---
 
 ## 📄 **Pagination Support**
 
-### **🚀 NEW: Complete Results Collection**
+### **🚀 Complete Results Collection**
 The MV Travel API uses pagination to handle large result sets efficiently. Our MCP server now provides three strategies:
 
 #### **Strategy 1: Quick Search** (`search_accommodations`)
@@ -317,9 +304,8 @@ load_more_accommodations({
 ## 🏗️ **Technical Architecture**
 
 - **Protocol**: JSON-RPC 2.0 over stdio (MCP compliant)
-- **Version**: 3.3.0 (Protocol compliant for Claude Desktop, with JSON-RPC 2.0 notification handling)
 - **API Integration**: Cloudflare Worker orchestration layer
-- **Location Intelligence**: 150+ verified static mappings using resort/skiarea/region/city IDs (no unreliable coordinates)
+- **Location Intelligence**: 150+ verified static mappings using resort/skiarea/region/city IDs
 - **Search Strategy**: resort → city → skiarea → region → dynamic fuzzy matching (most specific first, with cross-border validation)
 - **Comma-Separated Parsing**: "Umag, Croatia" → primary="umag", hint="croatia" for accurate results
 - **Universal Compatibility**: All MCP clients supported
@@ -334,7 +320,7 @@ To use this MCP server, you need a valid MV Travel API key:
 1. **Visit MV Travel** - [mv-travel.com](https://mv-travel.com/)
 2. **Register or Login** to your MV Travel account
 3. **Navigate to API section** in your account dashboard
-4. **Generate your API key** - You'll receive a 64-character key
+4. **Generate your API key** - You'll receive an API key
 5. **Copy the key** and use it in your MCP client configuration
 
 ### **🔒 Security Note**
@@ -351,26 +337,10 @@ Use your API key in any of the provided configuration files:
 
 ---
 
-## 🎥 **Video Demonstration**
-
-Watch our comprehensive video guide showing the MV Travel MCP Server in action:
-
-### **📺 Setup and Usage Tutorial**
-*[Video link will be added here manually]*
-
-The video covers:
-- 🔧 Installation and setup process
-- 🎯 Example searches and queries
-- 🏔️ Different vacation types (skiing, hiking, spa, Croatia)
-- 🤖 Integration with various MCP clients
-- 💡 Tips and best practices
-
----
-
 ## 🔧 **Troubleshooting**
 
 ### **Claude Desktop Issues**
-✅ **RESOLVED**: Version 3.3.0 includes full JSON-RPC 2.0 notification handling and protocol version compatibility for Claude Desktop. The server now silently accepts `notifications/initialized` and other notification messages per the JSON-RPC 2.0 spec (no response for messages without an `id` field).
+The server follows JSON-RPC 2.0 notification handling, so it works with Claude Desktop.
 
 ### **Common Solutions**
 1. **Restart your MCP client** after configuration changes
@@ -378,7 +348,7 @@ The video covers:
 3. **Verify API key** is correctly set in environment variables
 4. **Test with command line** for debugging:
    ```bash
-   echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize"}' | node mountvacation-mcp-server.js
+   echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize"}' | node server-versions/mountvacation-mcp-server.js
    ```
 
 ---
@@ -388,10 +358,10 @@ The video covers:
 ### **Local Testing**
 ```bash
 # Test initialization
-echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize"}' | node mountvacation-mcp-server.js
+echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize"}' | node server-versions/mountvacation-mcp-server.js
 
 # Test tools list  
-echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/list"}' | node mountvacation-mcp-server.js
+echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/list"}' | node server-versions/mountvacation-mcp-server.js
 ```
 
 ### **Cloudflare Worker Deployment**
@@ -415,6 +385,8 @@ npm run deploy
 ---
 
 ## 📈 **Version History**
+
+Client script (v3.x) and Cloudflare Worker (v2.x) are versioned separately.
 
 - **CF Worker v2.1.0** ✅ **Location resolution fix**: Strategy reordering (resort→city→skiarea→region) + cross-border validation. Prevents incorrect results from multi-country ski areas (e.g., Via Lattea). Fixes Sestriere, Katschberg, Terme Čatež, Obergurgl, Sölden.
 - **v3.4.0** ✅ Systemic location mapping overhaul: All 150+ static mappings now use verified resort/skiarea/region/city IDs (coordinate-based search deprecated). Full Croatia & Slovenia coverage. Comma-separated location parsing. Trailing slash fix. Non-ski destination support.
@@ -448,21 +420,6 @@ MIT License - See LICENSE file for details.
 
 ---
 
-## 🔗 **Production Deployment**
-
-**Current Production URL**: `https://mountvacation-mcp-final.4thtech.workers.dev`
-
-**Status**: ✅ Active and Stable
-- **Platform**: Cloudflare Workers (Free Tier)
-- **Requests/Day**: 100,000 (no inactivity timeout)
-- **Uptime**: Continuous
-- **Cloudflare Worker Version**: v2.1.0 (cross-border validation, 150+ verified location mappings)
-- **MCP Server Version**: v3.3.0 (Claude Desktop compatible)
-
-This is the latest stable deployment of the MV Travel MCP server on Cloudflare Workers. The server uses direct IP connection for maximum reliability.
-
----
-
 ## ⚠️ **Disclaimer**
 
 ### **🧪 Experimental Software**
@@ -483,8 +440,3 @@ This MCP server is experimental software provided "as is" without any warranties
 ### **🤝 Community Project**
 This is an open-source community project aimed at improving AI-assisted travel planning. While we strive for quality and reliability, users should exercise appropriate caution when using experimental software for important travel bookings.
 
----
-
-**🏔️ Ready to plan your next mountain vacation with AI assistance! 🎿**
-
-*Built with ❤️ for the mountain vacation community*

@@ -2,9 +2,11 @@
   "mcpServers": {
     "mv-travel": {
       "command": "node",
-      "args": ["/Users/talirezun/mountvacation-mcp-server-cline.js"],
+      "args": [
+        "/absolute/path/to/mountvacation-mcp-server.js"
+      ],
       "env": {
-        "MOUNTVACATION_API_KEY": "0e9147e2a4316bfd6c69a8d1ae6044e4879764a7783f8898a87ec976b420800e2570d234863e2a2ac62dfe0d595014e145ea3a89d69dc6213ef99d94cb3a71e2"
+        "MOUNTVACATION_API_KEY": "YOUR_API_KEY_HERE"
       }
     }
   }

@@ -1,4 +1,6 @@
-# 📋 MountVacation MCP Server — Changelog
+# MV Travel MCP Server — Changelog
+
+Client script (v3.x) and Cloudflare Worker (v2.x) are versioned separately; entries below track the Worker.
 
 All notable changes to this project are documented in this file.
 
@@ -43,7 +45,7 @@ All notable changes to this project are documented in this file.
 
 - **150+ static location mappings** covering 8+ countries
 - **10 MCP tools** including pagination, geolocation, and multi-region research
-- **API batching** with complete pagination support (350% more results)
+- **API batching** with complete pagination support
 - **Family pricing** with age-based discounts
 - **Direct booking links** with affiliate tracking
 - **Croatia & Slovenia** full coverage added

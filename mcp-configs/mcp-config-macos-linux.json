@@ -2,7 +2,9 @@
   "mcpServers": {
     "mv-travel": {
       "command": "node",
-      "args": ["~/MV-MCP-server/server-versions/mountvacation-mcp-server.js"],
+      "args": [
+        "/absolute/path/to/mountvacation-mcp-server.js"
+      ],
       "env": {
         "MOUNTVACATION_API_KEY": "YOUR_API_KEY_HERE"
       }

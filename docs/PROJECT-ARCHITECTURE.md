@@ -1,11 +1,11 @@
-# 🏗️ MountVacation MCP Server - Project Architecture
+# 🏗️ MV Travel MCP Server - Project Architecture
 
 **Version**: 2.1.0 (Cloudflare Worker) / 3.3.0 (MCP Server)
-**Last Updated**: 2026-03-12
+**Last Updated**: 2026-10-28
 
 ## 📋 **Project Overview**
 
-The MountVacation MCP Server is a Model Context Protocol (MCP) server that provides AI assistants with access to MountVacation's accommodation booking API. It enables natural language queries for vacation planning across European destinations — ski resorts, coastal towns, thermal spas, and lake regions.
+The MV Travel MCP Server is a Model Context Protocol (MCP) server that provides AI assistants with access to MV Travel's accommodation booking API. It enables natural language queries for vacation planning across European destinations — ski resorts, coastal towns, thermal spas, and lake regions.
 
 ### **Key Features**
 - 🏔️ **Year-Round Vacations**: Mountain, coastal, spa, and lake accommodations across Europe
@@ -14,7 +14,7 @@ The MountVacation MCP Server is a Model Context Protocol (MCP) server that provi
 - 🇸🇮 **Full Slovenia Coverage**: Bled, Bohinj, Portorož, Piran, Maribor, Kranjska Gora, Terme Čatež
 - 👨‍👩‍👧‍👦 **Family Support**: Children pricing, age-based discounts, family room configurations
 - 🔗 **Direct Booking**: Real-time pricing with direct booking links
-- 📄 **Complete Pagination**: Advanced API batching for comprehensive results (350% more accommodations)
+- 📄 **Complete Pagination**: Advanced API batching for comprehensive results
 - 🔄 **Universal Compatibility**: Works with all MCP clients (Claude Desktop, Augment Code, LM Studio, etc.)
 - 🛡️ **Cross-Border Validation**: Prevents incorrect results from multi-country ski areas (e.g., Via Lattea)
 
@@ -51,7 +51,7 @@ The MountVacation MCP Server is a Model Context Protocol (MCP) server that provi
                     └───────────┬───────────┘
                                 │
 ┌─────────────────────────────────────────────────────────────────┐
-│                 MOUNTVACATION API LAYER                         │
+│                 MV TRAVEL API LAYER                             │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐│
 │  │ Countries   │ │   Resorts   │ │   Cities    │ │ Ski Areas   ││
 │  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘│
@@ -67,34 +67,43 @@ The MountVacation MCP Server is a Model Context Protocol (MCP) server that provi
 
 ```
 MV-MCP-server/
-├── 📄 mountvacation-mcp-server.js    # Main MCP server (production)
 ├── 📄 README.md                      # Project documentation
+├── 📄 CLAUDE.md                      # Project context for Claude Code
+├── 📄 .env.example                   # Example environment variables
+├── 📁 server-versions/               # Client scripts (what users download)
+│   ├── 📄 mountvacation-mcp-server.js        # Standard MCP server
+│   ├── 📄 mountvacation-mcp-server-cline.js  # Cline.bot version
+│   └── 📄 mountvacation-mcp-server-v2.js     # Alternate version
 ├── 📁 docs/                          # Documentation folder
 │   ├── 📄 PROJECT-ARCHITECTURE.md    # This file — system architecture & reference
-│   ├── 📄 CHANGELOG.md              # Version history & release notes
+│   ├── 📄 CHANGELOG.md               # Version history & release notes
 │   ├── 📄 MV-MCP-Location-Resolution-Bug-Report.md  # Bug diagnosis (resolved)
-│   └── 📄 mountvacation_api_batching_guide.md  # API batching/pagination guide
+│   ├── 📄 mountvacation_api_batching_guide.md  # API batching/pagination guide
+│   └── 📁 foundations/               # Architecture and decision notes
+│       ├── 📄 architecture.md
+│       └── 📄 decisions.md
 ├── 📁 cloudflare-workers/            # Cloudflare Worker deployment
 │   ├── 📄 package.json               # Dependencies
 │   ├── 📄 wrangler.toml              # Cloudflare configuration
-│   ├── 📁 src/                       # Worker source code
-│   │   ├── 📄 index.ts               # Main worker entry point
-│   │   ├── 📁 api/                   # API integration layer
-│   │   │   ├── 📄 mountvacation-client.ts  # MountVacation API client
-│   │   │   └── 📄 id-mapping.ts      # Location ID resolution
-│   │   └── 📄 types.ts               # TypeScript type definitions
-│   └── 📁 tests/                     # Test files
+│   └── 📁 src/                       # Worker source code
+│       ├── 📄 index.ts               # Main worker entry point
+│       ├── 📄 types.ts               # TypeScript type definitions
+│       ├── 📁 api/                   # API integration layer
+│       │   ├── 📄 mountvacation-client.ts  # MV Travel API client
+│       │   └── 📄 id-mapping.ts      # Location ID resolution
+│       └── 📁 utils/                 # Cache, logger, rate limiter
 └── 📁 mcp-configs/                   # MCP client configurations
     ├── 📄 mcp-config.json            # Generic configuration
     ├── 📄 mcp-config-macos-linux.json  # macOS/Linux specific
-    └── 📄 mcp-config-windows.json    # Windows specific
+    ├── 📄 mcp-config-windows.json    # Windows specific
+    └── 📄 mcp-config-for-augment.json  # Augment Code
 ```
 
 ---
 
 ## 🔧 **Core Components**
 
-### **1. MCP Server (`mountvacation-mcp-server.js`)**
+### **1. MCP Server (`server-versions/mountvacation-mcp-server.js`)**
 - **Protocol**: JSON-RPC 2.0 over stdio
 - **Version**: 3.3.0 (Protocol compliant, Claude Desktop compatible)
 - **Tools**: 10 comprehensive accommodation search tools
@@ -104,7 +113,7 @@ MV-MCP-server/
 - **Purpose**: API orchestration and intelligent routing
 - **Version**: 2.1.0
 - **Features**:
-  - **150+ verified static location mappings** using resort/skiarea/region/city IDs (no unreliable coordinates)
+  - **150+ verified static location mappings** using resort/skiarea/region/city IDs
   - Dynamic ID mapping with fuzzy location matching
   - Comma-separated location parsing ("Umag, Croatia" → primary="umag", hint="croatia")
   - **Search strategy prioritization: resort → city → skiarea → region** (most specific first)
@@ -115,8 +124,8 @@ MV-MCP-server/
 
 ### **3. Tool Definitions**
 1. `search_accommodations` - Main search with location intelligence
-2. `search_accommodations_complete` - **NEW**: Complete pagination support for comprehensive results
-3. `load_more_accommodations` - **NEW**: Manual pagination control for additional results
+2. `search_accommodations_complete` - Complete pagination support for comprehensive results
+3. `load_more_accommodations` - Manual pagination control for additional results
 4. `get_accommodation_details` - Detailed property information
 5. `get_facility_details` - Room/facility specific details
 6. `search_by_resort_id` - Resort-specific searches
@@ -129,7 +138,7 @@ MV-MCP-server/
 
 ## 🌐 **API Integration**
 
-### **MountVacation API Endpoints**
+### **MV Travel API Endpoints**
 - `https://api.mountvacation.com/countries` - Country listings
 - `https://api.mountvacation.com/resorts` - Resort database
 - `https://api.mountvacation.com/regions` - Regional groupings
@@ -145,7 +154,7 @@ MV-MCP-server/
 
 > **Validation Trust Model (v2.1.0)**: Resort and City IDs are specific to a single location and are trusted without further validation. SkiArea and Region IDs can span multiple countries (e.g., Via Lattea covers Italy and France), so results from these strategies are validated against the user's search query using keyword matching to prevent cross-border mismatches.
 
-> **Note**: Coordinate/geolocation-based search has been deprecated as a primary strategy due to unreliable results from the MountVacation API. All 150+ static mappings now use verified resort/skiarea/region/city IDs.
+> **Note**: Coordinate/geolocation-based search has been deprecated as a primary strategy due to unreliable results from the MV Travel API. All 150+ static mappings now use verified resort/skiarea/region/city IDs.
 
 ---
 
@@ -157,7 +166,7 @@ MV-MCP-server/
 3. **Server Processing** → Tool validation and routing
 4. **API Orchestration** → Cloudflare Worker processes request
 5. **Location Resolution** → ID mapping for optimal search
-6. **API Calls** → Multiple MountVacation endpoints
+6. **API Calls** → Multiple MV Travel API endpoints
 7. **Data Aggregation** → Results compilation and formatting
 8. **Response** → Structured accommodation data with booking links
 
@@ -175,7 +184,7 @@ MV-MCP-server/
 ### **Local Development**
 ```bash
 # Test server locally
-echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize"}' | node mountvacation-mcp-server.js
+echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize"}' | node server-versions/mountvacation-mcp-server.js
 
 # Deploy Cloudflare Worker
 cd cloudflare-workers
@@ -203,14 +212,6 @@ npm run deploy
 - **Error Handling**: Graceful failure scenarios
 - **Notification Handling**: Silent acceptance of JSON-RPC 2.0 notifications (no response for `notifications/initialized`, `notifications/cancelled`, etc.)
 
-### **Performance Metrics**
-- **Response Time**: <30 seconds for complex searches
-- **Coverage**: 86% of European ski destinations
-- **Success Rate**: >95% for valid location queries
-- **Availability**: 99.9% uptime via Cloudflare
-- **Pagination Efficiency**: 350% more results with complete API batching
-- **Authentication Success**: 100% success rate with proper API key configuration
-
 ---
 
 ## 📊 **Supported Destinations**
@@ -226,7 +227,7 @@ npm run deploy
 **🇫🇷 France** (Rhône-Alpes region=807):
 - Chamonix (resort 9233), Val d'Isère (resort 9227), Tignes (resort 70), Les Arcs (resort 9278), La Plagne (resort 9270), Courchevel (resort 9229), Méribel (resort 9485), Val Thorens (resort 10), Alpe d'Huez (resort 9325), Les Deux Alpes (resort 110), Serre Chevalier (resort 155), Morzine (resort 9244), Avoriaz (resort 9236)
 
-**🇨🇭 Switzerland** (Valais region=671):
+**🇨🇭 Switzerland**:
 - Zermatt (resort 22), Verbier (resort 9240), St. Moritz (resort 72), Davos (resort 8), Crans Montana (resort 9239), Saas-Fee (resort 5), Grindelwald (resort 9484), Engelberg (resort 89), Arosa (resort 9238)
 
 **🇭🇷 Croatia** (Istra region=5207):
@@ -236,23 +237,22 @@ npm run deploy
 - Bled (resort 9436), Bohinj (resort 76), Portorož (resort 9469), Piran (resort 9467), Maribor (resort 9215), Kranjska Gora (resort 87)
 
 **🇧🇦 Bosnia**: Jahorina, Bjelašnica
-**🇩🇪 Germany**: Cross-border results
 
 ---
 
 ## 🔐 **Security & Authentication**
 
 ### **Authentication Architecture**
-The MountVacation MCP server uses a **user-provided API key architecture** for maximum security and scalability:
+The MV Travel MCP server uses a **user-provided API key architecture** for maximum security and scalability:
 
-1. **User Responsibility**: Each user obtains their own API key from MountVacation
+1. **User Responsibility**: Each user obtains their own API key from MV Travel
 2. **Client-side Configuration**: API keys are stored in MCP client configurations
 3. **Secure Transmission**: Keys are transmitted via HTTPS headers to Cloudflare Workers
 4. **No Server Storage**: No API keys are stored in the server or cloud infrastructure
 
 ### **Authentication Flow**
 ```
-User API Key → MCP Client → Local Server → Cloudflare Workers → MountVacation API
+User API Key → MCP Client → Local Server → Cloudflare Workers → MV Travel API
      ↓              ↓            ↓               ↓                    ↓
 [Client Config] [Env Var] [HTTP Header] [URL Parameter] [API Authentication]
 ```
@@ -260,7 +260,7 @@ User API Key → MCP Client → Local Server → Cloudflare Workers → MountVac
 ### **API Key Management**
 - **Environment Variable**: `MOUNTVACATION_API_KEY` in client configuration
 - **Header Transmission**: `X-MountVacation-API-Key` header to Cloudflare Workers
-- **URL Parameter**: `apiKey` parameter in MountVacation API requests
+- **URL Parameter**: `apiKey` parameter in MV Travel API requests
 - **Pagination Support**: Authentication automatically included in paginated requests
 
 ### **MCP Client Setup Examples**
@@ -271,9 +271,9 @@ User API Key → MCP Client → Local Server → Cloudflare Workers → MountVac
   "mcpServers": {
     "mv-travel": {
       "command": "node",
-      "args": ["/Users/username/mountvacation-mcp-server.js"],
+      "args": ["/absolute/path/to/mountvacation-mcp-server.js"],
       "env": {
-        "MOUNTVACATION_API_KEY": "your-64-character-api-key-here"
+        "MOUNTVACATION_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -286,9 +286,9 @@ User API Key → MCP Client → Local Server → Cloudflare Workers → MountVac
   "mcpServers": {
     "mv-travel": {
       "command": "node",
-      "args": ["./mountvacation-mcp-server.js"],
+      "args": ["/absolute/path/to/mountvacation-mcp-server.js"],
       "env": {
-        "MOUNTVACATION_API_KEY": "your-64-character-api-key-here"
+        "MOUNTVACATION_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -300,9 +300,9 @@ User API Key → MCP Client → Local Server → Cloudflare Workers → MountVac
 {
   "name": "MV Travel MCP",
   "command": "node",
-  "args": ["path/to/mountvacation-mcp-server.js"],
+  "args": ["/absolute/path/to/mountvacation-mcp-server.js"],
   "env": {
-    "MOUNTVACATION_API_KEY": "your-64-character-api-key-here"
+    "MOUNTVACATION_API_KEY": "your-api-key-here"
   }
 }
 ```
@@ -313,14 +313,12 @@ User API Key → MCP Client → Local Server → Cloudflare Workers → MountVac
 - ✅ **HTTPS Only**: All communications encrypted
 - ✅ **Environment Variables**: Keys stored in secure client configs
 - ✅ **No Logging**: API keys never logged or stored
-- ✅ **Automatic Cleanup**: Keys not persisted in server memory
 
 ---
 
 ## 🚀 **Future Enhancements**
 
 ### **Planned Features**
-- Switzerland coverage expansion
 - Real-time availability checking
 - Price comparison across booking platforms
 - Weather integration for ski conditions
@@ -332,6 +330,3 @@ User API Key → MCP Client → Local Server → Cloudflare Workers → MountVac
 - Enhanced error reporting and diagnostics
 - Performance monitoring and analytics
 
----
-
-**Built with ❤️ for the mountain vacation community** 🏔️⛷️🏖️

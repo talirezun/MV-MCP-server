@@ -1,4 +1,4 @@
-# MountVacation MCP — Location Resolution Bug: Diagnosis & Resolution
+# MV Travel MCP — Location Resolution Bug: Diagnosis & Resolution
 
 **Status:** ✅ **RESOLVED** in v2.1.0 (2026-03-12)
 **Document type:** Coding Agent Brief
@@ -12,11 +12,11 @@
 
 ## 1. Executive Summary
 
-The MountVacation MCP server fails to resolve a significant subset of valid European mountain resort names into search results, even though the underlying MountVacation API contains full data for those locations. The root cause is a **missing or incomplete location-name-to-numeric-ID resolution layer** in the MCP.
+The MV Travel MCP server fails to resolve a significant subset of valid European mountain resort names into search results, even though the underlying MV Travel API contains full data for those locations. The root cause is a **missing or incomplete location-name-to-numeric-ID resolution layer** in the MCP.
 
 When a user provides a location name like `"Katschberg"`, the MCP either fails silently or falls back to a generic country-level search, returning zero relevant results. In contrast, when the correct numeric resort ID (`9146`) is passed directly to the API, all 13 available properties are returned correctly.
 
-The same API powers the MountVacation website search, which does resolve "Katschberg" correctly — because the website already knows the resort ID and embeds it in the URL as `?resort=9146`.
+The same API powers the MV Travel website search, which does resolve "Katschberg" correctly — because the website already knows the resort ID and embeds it in the URL as `?resort=9146`.
 
 **Impact:** Any resort, city, or region that is not already in the MCP's internal mapping (if one exists) is effectively invisible to end users — producing the false impression that no accommodation exists there.
 
@@ -24,7 +24,7 @@ The same API powers the MountVacation website search, which does resolve "Katsch
 
 ## 2. Background: API Architecture
 
-The MountVacation API exposes a strict **hierarchical geographic taxonomy**:
+The MV Travel API exposes a strict **hierarchical geographic taxonomy**:
 
 ```
 Countries  →  Regions  →  Ski Areas  →  Resorts  →  Cities
@@ -106,7 +106,7 @@ The correct question is: **why does resolution work for some names and fail for 
 
 ### Primary Root Cause: City Resolver Works, Resort Resolver Does Not
 
-The MountVacation API has two distinct geographic entity types that a user might name:
+The MV Travel API has two distinct geographic entity types that a user might name:
 
 | Entity type | API endpoint | Example |
 |---|---|---|
@@ -381,4 +381,4 @@ FILES: mountvacation-mcp-server.js, cloudflare-workers/[main worker file]
 
 ---
 
-*Document prepared from live API testing session on 2026-03-12. All test results are from direct MCP tool calls against the live MountVacation API with real search parameters (arrival: 2026-03-22, departure: 2026-03-29, 2 adults).*
+*Document prepared from live API testing session on 2026-03-12. All test results are from direct MCP tool calls against the live MV Travel API with real search parameters (arrival: 2026-03-22, departure: 2026-03-29, 2 adults).*
