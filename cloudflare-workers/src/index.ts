@@ -1,5 +1,5 @@
 /**
- * MountVacation MCP Server - Cloudflare Workers Implementation
+ * MV Travel MCP Server - Cloudflare Workers Implementation
  * A robust HTTP-based MCP server for searching mountain vacation accommodations
  */
 
@@ -71,7 +71,7 @@ export default {
 
       // Default response
       return new Response(JSON.stringify({
-        name: 'MountVacation MCP Server',
+        name: 'MV Travel MCP Server',
         version: '2.2.0',
         description: 'Comprehensive Model Context Protocol server for mountain vacation accommodations with property links, image galleries, and detailed facility information',
         endpoints: {
@@ -119,11 +119,11 @@ async function handleMCPRequest(request: Request, env: Env, logger: any): Promis
       id: null,
       error: {
         code: -32602,
-        message: 'MountVacation API key required. Please provide your API key in the MCP client configuration.',
+        message: 'MV Travel API key required. Please provide your API key in the MCP client configuration.',
         data: {
           required_header: 'X-MountVacation-API-Key',
           alternative_header: 'Authorization: Bearer <your_api_key>',
-          get_api_key: 'https://www.mountvacation.si/',
+          get_api_key: 'https://mv-travel.com/',
           setup_guide: 'Add MOUNTVACATION_API_KEY to your MCP client env variables',
           documentation: 'https://github.com/talirezun/MV-MCP-server#api-key-setup'
         }
@@ -141,9 +141,9 @@ async function handleMCPRequest(request: Request, env: Env, logger: any): Promis
       id: null,
       error: {
         code: -32602,
-        message: 'Invalid API key format. Please check your MountVacation API key.',
+        message: 'Invalid API key format. Please check your MV Travel API key.',
         data: {
-          get_api_key: 'https://www.mountvacation.si/',
+          get_api_key: 'https://mv-travel.com/',
           documentation: 'https://github.com/talirezun/MV-MCP-server#api-key-setup'
         }
       }
@@ -257,7 +257,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
   const tools = [
     {
       name: 'search_accommodations',
-      description: 'Search for accommodations using the MountVacation API. Supports location-based search (city, resort, region names), specific accommodation IDs, resort IDs, city IDs, and geolocation-based search. Returns comprehensive accommodation details including pricing, amenities, pictures, distances, and booking information.',
+      description: 'Search for accommodations using the MV Travel API. Supports location-based search (city, resort, region names), specific accommodation IDs, resort IDs, city IDs, and geolocation-based search. Returns comprehensive accommodation details including pricing, amenities, pictures, distances, and booking information.',
       inputSchema: {
         type: 'object',
         additionalProperties: false,
@@ -704,7 +704,7 @@ function handleToolsList(request: MCPRequest, logger: any): Response {
     },
     {
       name: 'search_accommodations_complete',
-      description: 'Search for accommodations with complete pagination support. Collects all available results by following pagination links from the MountVacation API. Use this when you need comprehensive results equivalent to browsing all pages on the website.',
+      description: 'Search for accommodations with complete pagination support. Collects all available results by following pagination links from the MV Travel API. Use this when you need comprehensive results equivalent to browsing all pages on the website.',
       inputSchema: {
         type: 'object',
         additionalProperties: false,

@@ -1,11 +1,11 @@
 {
-  "name": "mountvacation-mcp-worker",
+  "name": "mv-travel-mcp-worker",
   "version": "2.2.0",
-  "description": "Comprehensive MountVacation MCP Server with property links, image galleries, and detailed accommodation information",
+  "description": "MV Travel MCP server on Cloudflare Workers: accommodation search with booking links and detailed property information",
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy && wrangler deploy --env legacy",
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -16,6 +16,7 @@
     "prepare": "npm run build"
   },
   "keywords": [
+    "mv-travel",
     "mcp",
     "model-context-protocol",
     "mountvacation",
@@ -23,7 +24,7 @@
     "travel",
     "accommodation"
   ],
-  "author": "MountVacation MCP Team",
+  "author": "Tali Režun",
   "license": "MIT",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231218.0",

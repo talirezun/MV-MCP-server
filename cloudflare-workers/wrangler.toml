@@ -1,18 +1,21 @@
-name = "mountvacation-mcp-final"
+# MV Travel MCP Worker
+#
+# Two Workers run the SAME code:
+#   mv-travel-mcp           -> https://mv-travel-mcp.talirezun.com   (client script v3.5.0+)
+#   mountvacation-mcp-final -> https://mountvacation-mcp-final.4thtech.workers.dev
+#                              (legacy alias: client scripts <= v3.4 hardcode this hostname;
+#                               keep it deployed so existing installs keep working)
+#
+# `npm run deploy` deploys both. Never deploy only one.
+name = "mv-travel-mcp"
 main = "src/index.ts"
 compatibility_date = "2023-12-01"
 compatibility_flags = ["nodejs_compat"]
 account_id = "e43aa15d537153ef8eadd3512168c4aa"
-workers_dev = true
-
-# Worker configuration
-[env.production]
-name = "blocklabs-mountvacation-mcp-production"
-workers_dev = true
-vars = { NODE_ENV = "production", LOG_LEVEL = "info", CACHE_TTL_SECONDS = "300", MAX_CACHE_SIZE = "1000", API_TIMEOUT_SECONDS = "30", MAX_RESULTS_DEFAULT = "5", MAX_RESULTS_LIMIT = "20", RATE_LIMIT_REQUESTS_PER_MINUTE = "60" }
-
-[env.staging]
-name = "blocklabs-mountvacation-mcp-staging"
+workers_dev = false
+routes = [
+  { pattern = "mv-travel-mcp.talirezun.com", custom_domain = true }
+]
 
 # Environment variables (secrets should be set via wrangler secret put)
 [vars]
@@ -25,26 +28,17 @@ MAX_RESULTS_DEFAULT = "5"
 MAX_RESULTS_LIMIT = "20"
 RATE_LIMIT_REQUESTS_PER_MINUTE = "60"
 
-# KV namespace for caching (optional - commented out for initial deployment)
+# Legacy alias for existing installs. Environments do NOT inherit [vars], so they are repeated here.
+[env.legacy]
+name = "mountvacation-mcp-final"
+workers_dev = true
+routes = []
+vars = { NODE_ENV = "production", LOG_LEVEL = "info", CACHE_TTL_SECONDS = "300", MAX_CACHE_SIZE = "1000", API_TIMEOUT_SECONDS = "30", MAX_RESULTS_DEFAULT = "5", MAX_RESULTS_LIMIT = "20", RATE_LIMIT_REQUESTS_PER_MINUTE = "60" }
+
+# KV namespace for caching (optional - not bound; caching is a no-op without it)
 # [[kv_namespaces]]
 # binding = "CACHE"
 # id = "your-kv-namespace-id"
-# preview_id = "your-preview-kv-namespace-id"
 
-# Durable Objects (if needed for advanced features)
-# [[durable_objects.bindings]]
-# name = "RATE_LIMITER"
-# class_name = "RateLimiter"
-
-# Analytics Engine (for monitoring - commented out for initial deployment)
-# [[analytics_engine_datasets]]
-# binding = "ANALYTICS"
-
-# Compatibility settings
 [build]
 command = "npm run build"
-
-# Development settings
-[env.development]
-name = "blocklabs-mountvacation-mcp-dev"
-vars = { NODE_ENV = "development", LOG_LEVEL = "debug" }
