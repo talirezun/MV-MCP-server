@@ -1,6 +1,6 @@
-# 🏔️ MountVacation MCP Server
+# 🏔️ MV Travel MCP Server
 
-A production-ready Model Context Protocol (MCP) server that provides AI assistants with intelligent access to MountVacation's accommodation booking API, specializing in year-round mountain vacations across Europe, spa & terme holidays in Slovenia, and extensive Croatia coverage.
+A production-ready Model Context Protocol (MCP) server that provides AI assistants with intelligent access to [MV Travel](https://mv-travel.com/)'s (formerly MountVacation) accommodation booking API, specializing in year-round mountain vacations across Europe, spa & terme holidays in Slovenia, and extensive Croatia coverage.
 
 ## Watch the Demo Video
 
@@ -50,8 +50,8 @@ All configuration is done through your MCP client's config file - no additional 
 curl -o mountvacation-mcp-server.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js
 ```
 
-### **2. Get Your MountVacation API Key**
-[Get your API key here](#-get-your-mountvacation-api-key) (see section below for details)
+### **2. Get Your MV Travel API Key**
+[Get your API key here](#-get-your-mv-travel-api-key) (see section below for details)
 
 ### **3. Configure Your MCP Client**
 Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
@@ -96,7 +96,7 @@ The server uses direct IP connection to Cloudflare Workers, ensuring reliable op
 
 ### **📋 Prerequisites**
 - Node.js (version 14 or higher)
-- Your MountVacation API key
+- Your MV Travel API key
 
 ### **📥 Download Server File (All Platforms)**
 
@@ -157,7 +157,7 @@ Additional MCP client testing is ongoing. The server follows MCP protocol standa
    - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
    - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
    - **Linux**: `~/.config/Claude/claude_desktop_config.json`
-3. Add the MountVacation server configuration (see above)
+3. Add the MV Travel server configuration (see above)
 4. Restart Claude Desktop
 
 ### **🧠 LM Studio**
@@ -265,7 +265,7 @@ Try asking your AI assistant:
 ## 📄 **Pagination Support**
 
 ### **🚀 NEW: Complete Results Collection**
-The MountVacation API uses pagination to handle large result sets efficiently. Our MCP server now provides three strategies:
+The MV Travel API uses pagination to handle large result sets efficiently. Our MCP server now provides three strategies:
 
 #### **Strategy 1: Quick Search** (`search_accommodations`)
 - Returns first batch (20-30 results) for fast response
@@ -275,7 +275,7 @@ The MountVacation API uses pagination to handle large result sets efficiently. O
 #### **Strategy 2: Complete Collection** (`search_accommodations_complete`)
 - Automatically follows all pagination links
 - Collects up to 200 total results across multiple pages
-- Equivalent to browsing all pages on mountvacation.com
+- Equivalent to browsing all pages on [mv-travel.com](https://mv-travel.com/)
 - Configurable limits for performance
 
 #### **Strategy 3: Progressive Loading** (`load_more_accommodations`)
@@ -324,20 +324,20 @@ load_more_accommodations({
 
 ---
 
-## 🔑 **Get Your MountVacation API Key**
+## 🔑 **Get Your MV Travel API Key**
 
-To use this MCP server, you need a valid MountVacation API key:
+To use this MCP server, you need a valid MV Travel API key:
 
 ### **📝 How to Obtain Your API Key**
-1. **Visit MountVacation.si** - [Get your API key here](https://www.mountvacation.si/) *(Link will be added manually)*
-2. **Register or Login** to your MountVacation account
+1. **Visit MV Travel** - [mv-travel.com](https://mv-travel.com/)
+2. **Register or Login** to your MV Travel account
 3. **Navigate to API section** in your account dashboard
 4. **Generate your API key** - You'll receive a 64-character key
 5. **Copy the key** and use it in your MCP client configuration
 
 ### **🔒 Security Note**
 - Keep your API key secure and never share it publicly
-- The API key provides access to MountVacation's booking system
+- The API key provides access to MV Travel's booking system
 - Each key is tied to your account for billing and usage tracking
 
 ### **⚙️ Configuration**
@@ -351,7 +351,7 @@ Use your API key in any of the provided configuration files:
 
 ## 🎥 **Video Demonstration**
 
-Watch our comprehensive video guide showing the MountVacation MCP Server in action:
+Watch our comprehensive video guide showing the MV Travel MCP Server in action:
 
 ### **📺 Setup and Usage Tutorial**
 *[Video link will be added here manually]*
@@ -438,9 +438,17 @@ MIT License - See LICENSE file for details.
 
 ---
 
+## 👤 **Author**
+
+**[Dr. Tali Režun](https://talirezun.com/)** builds software with AI agents and teaches leaders and developers to do the same. He is Vice Dean of Frontier Technologies at COTRUGLI Business School, a serial entrepreneur for 30 years, the builder of The Curator, Agent Link and Lumina, and the author of *From Lab to Life*.
+
+🌐 [talirezun.com](https://talirezun.com/)
+
+---
+
 ## 🔗 **Production Deployment**
 
-**Current Production URL**: `https://blocklabs-mountvacation-mcp-production.4thtech.workers.dev`
+**Current Production URL**: `https://mountvacation-mcp-final.4thtech.workers.dev`
 
 **Status**: ✅ Active and Stable
 - **Platform**: Cloudflare Workers (Free Tier)
@@ -449,7 +457,7 @@ MIT License - See LICENSE file for details.
 - **Cloudflare Worker Version**: v2.1.0 (cross-border validation, 150+ verified location mappings)
 - **MCP Server Version**: v3.3.0 (Claude Desktop compatible)
 
-This is the latest stable deployment of the MountVacation MCP server on Cloudflare Workers. The server uses direct IP connection for maximum reliability.
+This is the latest stable deployment of the MV Travel MCP server on Cloudflare Workers. The server uses direct IP connection for maximum reliability.
 
 ---
 
@@ -460,7 +468,7 @@ This MCP server is experimental software provided "as is" without any warranties
 
 ### **📋 Liability Limitations**
 - **Code Author**: The author of this code is not liable for any damages, issues, or problems arising from the use of this software
-- **MountVacation**: MountVacation.si is not liable for any issues related to this third-party integration
+- **MV Travel**: [MV Travel](https://mv-travel.com/) is not liable for any issues related to this third-party integration
 - **No Warranty**: This software is provided without warranty of any kind, express or implied
 - **Use at Own Risk**: Users assume all risks associated with using this experimental software
 
