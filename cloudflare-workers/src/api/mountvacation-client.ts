@@ -315,6 +315,36 @@ const LOCATION_MAPPINGS: Record<string, LocationMapping> = {
   'lago di garda': { resort: 4 },
 };
 
+// Keys that name a country, broad area or generic search phrase must never match by substring
+const GENERIC_KEY_PATTERN = /^(austria|austrian|switzerland|swiss|france|french|italy|italian|slovenia|slovenian|croatia|croatian|germany|german|bosnia|bosnian|europe|european|ski|skiing|alps|alpine|mountain|lake)\b|\b(ski|skiing|alps|dolomites|dolomiti|coast|sea|beach|resorts?|vacation)$/;
+
+function foldLocationKey(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.\-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+let foldedLocationIndex: Map<string, { mapping: LocationMapping; generic: boolean }> | null = null;
+
+function getFoldedLocationIndex() {
+  if (!foldedLocationIndex) {
+    foldedLocationIndex = new Map();
+    for (const [key, mapping] of Object.entries(LOCATION_MAPPINGS)) {
+      const folded = foldLocationKey(key);
+      // Region/skiarea-only mappings are broad areas, not places
+      const generic = (!mapping.resort && !mapping.city) || GENERIC_KEY_PATTERN.test(folded);
+      if (!foldedLocationIndex.has(folded)) {
+        foldedLocationIndex.set(folded, { mapping, generic });
+      }
+    }
+  }
+  return foldedLocationIndex;
+}
+
 export class MountVacationClient {
   private baseUrl = 'https://api.mountvacation.com';
   private searchEndpoint = '/accommodations/search';
@@ -322,6 +352,10 @@ export class MountVacationClient {
   private logger: Logger;
   private apiKey: string;
   private idMappingManager: IdMappingManager;
+  // Per-search counters so "API failed" is not reported as "no availability"
+  // `rejected` = the API answered but refused that query (400/404/422), so it is reachable
+  private apiOutcomes = { ok: 0, rejected: 0, failed: 0, authFailed: 0 };
+  private personsCount = 0;
 
   constructor(env: Env, logger: Logger, userApiKey: string) {
     this.timeout = parseInt(env.API_TIMEOUT_SECONDS) * 1000;
@@ -372,6 +406,8 @@ export class MountVacationClient {
       finalDepartureDate = arrivalDate.toISOString().split('T')[0];
     }
 
+    this.apiOutcomes = { ok: 0, rejected: 0, failed: 0, authFailed: 0 };
+
     // Validate dates
     const dateValidation = this.validateDates(arrival_date, finalDepartureDate!);
     if (dateValidation.error) {
@@ -384,6 +420,8 @@ export class MountVacationClient {
       // Convert persons count to ages (assume all adults age 30)
       finalPersonsAges = Array(persons).fill(30).join(',');
     }
+
+    this.personsCount = finalPersonsAges ? finalPersonsAges.split(',').filter(a => a.trim() !== '').length : 0;
 
     // Base search parameters
     const baseParams: Record<string, string> = {
@@ -444,6 +482,7 @@ export class MountVacationClient {
         // Use mapped location data with enhanced strategy handling
         const searchStrategies = this.buildSearchStrategies(baseParams, locationMapping, location);
         const normalizedLocation = location.toLowerCase();
+        let staticResultsRejected = false;
 
         // For Alpbachtal, try to combine results from multiple strategies
         if (normalizedLocation.includes('alpbach')) {
@@ -502,7 +541,7 @@ export class MountVacationClient {
                 arrival_date: baseParams.arrival || '',
                 departure_date: baseParams.departure || '',
                 nights: 0,
-                persons_count: 0,
+                persons_count: this.personsCount,
                 total_found: allResults.length,
                 currency: baseParams.currency || 'EUR'
               },
@@ -527,8 +566,7 @@ export class MountVacationClient {
 
                 // Only trust resort/city IDs without validation (they are specific to one location).
                 // Skiarea and region can span multiple countries/resorts, so they still need validation.
-                const isTrustedIdStrategy = strategy.name.includes('resort') ||
-                  strategy.name.includes('city');
+                const isTrustedIdStrategy = this.isTrustedIdStrategy(strategy.name);
 
                 if (isTrustedIdStrategy || this.validateLocationMatch(formatted, location)) {
                   this.logger.info('Search successful with static mapping', {
@@ -546,6 +584,7 @@ export class MountVacationClient {
                     results_count: formatted.accommodations?.length || 0,
                   });
                   // Continue to next strategy instead of returning invalid results
+                  staticResultsRejected = true;
                 }
               }
             } catch (error) {
@@ -562,6 +601,12 @@ export class MountVacationClient {
         // Static mapping exists but all strategies returned 0 results.
         // This means the location is correctly identified but has no availability for these dates.
         // Return a clear message instead of falling through to fuzzy dynamic matching.
+        // If results came back but validation rejected them all, fall through to dynamic/fallback instead.
+        if (!staticResultsRejected) {
+        const upstreamError = this.getUpstreamFailure();
+        if (upstreamError) {
+          return upstreamError;
+        }
         this.logger.info('Static mapping found but no availability for requested dates', {
           location: location,
           mapping: locationMapping,
@@ -572,16 +617,20 @@ export class MountVacationClient {
             arrival_date: baseParams.arrival || '',
             departure_date: baseParams.departure || '',
             nights: 0,
-            persons_count: 0,
+            persons_count: this.personsCount,
             total_found: 0,
             currency: baseParams.currency || 'EUR',
           },
           accommodations: [],
           timestamp: new Date().toISOString(),
         };
+        }
+        this.logger.warn('Static mapping results all rejected by validation, falling through to dynamic mapping', {
+          location: location,
+        });
       }
 
-      // Try dynamic ID mapping if no static mapping exists
+      // Try dynamic ID mapping if no static mapping exists (or static results were rejected)
       try {
         this.logger.info(`[MountVacationClient] Attempting dynamic ID mapping for: "${location}"`);
         const locationMatches = await this.idMappingManager.resolveLocation(location, env);
@@ -607,10 +656,10 @@ export class MountVacationClient {
                 if (result && !(result as any).error && result.accommodations && result.accommodations.length > 0) {
                   const formatted = this.formatResults(result, max_results);
 
-                  // Only trust resort/city IDs without validation (specific to one location).
+                  // Only trust resort/city IDs without validation (specific to one location), and only
+                  // for a near-exact name match: fuzzy matches ("zagreb" ~ "zadar") must be validated.
                   // Skiarea and region can span multiple countries, so they still need validation.
-                  const isTrustedIdStrategy = strategy.name.includes('resort') ||
-                    strategy.name.includes('city');
+                  const isTrustedIdStrategy = this.isTrustedIdStrategy(strategy.name) && match.confidence >= 0.9;
 
                   if (isTrustedIdStrategy || this.validateLocationMatch(formatted, location)) {
                     this.logger.info('Search successful with dynamic ID mapping', {
@@ -650,13 +699,17 @@ export class MountVacationClient {
                 match_type: match.type,
                 confidence: match.confidence,
               });
+              const upstreamError = this.getUpstreamFailure();
+              if (upstreamError) {
+                return upstreamError;
+              }
               return {
                 message: `No accommodations found in ${match.name} for the requested dates. This destination may have limited seasonal availability. Try different dates or a nearby area.`,
                 search_summary: {
                   arrival_date: baseParams.arrival || '',
                   departure_date: baseParams.departure || '',
                   nights: 0,
-                  persons_count: 0,
+                  persons_count: this.personsCount,
                   total_found: 0,
                   currency: baseParams.currency || 'EUR',
                 },
@@ -693,8 +746,7 @@ export class MountVacationClient {
             const formatted = this.formatResults(result, max_results);
 
             // Only trust resort/city IDs without validation (specific to one location).
-            const isTrustedIdStrategy = strategy.name.includes('resort') ||
-              strategy.name.includes('city');
+            const isTrustedIdStrategy = this.isTrustedIdStrategy(strategy.name);
 
             if (isTrustedIdStrategy || this.validateLocationMatch(formatted, location)) {
               this.logger.info('Search successful with fallback', {
@@ -724,6 +776,10 @@ export class MountVacationClient {
       }
 
       // If all strategies failed
+      const upstreamError = this.getUpstreamFailure();
+      if (upstreamError) {
+        return upstreamError;
+      }
       return {
         error: `No accommodations found for '${location}'. This location may not be available in our database.`,
         suggestions: [
@@ -777,7 +833,7 @@ export class MountVacationClient {
       try {
         this.logger.debug('Fetching additional page', {
           page: currentPage + 1,
-          url: nextPageUrl,
+          url: this.redactUrl(nextPageUrl),
           current_results: allAccommodations.length
         });
 
@@ -834,7 +890,7 @@ export class MountVacationClient {
    */
   async fetchNextPage(nextPageUrl: string, env: Env): Promise<SearchResult> {
     try {
-      this.logger.debug('Fetching next page', { url: nextPageUrl });
+      this.logger.debug('Fetching next page', { url: this.redactUrl(nextPageUrl) });
 
       // Parse the URL to add authentication if needed
       const url = new URL(nextPageUrl);
@@ -860,7 +916,7 @@ export class MountVacationClient {
       const data = await response.json();
 
       this.logger.info('Next page fetched successfully', {
-        url: nextPageUrl,
+        url: this.redactUrl(nextPageUrl),
         results_count: data.accommodations?.length || 0,
         has_more: !!data.links?.next
       });
@@ -869,7 +925,7 @@ export class MountVacationClient {
 
     } catch (error) {
       this.logger.error('Failed to fetch next page', {
-        url: nextPageUrl,
+        url: this.redactUrl(nextPageUrl),
         error: error instanceof Error ? error.message : String(error)
       });
 
@@ -922,20 +978,59 @@ export class MountVacationClient {
   }
 
   /**
+   * Trusted = resort/city ID searches (specific to one location). Skiarea, region, country
+   * and geolocation strategies can span borders, so they still need validation.
+   */
+  private isTrustedIdStrategy(strategyName: string): boolean {
+    return /^(resort|city)/.test(strategyName);
+  }
+
+  /**
+   * Error to return when no API call succeeded (auth rejected / upstream failure),
+   * or null when at least one call succeeded (so "no availability" is genuine).
+   */
+  private getUpstreamFailure(): SearchResult | null {
+    const { ok, rejected, failed, authFailed } = this.apiOutcomes;
+    if (ok + rejected > 0 || failed === 0) {
+      return null;
+    }
+    if (authFailed === failed) {
+      return {
+        error: 'The MV Travel API key was rejected (authentication failed). Please check that your API key is valid and has the required permissions.',
+        timestamp: new Date().toISOString(),
+      };
+    }
+    return {
+      error: 'The MV Travel API request failed (upstream error, rate limit or timeout), so availability could not be determined. Please try again later.',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
    * Find location mapping for a given location string
+   * Exact match on the full string, then on the part before the first comma ("Katschberg, Austria").
+   * Partial (word-boundary) matching is limited to specific place keys on the primary part;
+   * country/area-level keys only match when they ARE the input.
    */
   private findLocationMapping(location: string): LocationMapping | null {
-    const normalizedLocation = location.toLowerCase().trim();
+    const full = foldLocationKey(location);
+    const primary = foldLocationKey(location.split(',')[0] ?? '');
+    const index = getFoldedLocationIndex();
 
-    // Direct match
-    if (LOCATION_MAPPINGS[normalizedLocation]) {
-      return LOCATION_MAPPINGS[normalizedLocation];
+    // Exact match (full string, then primary part)
+    const exact = index.get(full) || index.get(primary);
+    if (exact) {
+      return exact.mapping;
     }
 
-    // Partial match - check if location contains any mapped location
-    for (const [mappedLocation, mapping] of Object.entries(LOCATION_MAPPINGS)) {
-      if (normalizedLocation.includes(mappedLocation) || mappedLocation.includes(normalizedLocation)) {
-        return mapping;
+    // Partial match - primary part only, min 4 chars, whole words, specific (non-generic) keys only
+    if (primary.length < 4) {
+      return null;
+    }
+    for (const [key, entry] of index) {
+      if (entry.generic) continue;
+      if (new RegExp(`(^|\\s)${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`).test(primary)) {
+        return entry.mapping;
       }
     }
 
@@ -943,8 +1038,8 @@ export class MountVacationClient {
   }
 
   /**
-   * Validate that search results match the requested location
-   * This prevents returning results from completely different locations
+   * Validate that search results match the requested location, filtering `results.accommodations`
+   * down to the matching ones. Returns false when none match.
    */
   private validateLocationMatch(results: any, requestedLocation: string): boolean {
     if (!results?.accommodations || results.accommodations.length === 0) {
@@ -992,8 +1087,9 @@ export class MountVacationClient {
       }
     }
 
-    // Check if any accommodation matches at least one validation keyword
-    for (const accommodation of results.accommodations) {
+    // Keep only the accommodations that match at least one validation keyword, so a
+    // multi-country skiarea/region (e.g. Via Lattea) can never mix in another country's results
+    const matching = results.accommodations.filter((accommodation: any) => {
       const locationText = [
         accommodation.location?.city,
         accommodation.location?.country,
@@ -1001,16 +1097,24 @@ export class MountVacationClient {
         accommodation.location?.region,
         accommodation.location?.full_address,
         accommodation.name
-      ].filter(Boolean).join(' ').toLowerCase();
+      ].filter(Boolean).join(' ');
+      const foldedLocationText = foldLocationKey(locationText);
 
       // Check if any validation keyword is found in the accommodation location
+      // (diacritic-insensitive, so "porec" matches "Poreč")
       const hasMatch = validationKeywords.some(keyword =>
-        locationText.includes(keyword.toLowerCase())
+        foldedLocationText.includes(foldLocationKey(keyword))
       );
 
-      if (hasMatch) {
-        return true; // At least one accommodation matches
+      return hasMatch;
+    });
+
+    if (matching.length > 0) {
+      if (matching.length < results.accommodations.length) {
+        this.logger.info(`Location validation dropped ${results.accommodations.length - matching.length} non-matching results for '${requestedLocation}'`);
+        results.accommodations = matching;
       }
+      return true;
     }
 
     // No accommodations match the requested location
@@ -1988,6 +2092,17 @@ export class MountVacationClient {
   }
 
   /**
+   * URL string safe for logging (apiKey value replaced)
+   */
+  private redactUrl(url: URL | string): string {
+    const copy = new URL(url.toString());
+    if (copy.searchParams.has('apiKey')) {
+      copy.searchParams.set('apiKey', '[redacted]');
+    }
+    return copy.toString();
+  }
+
+  /**
    * Make API request with error handling and retries
    */
   private async makeApiRequest(params: Record<string, string>, env: Env): Promise<APIResponse | SearchResult> {
@@ -2014,11 +2129,10 @@ export class MountVacationClient {
     try {
       // DEBUG: Log detailed request info
       this.logger.info('Making API request', {
-        url: url.toString(),
+        url: this.redactUrl(url),
         timeout_ms: this.timeout,
-        params: Object.fromEntries(url.searchParams),
+        params: Object.fromEntries(new URL(this.redactUrl(url)).searchParams),
         api_key_length: this.apiKey.length,
-        api_key_prefix: this.apiKey.substring(0, 8) + '...',
       });
 
       const startTime = Date.now();
@@ -2032,6 +2146,7 @@ export class MountVacationClient {
       });
 
       if (response.ok) {
+        this.apiOutcomes.ok++;
         const data = await response.json() as APIResponse;
 
         // DEBUG: Log the actual API response
@@ -2071,6 +2186,14 @@ export class MountVacationClient {
    * Handle API error responses
    */
   private async handleApiError(response: Response): Promise<SearchResult> {
+    if (response.status === 400 || response.status === 404 || response.status === 422) {
+      this.apiOutcomes.rejected++;
+    } else {
+      this.apiOutcomes.failed++;
+      if (response.status === 401 || response.status === 403) {
+        this.apiOutcomes.authFailed++;
+      }
+    }
     let errorMessage = `API request failed with status ${response.status}`;
     
     try {
@@ -2111,6 +2234,7 @@ export class MountVacationClient {
    * Handle request errors (network, timeout, etc.)
    */
   private handleRequestError(error: unknown): SearchResult {
+    this.apiOutcomes.failed++;
     let errorMessage = 'Request failed';
     
     if (error instanceof Error) {
@@ -2201,7 +2325,7 @@ export class MountVacationClient {
           arrival_date: data.arrival || '',
           departure_date: data.departure || '',
           nights: data.nights || 0,
-          persons_count: data.personsAges?.length || 0,
+          persons_count: data.personsAges?.length || this.personsCount,
           total_found: 0,
           currency: data.currency || 'EUR',
         },
@@ -2328,7 +2452,7 @@ export class MountVacationClient {
         arrival_date: data.arrival || '',
         departure_date: data.departure || '',
         nights: data.nights || 0,
-        persons_count: data.personsAges?.length || 0,
+        persons_count: data.personsAges?.length || this.personsCount,
         total_found: formattedAccommodations.length,
         currency: data.currency || 'EUR',
       },

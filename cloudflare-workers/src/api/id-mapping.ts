@@ -75,6 +75,26 @@ export interface LocationMatch {
 }
 
 /**
+ * The API returns some titles as plain strings and others as per-language objects ({ en: "..." })
+ */
+function titleText(title: unknown): string {
+  if (typeof title === 'string') return title;
+  if (title && typeof title === 'object') {
+    const titles = title as Record<string, unknown>;
+    const value = titles.en ?? Object.values(titles)[0];
+    return typeof value === 'string' ? value : '';
+  }
+  return '';
+}
+
+/**
+ * Lowercase and strip diacritics so "catez" matches "Čatež"
+ */
+function foldTitle(value: string): string {
+  return value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+}
+
+/**
  * ID Mapping Manager - handles fetching, caching, and resolving location IDs
  */
 export class IdMappingManager {
@@ -229,12 +249,12 @@ export class IdMappingManager {
 
     // Search cities
     for (const city of this.mappings.cities) {
-      const confidence = this.calculateStringMatch(primaryQuery, city.title.toLowerCase());
+      const confidence = this.calculateStringMatch(foldTitle(primaryQuery), foldTitle(titleText(city.title)));
       if (confidence > 0.3) {
         const cityMatch: LocationMatch = {
           type: 'city',
           id: city.id,
-          name: city.title,
+          name: titleText(city.title),
           confidence,
           countryCode: city.countryCode,
           parentResortId: city.resortID,
@@ -251,12 +271,12 @@ export class IdMappingManager {
 
     // Search resorts — include parent hierarchy IDs for cascading fallback
     for (const resort of this.mappings.resorts) {
-      const confidence = this.calculateStringMatch(primaryQuery, resort.title.toLowerCase());
+      const confidence = this.calculateStringMatch(foldTitle(primaryQuery), foldTitle(titleText(resort.title)));
       if (confidence > 0.3) {
         matches.push({
           type: 'resort',
           id: resort.id,
-          name: resort.title,
+          name: titleText(resort.title),
           confidence,
           countryCode: resort.countryCode,
           parentSkiAreaId: resort.skiareaID,
@@ -267,12 +287,12 @@ export class IdMappingManager {
 
     // Search ski areas
     for (const skiarea of this.mappings.skiareas) {
-      const confidence = this.calculateStringMatch(primaryQuery, skiarea.title.toLowerCase());
+      const confidence = this.calculateStringMatch(foldTitle(primaryQuery), foldTitle(titleText(skiarea.title)));
       if (confidence > 0.3) {
         matches.push({
           type: 'skiarea',
           id: skiarea.id,
-          name: skiarea.title,
+          name: titleText(skiarea.title),
           confidence
         });
       }

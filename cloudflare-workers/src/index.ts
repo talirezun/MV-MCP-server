@@ -55,7 +55,7 @@ export default {
         return new Response(JSON.stringify({
           status: 'healthy',
           timestamp: new Date().toISOString(),
-          version: '2.0.0',
+          version: '2.2.0',
         }), {
           headers: { 
             'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ export default {
       // Default response
       return new Response(JSON.stringify({
         name: 'MountVacation MCP Server',
-        version: '2.0.0',
+        version: '2.2.0',
         description: 'Comprehensive Model Context Protocol server for mountain vacation accommodations with property links, image galleries, and detailed facility information',
         endpoints: {
           mcp: '/mcp',
@@ -1017,8 +1017,8 @@ async function handleSearchAccommodations(
 
     const result = await apiClient.searchAccommodations(searchParams, env);
 
-    // Cache successful results
-    if (!result.error) {
+    // Cache only results with accommodations (never errors or empty/"no availability" responses)
+    if (!result.error && result.accommodations && result.accommodations.length > 0) {
       await cacheManager.set(cacheKey, result, env.CACHE);
     }
 
