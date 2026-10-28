@@ -42,7 +42,37 @@ All configuration is done through your MCP client's config file - no additional 
 
 ---
 
-## 🚀 **Quick Start**
+## ⚡ **One-Line Install (recommended)**
+
+You need [Node.js 18 or newer](https://nodejs.org) and your [MV Travel API key](#-get-your-mv-travel-api-key).
+
+**macOS / Linux**
+```bash
+curl -fsSL https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.sh | bash
+```
+
+**Windows (PowerShell)**
+```powershell
+irm https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.ps1 | iex
+```
+
+The installer:
+1. Asks for your API key (input is hidden) and checks it with MV Travel.
+2. Downloads the server to `~/.mv-travel-mcp/`.
+3. Finds the AI apps on your computer and lets you choose which ones to set up: Claude Desktop, Claude Code, Cursor, VS Code (Copilot), Windsurf, Cline, Roo Code, LM Studio, Kiro, Gemini CLI, Codex CLI, Antigravity, opencode and Zed.
+4. Adds an `mv-travel` entry to each one, after backing up the file and without touching your other servers.
+
+Then restart your app. Run the same command again to update, or add `--uninstall` to remove it:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.sh | bash -s -- --uninstall
+```
+
+Apps whose config can't be edited safely (Goose, Augment, or a config file containing comments) get the exact snippet to paste instead.
+
+---
+
+## 🚀 **Manual Install**
 
 ### **1. Download the Server File**
 ```bash

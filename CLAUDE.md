@@ -47,4 +47,5 @@ text is a document waiting to be asked for, not one that is missing.
 - Run a regression search set locally with `wrangler dev` before any deploy.
 - Roll back per Worker with `npx wrangler rollback <version-id> --name <worker>`.
 - Two production surfaces: the Cloudflare Workers (`cloudflare-workers/`) and the client scripts in `server-versions/`, which users download from `main` — so a push to `main` is a release.
+- The one-line installer (`install/`) is public the moment it lands on `main`. It pins the client scripts to a release tag + SHA-256 (`CLIENT_TAG`/`SHA256` in `install/install.js`): every client-script release must tag the new version and bump those constants, then run `bash install/test/run-tests.sh`. Test the installer only with a sandboxed `HOME`, never against real client configs.
 - Keep `mountvacation` identifiers (tool names, `MOUNTVACATION_API_KEY`, the `X-MountVacation-API-Key` header, script file names, the legacy Worker name) unchanged; only user-facing prose uses the "MV Travel" brand.

@@ -6,6 +6,22 @@ All notable changes to this project are documented in this file.
 
 ---
 
+## [Installer 1.0] — 2026-10-28
+
+### ⚡ New: one-line install
+
+- `curl -fsSL https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.sh | bash` (macOS/Linux) or `irm https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.ps1 | iex` (Windows).
+- Asks for the API key (hidden input) and checks it with MV Travel before changing anything.
+- Downloads the client script into `~/.mv-travel-mcp/`, pinned to release tag `client-v3.5.0` and verified by SHA-256.
+- Detects installed AI apps and registers an `mv-travel` entry in each one the user picks:
+  - through the app's own CLI for Claude Code, Codex CLI, Gemini CLI and VS Code;
+  - by merging the JSON config for Claude Desktop, Cursor, Windsurf, Cline, Roo Code, LM Studio, Kiro, Antigravity, opencode and Zed.
+- Backs up each file and keeps other servers.
+- Config files it can't safely edit (comments, YAML) get a paste-ready snippet instead.
+- Re-run to update; `--uninstall` removes it. `--dry-run`, `--yes`, `--clients` and `MV_TRAVEL_API_KEY` are supported for scripted setups.
+
+---
+
 ## [2.2.0] — 2026-10-28
 
 ### 🐛 Fixed: Location Resolution, Cross-Border Safety and Error Reporting
