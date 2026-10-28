@@ -1,6 +1,6 @@
 # MV Travel MCP — Architecture
 
-Updated 2026-10-28 (Worker v2.2.0, client script v3.5.0). Fuller narrative: `docs/PROJECT-ARCHITECTURE.md` in the repo.
+Updated 2026-10-28 (Worker v2.2.0, client script v3.5.0, installer 1.0). Fuller narrative: `docs/PROJECT-ARCHITECTURE.md` in the repo.
 
 ## Shape
 
@@ -33,12 +33,18 @@ MV Travel API  api.mountvacation.com  (apiKey query param)
 ## Components
 
 - **Client scripts** in `server-versions/`: `mountvacation-mcp-server.js` (standard), `-cline.js`, `-v2.js`. Plain Node with no dependencies, downloaded from `raw.githubusercontent.com/.../main/server-versions/`, so **`main` is the release channel**. The serverInfo name is `mv-travel-mcp-server` (v3.5.0).
+- **One-line installer** in `install/`: `install.sh` (curl | bash), `install.ps1` (irm | iex) and `install.js` (Node, no deps).
+  - Validates the key against the Worker (no redirects).
+  - Downloads the client script pinned to `CLIENT_TAG` + `SHA256` (bump these on every client release).
+  - Registers `mv-travel` through the app CLI (Claude Code, Codex, Gemini, VS Code on mac/linux) or a strict-JSON merge (Claude Desktop, Cursor, Windsurf/Devin, Cline, Roo, LM Studio, Kiro, Antigravity, opencode, Zed, VS Code on Windows), with backup, atomic 0600 write and symlink-safe handling.
+  - Replaces an old `mountvacation` entry.
+  - Sandboxed tests: `bash install/test/run-tests.sh`. Windows has not yet been run on a real machine.
 - **Worker source**:
   - `src/index.ts`: HTTP and MCP handler, tool dispatch, the cache guard.
   - `src/api/mountvacation-client.ts`: API client, search strategies, validation, upstream-error accounting, key redaction.
   - `src/api/id-mapping.ts`: dynamic ID mapping against `/countries /regions /cities /resorts /skiareas`.
   - `src/utils/`: cache (no KV bound, so effectively off), logger, rate limiter.
-- No automated tests. The regression check is a scripted set of location searches run against a local `wrangler dev` before deploy, then against production after.
+- No automated Worker tests. The regression check is a scripted set of location searches run against a local `wrangler dev` before deploy, then against production after.
 
 ## Tools (10)
 

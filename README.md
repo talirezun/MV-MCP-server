@@ -2,6 +2,51 @@
 
 A Model Context Protocol (MCP) server that provides AI assistants with intelligent access to [MV Travel](https://mv-travel.com/)'s (formerly MountVacation) accommodation booking API, specializing in year-round mountain vacations across Europe, spa & terme holidays in Slovenia, and extensive Croatia coverage.
 
+## 🚀 **Install (about 1 minute)**
+
+**Before you start you need:**
+- **Node.js 18 or newer**: download the LTS version from [nodejs.org](https://nodejs.org) if you don't have it.
+- **Your MV Travel API key**: see [how to get one](#-get-your-mv-travel-api-key).
+
+**Step 1. Run one command**
+
+On **Mac or Linux**, open Terminal and paste:
+```bash
+curl -fsSL https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.sh | bash
+```
+
+On **Windows**, open PowerShell and paste:
+```powershell
+irm https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.ps1 | iex
+```
+
+**Step 2. Paste your API key** when asked. It stays hidden while you type, and the installer checks it with MV Travel.
+
+**Step 3. Choose your apps.** The installer lists the AI apps it found on your computer. Press **Enter** to set up all of them.
+
+**Step 4. Restart your AI app.** For Claude Desktop, fully quit it (Cmd+Q on Mac, or File → Exit on Windows) and open it again.
+
+That's it. Try asking: *"Find a ski apartment in Kitzbühel for 2 adults, 7 nights in February."*
+
+### Already using the old MountVacation version?
+Run the same command. It replaces the old `mountvacation` entry with the new `mv-travel` one. Nothing else changes, and your other MCP servers are left alone.
+
+### Update or remove
+- **Update:** run the same command again.
+- **Remove (Mac/Linux):** `curl -fsSL https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.sh | bash -s -- --uninstall`
+- **Remove (Windows):** `$env:MV_TRAVEL_ARGS='--uninstall'; irm https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.ps1 | iex`
+
+### Works with
+Claude Desktop, Claude Code, Cursor, VS Code (GitHub Copilot), Windsurf, Cline, Roo Code, LM Studio, Kiro, Gemini CLI, Codex CLI, Antigravity, opencode and Zed. For any other app, or a config file it can't safely edit, the installer prints the exact text to paste instead.
+
+### If something goes wrong
+- **"needs Node.js 18 or newer":** install Node.js from [nodejs.org](https://nodejs.org), close and reopen the terminal, then run the command again.
+- **"That API key was rejected":** copy the key again from your MV Travel account and make sure there are no extra spaces.
+- **The app doesn't show MV Travel:** fully quit and reopen the app. If it still doesn't appear, run the command again and check the summary at the end.
+- Every config file is backed up before it's changed (`*.mv-travel-backup-*` next to the file).
+
+---
+
 ## Watch the Demo Video
 
 Click the thumbnail below to watch the video:
@@ -21,190 +66,6 @@ Click the thumbnail below to watch the video:
 - 📄 **Complete Pagination**: Advanced API batching for comprehensive results
 - 🔄 **Universal Compatibility**: Tested with LM Studio (gpt-oss 20B), Claude Desktop App, Augment Code, Cline.bot
 - 🧠 **Intelligent Search**: Comma-separated location parsing, resort/region ID-based search, destination prioritization
-
----
-
-## 🏗️ **Server Architecture**
-
-### **📥 Simple Installation**
-Users only need to download a single JavaScript file - no repository cloning required!
-
-### **📁 Available Server Files**
-- **`mountvacation-mcp-server.js`** - Standard MCP server for most clients (Claude Desktop, LM Studio, Augment Code)
-- **`mountvacation-mcp-server-cline.js`** - Optimized version for Cline.bot within VS Code
-
-### **🔗 Direct Download Links**
-- **Standard**: https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js
-- **Cline Version**: https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server-cline.js
-
-### **⚙️ Configuration**
-All configuration is done through your MCP client's config file - no additional setup files needed!
-
----
-
-## ⚡ **One-Line Install (recommended)**
-
-You need [Node.js 18 or newer](https://nodejs.org) and your [MV Travel API key](#-get-your-mv-travel-api-key).
-
-**macOS / Linux**
-```bash
-curl -fsSL https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.sh | bash
-```
-
-**Windows (PowerShell)**
-```powershell
-irm https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.ps1 | iex
-```
-
-The installer:
-1. Asks for your API key (input is hidden) and checks it with MV Travel.
-2. Downloads the server to `~/.mv-travel-mcp/`.
-3. Finds the AI apps on your computer and lets you choose which ones to set up: Claude Desktop, Claude Code, Cursor, VS Code (Copilot), Windsurf, Cline, Roo Code, LM Studio, Kiro, Gemini CLI, Codex CLI, Antigravity, opencode and Zed.
-4. Adds an `mv-travel` entry to each one, after backing up the file and without touching your other servers.
-
-Then restart your app. Run the same command again to update, or add `--uninstall` to remove it:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/install/install.sh | bash -s -- --uninstall
-```
-
-Apps whose config can't be edited safely (Goose, Augment, or a config file containing comments) get the exact snippet to paste instead.
-
----
-
-## 🚀 **Manual Install**
-
-### **1. Download the Server File**
-```bash
-# Download the MCP server file
-curl -o mountvacation-mcp-server.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js
-```
-
-### **2. Get Your MV Travel API Key**
-[Get your API key here](#-get-your-mv-travel-api-key) (see section below for details)
-
-### **3. Configure Your MCP Client**
-Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
-
-```json
-{
-  "mcpServers": {
-    "mv-travel": {
-      "command": "node",
-      "args": ["/absolute/path/to/mountvacation-mcp-server.js"],
-      "env": {
-        "MOUNTVACATION_API_KEY": "your-api-key-here"
-      }
-    }
-  }
-}
-```
-
-Use the full path to where you saved the file. A relative path is resolved from the client's working directory, not the download folder.
-
-> **Already installed under the old name `mountvacation`?** Nothing to change. The entry name is just a label, and existing setups keep working. Rename it to `mv-travel` only if you want the new name to show in your client.
-
-### **4. Restart Your MCP Client**
-The server will be available with 10 comprehensive accommodation search tools including advanced pagination support.
-
----
-
-## 🔧 **Reliability & DNS Resolution**
-
-The server runs on Cloudflare Workers. The client connects to Cloudflare by IP address with the correct Host header, so local DNS overrides do not interfere.
-
----
-
-## 💻 **Installation Instructions**
-
-### **📋 Prerequisites**
-- Node.js (version 18 or higher)
-- Your MV Travel API key
-
-### **📥 Download Server File (All Platforms)**
-
-**Option 1: Direct Download**
-```bash
-# Using curl (macOS/Linux)
-curl -o mountvacation-mcp-server.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js
-
-# Using PowerShell (Windows)
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js" -OutFile "mountvacation-mcp-server.js"
-```
-
-**Option 2: Browser Download**
-Visit: https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js
-Right-click → Save As → `mountvacation-mcp-server.js`
-
-### **⚙️ Configure Your MCP Client**
-
-Add this configuration to your MCP client's config file:
-
-```json
-{
-  "mcpServers": {
-    "mv-travel": {
-      "command": "node",
-      "args": ["/absolute/path/to/mountvacation-mcp-server.js"],
-      "env": {
-        "MOUNTVACATION_API_KEY": "your-api-key-here"
-      }
-    }
-  }
-}
-```
-
-> **Updating from an older version:** No action is needed. Existing installs call the legacy Worker address, which runs the latest Worker code, so fixes are picked up automatically. Re-downloading the script (v3.5.0) is optional and only changes the server name and address. Renaming your config entry from `mountvacation` to `mv-travel` is also optional.
-
-**Common config file locations:**
-- **Claude Desktop (macOS)**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Claude Desktop (Windows)**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **Claude Desktop (Linux)**: `~/.config/Claude/claude_desktop_config.json`
-
-## 🔄 **MCP Client Compatibility**
-
-### **✅ Tested and Working**
-- **🧠 LM Studio** - tested with gpt-oss 20B
-- **🤖 Claude Desktop App** - Full compatibility
-- **⚡ Augment Code** - Native integration support
-- **🔧 Cline.bot** - VS Code extension (use cline-specific server version)
-
-### **🔜 More Clients Testing**
-Additional MCP client testing is ongoing. The server follows MCP protocol standards for universal compatibility.
-
----
-
-## 📱 **Client-Specific Instructions**
-
-### **🤖 Claude Desktop**
-1. Download `mountvacation-mcp-server.js` to your preferred folder
-2. Edit your Claude Desktop config file:
-   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-   - **Linux**: `~/.config/Claude/claude_desktop_config.json`
-3. Add the MV Travel server configuration (see above)
-4. Restart Claude Desktop
-
-### **🧠 LM Studio**
-1. Download `mountvacation-mcp-server.js` to your LM Studio folder
-2. Add to your LM Studio MCP configuration
-3. Set the `MOUNTVACATION_API_KEY` environment variable
-4. Restart LM Studio
-
-### **⚡ Augment Code**
-1. Download `mountvacation-mcp-server.js` to your project folder
-2. Use the "Edit MCP Server" option in Augment
-3. Set command: `node` and args: the full path to the file
-4. Add `MOUNTVACATION_API_KEY` environment variable
-5. Save and restart
-
-### **🔧 Cline.bot (VS Code)**
-1. Download the Cline-specific version:
-   ```bash
-   curl -o mountvacation-mcp-server-cline.js https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server-cline.js
-   ```
-2. Configure in VS Code Cline extension settings
-3. Set environment variable: `MOUNTVACATION_API_KEY=your-api-key-here`
 
 ---
 
@@ -353,19 +214,43 @@ To use this MCP server, you need a valid MV Travel API key:
 2. **Register or Login** to your MV Travel account
 3. **Navigate to API section** in your account dashboard
 4. **Generate your API key** - You'll receive an API key
-5. **Copy the key** and use it in your MCP client configuration
+5. **Copy the key** and paste it into the installer when it asks
 
 ### **🔒 Security Note**
 - Keep your API key secure and never share it publicly
 - The API key provides access to MV Travel's booking system
 - Each key is tied to your account for billing and usage tracking
 
-### **⚙️ Configuration**
-Use your API key in any of the provided configuration files:
-- **Generic**: `mcp-config.json`
-- **macOS/Linux**: `mcp-config-macos-linux.json`
-- **Windows**: `mcp-config-windows.json`
-- **Augment Code**: `mcp-config-for-augment.json`
+For a manual setup, sample configs are in [`mcp-configs/`](mcp-configs/).
+
+---
+
+## 🛠️ **Manual Install (advanced)**
+
+Use this only if you can't run the installer.
+
+1. Download [`mountvacation-mcp-server.js`](https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js). For Cline, use [`mountvacation-mcp-server-cline.js`](https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server-cline.js) instead.
+2. Add this to your app's MCP config. Use the **full path** to the downloaded file, because a relative path won't work:
+
+```json
+{
+  "mcpServers": {
+    "mv-travel": {
+      "command": "node",
+      "args": ["/absolute/path/to/mountvacation-mcp-server.js"],
+      "env": {
+        "MOUNTVACATION_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+   Claude Desktop's config file is at:
+   - **Mac:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+   - **Linux:** `~/.config/Claude/claude_desktop_config.json`
+3. Restart the app.
 
 ---
 

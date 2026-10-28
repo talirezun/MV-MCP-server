@@ -70,6 +70,7 @@ MV-MCP-server/
 ├── 📄 README.md                      # Project documentation
 ├── 📄 CLAUDE.md                      # Project context for Claude Code
 ├── 📄 .env.example                   # Example environment variables
+├── 📁 install/                       # One-line installer (install.sh, install.ps1, install.js, test/)
 ├── 📁 server-versions/               # Client scripts (what users download)
 │   ├── 📄 mountvacation-mcp-server.js        # Standard MCP server
 │   ├── 📄 mountvacation-mcp-server-cline.js  # Cline.bot version
@@ -124,7 +125,17 @@ MV-MCP-server/
   - Rate limiting and error handling
   - Trailing-slash-free API endpoint for reliable connectivity
 
-### **3. Tool Definitions**
+### **3. One-line installer (`install/`)**
+- `install.sh` (macOS/Linux, `curl … | bash`) and `install.ps1` (Windows, `irm … | iex`) check for Node.js 18+ and run `install.js`.
+- `install.js` (Node, no dependencies):
+  - checks the API key against the Worker;
+  - downloads the client script into `~/.mv-travel-mcp/`, pinned to a release tag and verified by SHA-256;
+  - detects installed AI apps and registers an `mv-travel` entry. It uses the app's own CLI for Claude Code, Codex, Gemini and VS Code, and a backed-up strict-JSON merge for the others. It replaces an old `mountvacation` entry.
+- Re-running it updates the install; `--uninstall` removes it.
+- Tests: `bash install/test/run-tests.sh` (sandboxed; never touches real configs).
+- **On every client-script release:** tag it and bump `CLIENT_TAG` / `SHA256` in `install/install.js`.
+
+### **4. Tool Definitions**
 1. `search_accommodations` - Main search with location intelligence
 2. `search_accommodations_complete` - Complete pagination support for comprehensive results
 3. `load_more_accommodations` - Manual pagination control for additional results
