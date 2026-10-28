@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "mountvacation": {
+    "mv-travel": {
       "command": "node",
       "args": ["%USERPROFILE%\\MV-MCP-server\\server-versions\\mountvacation-mcp-server.js"],
       "env": {

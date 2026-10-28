@@ -59,7 +59,7 @@ Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
 ```json
 {
   "mcpServers": {
-    "mountvacation": {
+    "mv-travel": {
       "command": "node",
       "args": ["./mountvacation-mcp-server.js"],
       "env": {
@@ -69,6 +69,8 @@ Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
   }
 }
 ```
+
+> **Already installed under the old name `mountvacation`?** Nothing to change. The entry name is just a label, and existing setups keep working. Rename it to `mv-travel` only if you want the new name to show in your client.
 
 ### **4. Restart Your MCP Client**
 The server will be available with 10 comprehensive accommodation search tools including advanced pagination support.
@@ -120,7 +122,7 @@ Add this configuration to your MCP client's config file:
 ```json
 {
   "mcpServers": {
-    "mountvacation": {
+    "mv-travel": {
       "command": "node",
       "args": ["./mountvacation-mcp-server.js"],
       "env": {

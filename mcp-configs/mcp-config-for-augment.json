@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "mountvacation": {
+    "mv-travel": {
       "command": "node",
       "args": ["/Users/talirezun/mountvacation-mcp-server-cline.js"],
       "env": {

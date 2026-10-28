@@ -269,7 +269,7 @@ User API Key → MCP Client → Local Server → Cloudflare Workers → MountVac
 ```json
 {
   "mcpServers": {
-    "mountvacation-v3-FIXED": {
+    "mv-travel": {
       "command": "node",
       "args": ["/Users/username/mountvacation-mcp-server.js"],
       "env": {
@@ -284,7 +284,7 @@ User API Key → MCP Client → Local Server → Cloudflare Workers → MountVac
 ```json
 {
   "mcpServers": {
-    "mountvacation": {
+    "mv-travel": {
       "command": "node",
       "args": ["./mountvacation-mcp-server.js"],
       "env": {
@@ -298,7 +298,7 @@ User API Key → MCP Client → Local Server → Cloudflare Workers → MountVac
 #### **LM Studio**
 ```json
 {
-  "name": "MountVacation MCP",
+  "name": "MV Travel MCP",
   "command": "node",
   "args": ["path/to/mountvacation-mcp-server.js"],
   "env": {
