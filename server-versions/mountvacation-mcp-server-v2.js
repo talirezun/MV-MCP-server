@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * MountVacation MCP Server v3.2
+ * MV Travel MCP Server v3.5 (formerly MountVacation)
  * FIXED: Claude Desktop MCP Protocol Compliance
  *
  * Resolves ZodError validation issues by:
@@ -23,7 +23,7 @@ class MountVacationMCPServer {
     if (!this.apiKey) {
       throw new Error('MOUNTVACATION_API_KEY environment variable is required. Please set your API key.');
     }
-    this.workerUrl = 'mountvacation-mcp-final.4thtech.workers.dev';
+    this.workerUrl = 'mv-travel-mcp.talirezun.com';
     this.workerIp = '188.114.96.3'; // Cloudflare IP for the worker
     this.tools = this.getToolDefinitions();
     // Use Google's DNS server to avoid local DNS caching issues
@@ -34,7 +34,7 @@ class MountVacationMCPServer {
     return [
       {
         name: 'search_accommodations',
-        description: 'Search for accommodations using the MountVacation API. Supports location-based search (city, resort, region names), specific accommodation IDs, resort IDs, city IDs, and geolocation-based search. Returns comprehensive accommodation details including pricing, amenities, pictures, distances, and booking information.',
+        description: 'Search for accommodations using the MV Travel API. Supports location-based search (city, resort, region names), specific accommodation IDs, resort IDs, city IDs, and geolocation-based search. Returns comprehensive accommodation details including pricing, amenities, pictures, distances, and booking information.',
         inputSchema: {
           type: 'object',
           additionalProperties: false,
@@ -391,7 +391,7 @@ class MountVacationMCPServer {
       },
       {
         name: 'search_accommodations_complete',
-        description: 'Search for accommodations with complete pagination support. Collects all available results by following pagination links from the MountVacation API. Use this when you need comprehensive results equivalent to browsing all pages on the website.',
+        description: 'Search for accommodations with complete pagination support. Collects all available results by following pagination links from the MV Travel API. Use this when you need comprehensive results equivalent to browsing all pages on the website.',
         inputSchema: {
           type: 'object',
           additionalProperties: false,
@@ -540,8 +540,8 @@ class MountVacationMCPServer {
                 tools: {}
               },
               serverInfo: {
-                name: 'mountvacation-mcp-server',
-                version: '3.3.0'
+                name: 'mv-travel-mcp-server',
+                version: '3.5.0'
               }
             }
           };

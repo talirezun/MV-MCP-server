@@ -6,7 +6,42 @@ All notable changes to this project are documented in this file.
 
 ---
 
+## [2.2.0] — 2026-10-28
+
+### 🐛 Fixed: Location Resolution, Cross-Border Safety and Error Reporting
+
+Deployed to both Cloudflare Workers (identical code): `mv-travel-mcp` (https://mv-travel-mcp.talirezun.com) and the legacy alias `mountvacation-mcp-final` (https://mountvacation-mcp-final.4thtech.workers.dev). This is the first release that ships the 2.1.0 location fix to users, together with fixes for regressions an audit found in it.
+
+- **Dynamic place lookup crash**: Searches that returned "not in our database" now work (e.g. Ischgl, Mayrhofen, Kitzbühel, Katschberg, Poreč, Terme Čatež). The cause was a crash in dynamic place lookup when the API returned per-language titles.
+- **"Town, Country" inputs**: Inputs such as "Flachau, Austria" now resolve to the town instead of a country-wide default.
+- **Cross-border safety**: Results from multi-country ski areas are filtered to the requested place (e.g. Sestriere never returns French Montgenèvre hotels).
+- **Authentication errors**: A rejected API key now returns a clear authentication error instead of "not found".
+- **No availability**: Destinations with no availability for the dates say so instead of "not in database".
+- **Logging**: API keys are redacted from Worker logs.
+- **Caching**: Only non-empty results are cached.
+- **Search summary**: `search_summary.persons_count` is populated.
+
+### 🔧 Deployment
+
+- `npm run deploy` in `cloudflare-workers` deploys both Workers: `wrangler deploy && wrangler deploy --env legacy`.
+- The legacy alias stays up permanently because client scripts up to v3.3.0 hardcode its hostname.
+- The unused `blocklabs-mountvacation-mcp-production` Worker was deleted; `wrangler.toml` no longer defines production/staging/development environments.
+
+### 📦 Client script 3.5.0
+
+- Calls `mv-travel-mcp.talirezun.com` and reports serverInfo name `mv-travel-mcp-server`. Still connects via Cloudflare IP 188.114.96.3 with the Host header.
+- File names, tool names and the `MOUNTVACATION_API_KEY` env var are unchanged.
+- No action needed for existing users: older scripts call the legacy alias, which runs v2.2.0. Re-downloading is optional and only changes the server name/address.
+
+### ⚠️ Known Limitation
+
+- Some town names not in the built-in list can resolve to a nearby town in the same country (e.g. "Zagreb, Croatia" returns Zadar-area results).
+
+---
+
 ## [2.1.0] — 2026-03-12
+
+> **Note:** This release was committed but deployed only to the unused `blocklabs-mountvacation-mcp-production` Worker, so it did not reach users until 2.2.0.
 
 ### 🐛 Fixed: Location Resolution Cross-Border Bug
 

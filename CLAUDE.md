@@ -41,6 +41,10 @@ text is a document waiting to be asked for, not one that is missing.
 
 - Orchestrate: do simple tasks directly; delegate real work to Haiku → Sonnet → Opus; complex audits may go to Fable.
 - Always audit before pushing anything to production.
-- Never `git push` to `main` or run `wrangler deploy` without the owner's explicit approval in the current session.
-- Two production surfaces: the Cloudflare Worker (`cloudflare-workers/`) and the client scripts in `server-versions/`, which users download from `main` — so a push to `main` is a release.
-- Keep `mountvacation` identifiers (tool names, `MOUNTVACATION_API_KEY`, file names, Worker names) unchanged; only user-facing prose uses the "MV Travel" brand.
+- Never `git push` to `main` or deploy a Worker without the owner's explicit approval in the current session.
+- Production = two Workers with identical code: `mv-travel-mcp` (mv-travel-mcp.talirezun.com) and the legacy alias `mountvacation-mcp-final`, which old client scripts hardcode and which must never be removed.
+- Deploy only with `npm run deploy` (in `cloudflare-workers/`), which deploys both Workers.
+- Run a regression search set locally with `wrangler dev` before any deploy.
+- Roll back per Worker with `npx wrangler rollback <version-id> --name <worker>`.
+- Two production surfaces: the Cloudflare Workers (`cloudflare-workers/`) and the client scripts in `server-versions/`, which users download from `main` — so a push to `main` is a release.
+- Keep `mountvacation` identifiers (tool names, `MOUNTVACATION_API_KEY`, the `X-MountVacation-API-Key` header, script file names, the legacy Worker name) unchanged; only user-facing prose uses the "MV Travel" brand.

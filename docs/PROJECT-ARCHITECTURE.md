@@ -1,6 +1,6 @@
 # 🏗️ MV Travel MCP Server - Project Architecture
 
-**Version**: 2.1.0 (Cloudflare Worker) / 3.3.0 (MCP Server)
+**Version**: 2.2.0 (Cloudflare Worker) / 3.5.0 (client script)
 **Last Updated**: 2026-10-28
 
 ## 📋 **Project Overview**
@@ -105,13 +105,13 @@ MV-MCP-server/
 
 ### **1. MCP Server (`server-versions/mountvacation-mcp-server.js`)**
 - **Protocol**: JSON-RPC 2.0 over stdio
-- **Version**: 3.3.0 (Protocol compliant, Claude Desktop compatible)
+- **Version**: 3.5.0 (Protocol compliant, Claude Desktop compatible)
 - **Tools**: 10 comprehensive accommodation search tools
 - **Architecture**: Purely reactive, protocol-compliant server
 
 ### **2. Cloudflare Worker (`cloudflare-workers/`)**
 - **Purpose**: API orchestration and intelligent routing
-- **Version**: 2.1.0
+- **Version**: 2.2.0
 - **Features**:
   - **150+ verified static location mappings** using resort/skiarea/region/city IDs
   - Dynamic ID mapping with fuzzy location matching
@@ -119,6 +119,8 @@ MV-MCP-server/
   - **Search strategy prioritization: resort → city → skiarea → region** (most specific first)
   - **Cross-border validation**: SkiArea/region results are validated against the search query to prevent mismatches (e.g., French results for Italian searches within multi-country ski areas)
   - **Early exit for high-confidence mappings**: Static mappings with high confidence return "no results" instead of falling back to incorrect broader searches
+  - Location results from skiarea/region searches are filtered to the requested place
+  - Auth failures and upstream errors are reported, not shown as "no results"
   - Rate limiting and error handling
   - Trailing-slash-free API endpoint for reliable connectivity
 
@@ -164,7 +166,7 @@ MV-MCP-server/
 1. **User Query** → MCP Client (Claude Desktop, etc.)
 2. **MCP Protocol** → JSON-RPC request to server
 3. **Server Processing** → Tool validation and routing
-4. **API Orchestration** → Cloudflare Worker processes request
+4. **API Orchestration** → Client calls `mv-travel-mcp.talirezun.com`; the Cloudflare Worker processes the request
 5. **Location Resolution** → ID mapping for optimal search
 6. **API Calls** → Multiple MV Travel API endpoints
 7. **Data Aggregation** → Results compilation and formatting
@@ -193,7 +195,10 @@ npm run deploy
 
 ### **Production Deployment**
 - **GitHub**: https://github.com/talirezun/MV-MCP-server
-- **Cloudflare Worker**: `mountvacation-mcp-final.4thtech.workers.dev`
+- **Cloudflare Workers** (identical code, v2.2.0):
+  - `mv-travel-mcp` → https://mv-travel-mcp.talirezun.com (custom domain, used by client v3.5.0)
+  - `mountvacation-mcp-final` → https://mountvacation-mcp-final.4thtech.workers.dev (legacy alias; stays up permanently because client scripts up to v3.3.0 hardcode this hostname)
+- **Deploy both**: `cd cloudflare-workers && npm run deploy` (runs `wrangler deploy && wrangler deploy --env legacy`)
 - **Download URL**: `https://raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/mountvacation-mcp-server.js`
 
 ### **Version Management**

@@ -124,6 +124,8 @@ Add this configuration to your MCP client's config file:
 }
 ```
 
+> **Updating from an older version:** No action is needed. Existing installs call the legacy Worker address, which runs the latest Worker code, so fixes are picked up automatically. Re-downloading the script (v3.5.0) is optional and only changes the server name and address. Renaming your config entry from `mountvacation` to `mv-travel` is also optional.
+
 **Common config file locations:**
 - **Claude Desktop (macOS)**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Claude Desktop (Windows)**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -371,6 +373,8 @@ npm install
 npm run deploy
 ```
 
+`npm run deploy` deploys both the main Worker (`mv-travel-mcp`) and the legacy alias (`mountvacation-mcp-final`): `wrangler deploy && wrangler deploy --env legacy`.
+
 ---
 
 ## 📚 **Documentation**
@@ -388,7 +392,9 @@ npm run deploy
 
 Client script (v3.x) and Cloudflare Worker (v2.x) are versioned separately.
 
-- **CF Worker v2.1.0** ✅ **Location resolution fix**: Strategy reordering (resort→city→skiarea→region) + cross-border validation. Prevents incorrect results from multi-country ski areas (e.g., Via Lattea). Fixes Sestriere, Katschberg, Terme Čatež, Obergurgl, Sölden.
+- **CF Worker v2.2.0** ✅ **Location fixes and honest errors**: Fixes dynamic place lookup crash (Ischgl, Mayrhofen, Kitzbühel, Katschberg, Poreč, Terme Čatež now resolve), "Town, Country" inputs, cross-border filtering for multi-country ski areas, clear authentication errors, "no availability" messages, API key redaction in logs, and caching of non-empty results only. Deployed to `mv-travel-mcp` and the legacy alias `mountvacation-mcp-final`.
+- **v3.5.0** ✅ Client script calls `mv-travel-mcp.talirezun.com` and reports serverInfo name `mv-travel-mcp-server`. No action needed for existing users.
+- **CF Worker v2.1.0** ✅ **Location resolution fix**: Strategy reordering (resort→city→skiarea→region) + cross-border validation. Prevents incorrect results from multi-country ski areas (e.g., Via Lattea). Fixes Sestriere, Katschberg, Terme Čatež, Obergurgl, Sölden. (shipped to users in v2.2.0)
 - **v3.4.0** ✅ Systemic location mapping overhaul: All 150+ static mappings now use verified resort/skiarea/region/city IDs (coordinate-based search deprecated). Full Croatia & Slovenia coverage. Comma-separated location parsing. Trailing slash fix. Non-ski destination support.
 - **v3.3.0** ✅ JSON-RPC 2.0 notification handling fix for Claude Desktop compatibility (silent acceptance of `notifications/initialized`, protocol version set to `2024-11-05`)
 - **v3.2.0** - Protocol compliance fix for universal MCP client compatibility

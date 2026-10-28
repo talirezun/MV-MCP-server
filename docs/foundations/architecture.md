@@ -1,6 +1,6 @@
 # MV Travel MCP — Architecture
 
-Established 2026-10-28 from the repository at commit 77d29f8. Fuller narrative: `docs/PROJECT-ARCHITECTURE.md` in the repo (written before the MV Travel rebrand).
+Updated 2026-10-28 (Worker v2.2.0, client script v3.5.0). Fuller narrative: `docs/PROJECT-ARCHITECTURE.md` in the repo.
 
 ## Shape
 
@@ -8,39 +8,69 @@ Established 2026-10-28 from the repository at commit 77d29f8. Fuller narrative: 
 MCP client (Claude Desktop, LM Studio, Augment, Cline…)
    │ stdio, JSON-RPC 2.0, protocol 2024-11-05
    ▼
-server-versions/mountvacation-mcp-server.js   (runs on the USER's machine, v3.3.0)
-   │ HTTPS POST /mcp to 188.114.96.3, Host: mountvacation-mcp-final.4thtech.workers.dev
+server-versions/mountvacation-mcp-server.js   (runs on the USER's machine)
+   │ HTTPS POST /mcp to Cloudflare IP 188.114.96.3 with the Worker hostname as Host/SNI
    │ header X-MountVacation-API-Key: <user's key>
    ▼
-Cloudflare Worker  cloudflare-workers/src/index.ts   (v2.1.0)
-   │ location resolution (id-mapping.ts, 150+ static mappings) + search strategy
+Cloudflare Worker (cloudflare-workers/, one codebase, two deployments)
+   │ location resolution (static mappings → dynamic ID mapping → fallbacks) + validation
    ▼
 MV Travel API  api.mountvacation.com  (apiKey query param)
 ```
 
+## Two Workers, identical code
+
+| Worker | URL | Who calls it |
+|---|---|---|
+| `mv-travel-mcp` | https://mv-travel-mcp.talirezun.com (custom domain on the talirezun.com zone) | client script v3.5.0+ |
+| `mountvacation-mcp-final` | https://mountvacation-mcp-final.4thtech.workers.dev | client scripts ≤ v3.3.0, which hardcode this hostname. **Permanent legacy alias. Never delete.** |
+
+- `wrangler.toml`: the top-level `name = "mv-travel-mcp"` with a custom_domain route; `[env.legacy]` holds `mountvacation-mcp-final` with `workers_dev = true` and its own copy of the vars (envs don't inherit `[vars]`).
+- `npm run deploy` runs `wrangler deploy && wrangler deploy --env legacy`. Never deploy only one.
+- `4thtech` is the account-wide workers.dev subdomain, shared with other Workers (agentlink, talirezun-com, cors). Don't change it.
+- `blocklabs-mountvacation-mcp-production` was deleted 2026-10-28. The March 2026 fix had been deployed only to it, so it never reached users.
+
 ## Components
 
-- **Client scripts** — `server-versions/`: `mountvacation-mcp-server.js` (standard), `-cline.js` (Cline variant), `-v2.js` (older v3.2 variant, still points at the same Worker). Plain Node, no dependencies. Users download them from `raw.githubusercontent.com/talirezun/MV-MCP-server/main/server-versions/...`, so **`main` is the release channel**. They hardcode the Worker hostname and a Cloudflare anycast IP (DNS-bypass fix from v3.3).
-- **Worker** — `cloudflare-workers/`: `src/index.ts` (HTTP + MCP handler, CORS, tool dispatch), `src/api/mountvacation-client.ts` (API client, search strategies, cross-border validation, pagination), `src/api/id-mapping.ts` (static + dynamic location mapping), `src/utils/{cache,logger,rate-limiter}.ts`. TypeScript, `wrangler` 3.x, `@modelcontextprotocol/sdk` ^0.4. No test files exist in the repo despite a `jest` script.
-- **Configs** — `mcp-configs/*.json`: sample client configs.
+- **Client scripts** in `server-versions/`: `mountvacation-mcp-server.js` (standard), `-cline.js`, `-v2.js`. Plain Node with no dependencies, downloaded from `raw.githubusercontent.com/.../main/server-versions/`, so **`main` is the release channel**. The serverInfo name is `mv-travel-mcp-server` (v3.5.0).
+- **Worker source**:
+  - `src/index.ts`: HTTP and MCP handler, tool dispatch, the cache guard.
+  - `src/api/mountvacation-client.ts`: API client, search strategies, validation, upstream-error accounting, key redaction.
+  - `src/api/id-mapping.ts`: dynamic ID mapping against `/countries /regions /cities /resorts /skiareas`.
+  - `src/utils/`: cache (no KV bound, so effectively off), logger, rate limiter.
+- No automated tests. The regression check is a scripted set of location searches run against a local `wrangler dev` before deploy, then against production after.
 
 ## Tools (10)
 
 `search_accommodations`, `search_accommodations_complete`, `load_more_accommodations`, `get_accommodation_details`, `get_facility_details`, `search_by_resort_id`, `search_by_city_id`, `search_by_geolocation`, `get_booking_links`, `research_accommodations`.
 
-## Search strategy (Worker v2.1.0)
+## Location resolution (v2.2.0)
 
-resort → city → skiarea → region → dynamic fuzzy match. Resort/city results are trusted; skiarea/region results are keyword-validated against the query because those IDs can span countries (Via Lattea: Italy + France). High-confidence static mappings exit early with "no results" rather than falling back to a broader, wrong search.
+1. **Static mapping** (`findLocationMapping`):
+   - exact match on the folded full input, then on the part before the comma;
+   - a word-boundary partial match only for specific place keys (≥4 chars);
+   - country or area keys ("austria", "alps", skiarea/region-only keys) match only exactly.
+   - Strategies run resort → city → skiarea → region.
+2. **Dynamic mapping** (`IdMappingManager`):
+   - fuzzy match on API metadata; titles may be strings or per-language objects (`titleText`);
+   - diacritic-folded;
+   - the country hint from "Town, Country" demotes other countries.
+3. **Fallbacks**: generic region/coordinate searches. The API rejects coordinate searches with 400, which counts as "rejected", not "failed".
 
-## Deployment
+**Trust:** resort/city ID results are trusted, but dynamic ones only at confidence ≥ 0.9. Everything else goes through `validateLocationMatch`, which filters the results down to accommodations whose city/resort/region/country text contains a requested keyword. That is the cross-border guard; the canonical case is Sestriere vs Montgenèvre in Via Lattea.
 
-`wrangler.toml` defines:
-- top-level `name = "mountvacation-mcp-final"` — target of a bare `npm run deploy`. **This is the hostname every client script calls.**
-- `[env.production] name = "blocklabs-mountvacation-mcp-production"` — `wrangler deploy --env production`. README calls this "Current Production URL", but no client script points at it; it appeared idle on the dashboard (2026-10-28).
-- `[env.staging]`, `[env.development]` — named but not observed deployed.
-
-Unverified as of 2026-10-28: whether any user hits `blocklabs-…-production` directly. Check Cloudflare analytics for both Workers before changing either.
+**Outcomes:**
+- At least one successful API call with 0 results → a "no availability for these dates" `message`.
+- Every call failed with 401/403 → an auth `error`.
+- Every call failed otherwise → an upstream `error`.
+- Nothing resolved → a "not in our database" `error`.
 
 ## Auth
 
-User-supplied key only: `MOUNTVACATION_API_KEY` env var in the client config → `X-MountVacation-API-Key` header → `apiKey` param upstream. Nothing stored server-side.
+The key is user-supplied only: `MOUNTVACATION_API_KEY` env var → `X-MountVacation-API-Key` header → `apiKey` param upstream. Nothing is stored server-side, and the key is redacted in logs.
+
+## Known limitations
+
+- Dynamic fuzzy matching can pick a nearby town in the same country, e.g. "Zagreb, Croatia" gives Zadar-area results and "Obertauern, Austria" gives Kaprun.
+- `searchByDirectParams` (ID-based tools) still reports API failures as "no accommodations found".
+- The cache key ignores resort_id/city_id; harmless while KV is unbound.
